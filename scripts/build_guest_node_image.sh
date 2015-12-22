@@ -4,14 +4,6 @@ set -e
 
 export DIR="/root"
 
-if [ $# -eq 0 ] ; then
-  echo "usage: $0 <device>"
-  echo ""
-  echo "list of available devices: (do not specify partitions!)"
-  blkid
-  exit 1
-fi
-
 
 cd /root
 
