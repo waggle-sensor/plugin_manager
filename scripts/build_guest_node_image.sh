@@ -18,8 +18,11 @@ cd /root
 export IMAGE="ubuntu-14.04lts-server-odroid-xu3-20150725.img"
 if [ ! -e ${IMAGE}.xz ] ; then
   wget http://www.mcs.anl.gov/research/projects/waggle/downloads/${IMAGE}.xz
-  unxz --keep ${IMAGE}.xz
 fi
+
+rm ${IMAGE}
+unxz --keep ${IMAGE}.xz
+
 
 # get partition start position
 #fdisk -lu ${IMAGE}
