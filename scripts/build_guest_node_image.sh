@@ -12,7 +12,7 @@ if [ ! -e ${IMAGE}.xz ] ; then
   wget http://www.mcs.anl.gov/research/projects/waggle/downloads/${IMAGE}.xz
 fi
 
-rm ${IMAGE}
+rm -f ${IMAGE}
 unxz --keep ${IMAGE}.xz
 
 
