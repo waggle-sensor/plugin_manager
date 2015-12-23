@@ -254,12 +254,12 @@ mv ${NEW_IMAGE}.xz_part ${NEW_IMAGE}.xz
 
 
 if [ -e ${DIR}/waggle-id_rsa ] ; then
-  md5sum ${NEW_IMAGE}.xz > ${NEW_IMAGE}.xz.md5sum 
+  md5sum $(basename ${NEW_IMAGE}.xz) > ${NEW_IMAGE}.xz.md5sum 
   scp -o "StrictHostKeyChecking no" -v -i ${DIR}/waggle-id_rsa ${NEW_IMAGE}.xz ${NEW_IMAGE}.xz.md5sum waggle@terra.mcs.anl.gov:/mcs/www.mcs.anl.gov/research/projects/waggle/downloads/unstable
   
   if [ -e ${NEW_IMAGE_B}.xz ] ; then
     # upload second image with different UUID's
-    md5sum ${NEW_IMAGE_B}.xz > ${NEW_IMAGE_B}.xz.md5sum
+    md5sum $(basename ${NEW_IMAGE_B}.xz) > ${NEW_IMAGE_B}.xz.md5sum
     scp -o "StrictHostKeyChecking no" -v -i ${DIR}/waggle-id_rsa ${NEW_IMAGE_B}.xz ${NEW_IMAGE_B}.xz.md5sum waggle@terra.mcs.anl.gov:/mcs/www.mcs.anl.gov/research/projects/waggle/downloads/unstable
   fi
   
