@@ -53,8 +53,9 @@ if [ ! -e ${IMAGE}.xz ] ; then
 fi
 
 rm -f ${IMAGE}
-unxz --keep ${IMAGE}.xz
-
+if [ ! "${SKIP_UNXZ}_" == "1_" ] ; then
+  unxz --keep ${IMAGE}.xz
+fi
 
 # get partition start position
 #fdisk -lu ${IMAGE}
