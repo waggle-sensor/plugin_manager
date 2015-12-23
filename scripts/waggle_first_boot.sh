@@ -70,6 +70,8 @@ do_start()
 
 	rm -f /root/first_boot
 
+	update-rc.d -f waggle_first_boot.sh remove
+
 	# to prevent user from changing filesystem at this point, reboot now.
 	reboot
 
