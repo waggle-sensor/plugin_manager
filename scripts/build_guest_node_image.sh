@@ -6,6 +6,18 @@ export DIR="/root"
 
 export REPORT_FILE="/root/report.txt"
 
+
+
+if [ "${1}_" == "clean_" ] ; then
+  set +e
+  umount /mnt/newimage/{proc,dev,sys,}
+  sleep 1
+  losetup -d /dev/loop0
+  exit 0
+fi
+
+
+
 echo "usage: ./build_guest_node_image.sh 2>&1 | tee build.log"
 
 if [ ! -e waggle_first_boot.sh  ] ; then
