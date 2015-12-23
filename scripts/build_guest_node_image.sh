@@ -8,6 +8,7 @@ export REPORT_FILE="/root/report.txt"
 
 
 
+
 if [ "${1}_" == "clean_" ] ; then
   set +e
   umount /mnt/newimage/{proc,dev,sys,}
@@ -248,6 +249,7 @@ if [ "${NEW_PARTITION_SIZE_KB}" -lt "${OLD_PARTITION_SIZE_KB}" ] ; then
   # shows the new size (-b for bytes)
   #partx --show /dev/loop0 (fails)
 
+  sleep 3
 
   e2fsck -f /dev/loop0
 
