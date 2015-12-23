@@ -52,8 +52,9 @@ if [ ! -e ${IMAGE}.xz ] ; then
   wget http://www.mcs.anl.gov/research/projects/waggle/downloads/${IMAGE}.xz
 fi
 
-rm -f ${IMAGE}
+
 if [ ! "${SKIP_UNXZ}_" == "1_" ] ; then
+  rm -f ${IMAGE}
   unxz --keep ${IMAGE}.xz
 fi
 
