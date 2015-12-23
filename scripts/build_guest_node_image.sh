@@ -7,13 +7,15 @@ export DIR="/root"
 export REPORT_FILE="/root/report.txt"
 
 
+set +e
+umount /mnt/newimage/{proc,dev,sys,}
+sleep 1
+losetup -d /dev/loop0
+set -e
+
 
 
 if [ "${1}_" == "clean_" ] ; then
-  set +e
-  umount /mnt/newimage/{proc,dev,sys,}
-  sleep 1
-  losetup -d /dev/loop0
   exit 0
 fi
 
@@ -250,14 +252,17 @@ if [ "${NEW_PARTITION_SIZE_KB}" -lt "${OLD_PARTITION_SIZE_KB}" ] ; then
   #partx --show /dev/loop0 (fails)
 
   sleep 3
-  e2fsck_ok=1
-  set +e
-  while [ ${e2fsck_ok} != "0" ] ; do
-    e2fsck -f /dev/loop0
-    e2fsck_ok=$?
-    sleep 2
-  done
-  set -e
+
+  e2fsck -n -f /dev/loop0
+
+  #e2fsck_ok=1
+  #set +e
+  #while [ ${e2fsck_ok} != "0" ] ; do
+  #  e2fsck -f /dev/loop0
+  #  e2fsck_ok=$?
+  #  sleep 2
+  #done
+  #set -e
 
 else
   echo "NEW_PARTITION_SIZE_KB is NOT smaller than OLD_PARTITION_SIZE_KB"
