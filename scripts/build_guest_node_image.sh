@@ -6,7 +6,7 @@ export DIR="/root"
 
 export REPORT_FILE="/root/report.txt"
 
-
+echo "usage: ./build_guest_node_image.sh 2>&1 | tee build.log"
 
 if [ ! -e waggle_first_boot.sh  ] ; then
   echo "waggle_first_boot.sh not found. Execute script from script location."
@@ -226,12 +226,12 @@ if [ "${NEW_PARTITION_SIZE_KB}" -lt "${OLD_PARTITION_SIZE_KB}" ] ; then
 
   partprobe /dev/loop0
 
-  set +e
-  resize2fs /dev/loop0
-  set -e
+  #set +e
+  #resize2fs /dev/loop0
+  #set -e
 
   # does not show the new size
-  fdisk -lu ${IMAGE}
+  #fdisk -lu ${IMAGE}
 
   # shows the new size (-b for bytes)
   #partx --show /dev/loop0 (fails)
