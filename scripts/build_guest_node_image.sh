@@ -81,6 +81,8 @@ mount -o bind /sys ${IMAGEDIR}/sys
 
 cat <<EOF > ${IMAGEDIR}/root/build_gn_image.sh
 #!/bin/bash
+set -x
+set -e
 
 ###locale
 locale-gen "en_US.UTF-8"
