@@ -251,12 +251,13 @@ if [ "${NEW_PARTITION_SIZE_KB}" -lt "${OLD_PARTITION_SIZE_KB}" ] ; then
 
   sleep 3
   e2fsck_ok=1
+  set +e
   while [ ${e2fsck_ok} != "0" ] ; do
     e2fsck -f /dev/loop0
     e2fsck_ok=$?
     sleep 2
   done
-  
+  set -e
 
 else
   echo "NEW_PARTITION_SIZE_KB is NOT smaller than OLD_PARTITION_SIZE_KB"
