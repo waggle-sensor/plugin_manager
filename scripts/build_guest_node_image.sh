@@ -8,6 +8,14 @@ export REPORT_FILE="/root/report.txt"
 
 
 
+if [ ! -e waggle_first_boot.sh  ] ; then
+  echo "waggle_first_boot.sh not found. Execute script from script location."
+  exit 1
+fi
+
+SCRIPT_DIR=`pwd`
+
+
 hash partprobe &> /dev/null
 if [ $? -eq 1 ]; then
     apt-get install -y parted
@@ -77,6 +85,9 @@ mount -o bind /dev ${IMAGEDIR}/dev
 mount -o bind /sys ${IMAGEDIR}/sys
 
 
+cp ${SCRIPT_DIR}/waggle_first_boot.sh ${IMAGEDIR}/etc/init.d/
+ 
+
 ###                              ###
 ###  Script for chroot execution ###
 ###                              ###
@@ -115,6 +126,8 @@ dpkg -l >> ${REPORT_FILE}
 ### mark image for first boot 
 touch /root/first_boot
 
+chown root:root /etc/init.d/waggle_first_boot.sh
+update-rc.d waggle_first_boot.sh defaults
 
 rm -f /etc/network/interfaces.d/*
 rm -f /etc/udev/rules.d/70-persistent-net.rules 
