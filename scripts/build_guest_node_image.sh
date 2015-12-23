@@ -137,7 +137,7 @@ chroot ${IMAGEDIR} /bin/bash /root/build_gn_image.sh
 #
 
 rm -f ${REPORT_FILE}
-cp ${IMAGEDIR}/${REPORT_FILE} ./${NEW_IMAGE}.report.txt
+cp ${IMAGEDIR}${REPORT_FILE} ${NEW_IMAGE}.report.txt
 
 
 
@@ -159,13 +159,11 @@ EOF
 
 
 
-umount /mnt/newimage/proc
-umount /mnt/newimage/dev
-umount /mnt/newimage/sys
+
 
 export OLD_PARTITION_SIZE_KB=$(df -BK --output=size /dev/loop0 | tail -n 1 | grep -o "[0-9]\+") ; echo "OLD_PARTITION_SIZE_KB: ${OLD_PARTITION_SIZE_KB}"
 
-umount /mnt/newimage
+umount /mnt/newimage/{proc,dev,sys,}
 
 
 
