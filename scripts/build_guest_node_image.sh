@@ -106,7 +106,7 @@ echo "Etc/UTC" > /etc/timezone
 dpkg-reconfigure --frontend noninteractive tzdata
 
 apt-get update
-apt-get upgrade -y
+#apt-get upgrade -y
 apt-get --no-install-recommends install -y network-manager
 apt-get autoclean
 apt-get autoremove -y
