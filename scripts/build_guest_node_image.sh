@@ -4,8 +4,48 @@ set -e
 
 export DIR="/root"
 
+export REPORT_FILE="/root/report.txt"
 
-cd /root
+
+
+hash partprobe &> /dev/null
+if [ $? -eq 1 ]; then
+    apt-get install -y parted
+fi
+
+
+ODROID_MODEL=$(head -n 1 /media/boot/boot.ini | cut -d '-' -f 1)
+MODEL=""
+if [ "${ODROID_MODEL}_"  == "ODROIDXU_" ] ; then
+  echo "Detected device: ${ODROID_MODEL}"
+  if [ -e /media/boot/exynos5422-odroidxu3.dtb ] ; then
+    export MODEL="odroid-xu3"
+  else
+    export MODEL="odroid-xu"
+    echo "Did not find the XU3/4-specific file /media/boot/exynos5422-odroidxu3.dtb."
+    exit 1
+  fi
+elif [ "${ODROID_MODEL}_"  == "ODROIDC_" ] ; then
+  echo "Detected device: ${ODROID_MODEL}"
+  export MODEL="odroid-c1"
+else
+  echo "Could not detect ODROID model. (${ODROID_MODEL})"
+  exit 1
+fi
+
+
+set -e
+set -x
+
+export DATE=`date +"%Y%m%d"` ; echo "DATE: ${DATE}"
+export NEW_IMAGE_PREFIX="${DIR}/waggle-guestnode-${MODEL}-${DATE}" ; echo "NEW_IMAGE_PREFIX: ${NEW_IMAGE_PREFIX}"
+export NEW_IMAGE="${NEW_IMAGE_PREFIX}.img" ; echo "NEW_IMAGE: ${NEW_IMAGE}"
+
+export NEW_IMAGE_B="${NEW_IMAGE_PREFIX}_B.img" ; echo "NEW_IMAGE_B: ${NEW_IMAGE_B}"
+
+
+
+cd ${DIR}
 
 export IMAGE="ubuntu-14.04lts-server-odroid-xu3-20150725.img"
 if [ ! -e ${IMAGE}.xz ] ; then
@@ -18,7 +58,7 @@ unxz --keep ${IMAGE}.xz
 
 # get partition start position
 #fdisk -lu ${IMAGE}
-export START_BLOCK=$(fdisk -lu ${IMAGE} | grep "${IMAGE}2" | grep -o " [0-9]\+ \+[0-9]\+ \+[0-9]\+ \+83" | cut -d ' ' -f 2) ; echo "START_BLOCK: ${START_BLOCK}"
+export START_BLOCK=$(fdisk -lu ${IMAGE} | grep "${IMAGE}2" | awk '{print $2}') ; echo "START_BLOCK: ${START_BLOCK}"
 
 export START_POS=$(echo "${START_BLOCK}*512" | bc) ; echo "START_POS: ${START_POS}"
 
@@ -57,6 +97,17 @@ apt-get autoclean
 apt-get autoremove -y
 
 
+
+### create report
+echo "image created: " > ${REPORT_FILE}
+date >> ${REPORT_FILE}
+echo "" >> ${REPORT_FILE}
+uname -a >> ${REPORT_FILE}
+echo "" >> ${REPORT_FILE}
+cat /etc/os-release >> ${REPORT_FILE}
+dpkg -l >> ${REPORT_FILE}
+
+
 ### mark image for first boot 
 touch /root/first_boot
 
@@ -66,6 +117,9 @@ rm -f /etc/udev/rules.d/70-persistent-net.rules
 
 
 EOF
+
+rm -f ${REPORT_FILE}
+cp ${IMAGEDIR}/${REPORT_FILE} ./${NEW_IMAGE}.report.txt
 
 chmod +x ${IMAGEDIR}/root/build_gn_image.sh
 
@@ -93,10 +147,116 @@ EOF
 umount /mnt/newimage/proc
 umount /mnt/newimage/dev
 umount /mnt/newimage/sys
+
+export OLD_PARTITION_SIZE_KB=$(df -BK --output=size /dev/loop0 | tail -n 1 | grep -o "[0-9]\+") ; echo "OLD_PARTITION_SIZE_KB: ${OLD_PARTITION_SIZE_KB}"
+
 umount /mnt/newimage
+
+
+
+export ESTIMATED_FS_SIZE_BLOCKS=$(resize2fs -P /dev/loop0 | grep -o "[0-9]*") ; echo "ESTIMATED_FS_SIZE_BLOCKS: ${ESTIMATED_FS_SIZE_BLOCKS}"
+
+export BLOCK_SIZE=`blockdev --getbsz /dev/loop0`; echo "BLOCK_SIZE: ${BLOCK_SIZE}"
+
+export ESTIMATED_FS_SIZE_KB=$(echo "${ESTIMATED_FS_SIZE_BLOCKS}*${BLOCK_SIZE}/1024" | bc) ; echo "ESTIMATED_FS_SIZE_KB: ${ESTIMATED_FS_SIZE_KB}"
+
+
+
+# add 500MB
+export NEW_PARTITION_SIZE_KB=$(echo "${ESTIMATED_FS_SIZE_KB} + (1024)*500" | bc) ; echo "NEW_PARTITION_SIZE_KB: ${NEW_PARTITION_SIZE_KB}"
+
+# add 100MB
+export NEW_FS_SIZE_KB=$(echo "${ESTIMATED_FS_SIZE_KB} + (1024)*100" | bc) ; echo "NEW_FS_SIZE_KB: ${NEW_FS_SIZE_KB}"
+
+
+# verify partition:
+e2fsck -f -y /dev/loop0
+
+
+
+export SECTOR_SIZE=`fdisk -lu ${IMAGE} | grep "Sector size" | grep -o ": [0-9]*" | grep -o "[0-9]*"` ; echo "SECTOR_SIZE: ${SECTOR_SIZE}"
+
+export FRONT_SIZE_KB=`echo "${SECTOR_SIZE} * ${START_BLOCK} / 1024" | bc` ; echo "FRONT_SIZE_KB: ${FRONT_SIZE_KB}"
+
+
+if [ "${NEW_PARTITION_SIZE_KB}" -lt "${OLD_PARTITION_SIZE_KB}" ] ; then 
+
+  echo "NEW_PARTITION_SIZE_KB is smaller than OLD_PARTITION_SIZE_KB"
+
+  # shrink filesystem (that does not shrink the partition!)
+  resize2fs -p /dev/loop0 ${NEW_FS_SIZE_KB}K
+
+
+  partprobe  /dev/loop0
+
+  sleep 3
+
+  ### fdisk (shrink partition)
+  # fdisk: (d)elete partition 2 ; (c)reate new partiton 2 ; specify start posirion and size of new partiton
+  set +e
+  echo -e "d\n2\nn\np\n2\n${START_BLOCK}\n+${NEW_PARTITION_SIZE_KB}K\nw\n" | fdisk ${IMAGE}
+  set -e
+
+
+  partprobe  /dev/${OTHER_DEVICE}
+
+  set +e
+  resize2fs /dev/loop0
+  set -e
+
+  # does not show the new size
+  fdisk -lu ${IMAGE}
+
+  # shows the new size (-b for bytes)
+  #partx --show /dev/loop0 (fails)
+
+
+  e2fsck -f /dev/loop0
+
+else
+  echo "NEW_PARTITION_SIZE_KB is NOT smaller than OLD_PARTITION_SIZE_KB"
+fi
+
+
 losetup -d /dev/loop0
 
 
 
+# add size of boot partition
+COMBINED_SIZE_KB=`echo "${NEW_PARTITION_SIZE_KB} + ${FRONT_SIZE_KB}" | bc` ; echo "COMBINED_SIZE_KB: ${COMBINED_SIZE_KB}"
+COMBINED_SIZE_BYTES=`echo "(${NEW_PARTITION_SIZE_KB} + ${FRONT_SIZE_KB}) * 1024" | bc` ; echo "COMBINED_SIZE_KB: ${COMBINED_SIZE_KB}"
+
+# from kb to mb
+export BLOCKS_TO_WRITE=`echo "${COMBINED_SIZE_KB}/1024" | bc` ; echo "BLOCKS_TO_WRITE: ${BLOCKS_TO_WRITE}"
 
 
+
+# does not work: count=${BLOCKS_TO_WRITE}
+pv -per --width 80 --size ${COMBINED_SIZE_BYTES} -f ${IMAGE} | dd bs=1M iflag=fullblock count=${BLOCKS_TO_WRITE} | xz -1 --stdout - > ${NEW_IMAGE}.xz_part
+
+
+mv ${NEW_IMAGE}.xz_part ${NEW_IMAGE}.xz
+
+
+
+
+if [ -e ${DIR}/waggle-id_rsa ] ; then
+  md5sum ${NEW_IMAGE}.xz > ${NEW_IMAGE}.xz.md5sum 
+  scp -o "StrictHostKeyChecking no" -v -i ${DIR}/waggle-id_rsa ${NEW_IMAGE}.xz ${NEW_IMAGE}.xz.md5sum waggle@terra.mcs.anl.gov:/mcs/www.mcs.anl.gov/research/projects/waggle/downloads/unstable
+  
+  if [ -e ${NEW_IMAGE_B}.xz ] ; then
+    # upload second image with different UUID's
+    md5sum ${NEW_IMAGE_B}.xz > ${NEW_IMAGE_B}.xz.md5sum
+    scp -o "StrictHostKeyChecking no" -v -i ${DIR}/waggle-id_rsa ${NEW_IMAGE_B}.xz ${NEW_IMAGE_B}.xz.md5sum waggle@terra.mcs.anl.gov:/mcs/www.mcs.anl.gov/research/projects/waggle/downloads/unstable
+  fi
+  
+  
+  if [ -e ${NEW_IMAGE}.report.txt ] ; then 
+    scp -o "StrictHostKeyChecking no" -v -i ${DIR}/waggle-id_rsa ${NEW_IMAGE}.report.txt waggle@terra.mcs.anl.gov:/mcs/www.mcs.anl.gov/research/projects/waggle/downloads/unstable
+  fi
+  
+  if [ -e ${NEW_IMAGE}.build_log.txt ] ; then 
+    scp -o "StrictHostKeyChecking no" -v -i ${DIR}/waggle-id_rsa ${NEW_IMAGE}.build_log.txt waggle@terra.mcs.anl.gov:/mcs/www.mcs.anl.gov/research/projects/waggle/downloads/unstable
+  fi
+  
+fi
