@@ -120,14 +120,25 @@ rm -f /etc/udev/rules.d/70-persistent-net.rules
 
 EOF
 
-rm -f ${REPORT_FILE}
-cp ${IMAGEDIR}/${REPORT_FILE} ./${NEW_IMAGE}.report.txt
+
 
 chmod +x ${IMAGEDIR}/root/build_gn_image.sh
 
+#
+# CHROOT HERE
+#
+
 chroot ${IMAGEDIR} /bin/bash /root/build_gn_image.sh
 
+# 
 # After changeroot
+#
+
+rm -f ${REPORT_FILE}
+cp ${IMAGEDIR}/${REPORT_FILE} ./${NEW_IMAGE}.report.txt
+
+
+
 #set static IP
 cat <<EOF >  ${IMAGEDIR}/etc/network/interfaces
 # interfaces(5) file used by ifup(8) and ifdown(8)
