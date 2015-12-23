@@ -211,7 +211,7 @@ if [ "${NEW_PARTITION_SIZE_KB}" -lt "${OLD_PARTITION_SIZE_KB}" ] ; then
   set -e
 
 
-  partprobe  /dev/${OTHER_DEVICE}
+  partprobe /dev/loop0
 
   set +e
   resize2fs /dev/loop0
