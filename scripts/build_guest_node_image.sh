@@ -100,8 +100,6 @@ mount -o bind /dev ${IMAGEDIR}/dev
 mount -o bind /sys ${IMAGEDIR}/sys
 
 
-cp ${SCRIPT_DIR}/waggle_first_boot.sh ${IMAGEDIR}/etc/init.d/
- 
 
 ###                              ###
 ###  Script for chroot execution ###
@@ -126,6 +124,14 @@ apt-get --no-install-recommends install -y network-manager
 apt-get autoclean
 apt-get autoremove -y
 
+apt-get install -y git
+
+mkdir -p /usr/lib/waggle/
+cd /usr/lib/waggle/
+git clone --recursive https://github.com/waggle-sensor/guestnodes.git
+
+
+
 
 
 ### create report
@@ -141,7 +147,9 @@ dpkg -l >> ${REPORT_FILE}
 ### mark image for first boot 
 touch /root/first_boot
 
-chown root:root /etc/init.d/waggle_first_boot.sh
+ln -s /usr/lib/waggle/guestnodes/scripts/waggle_first_boot.sh /etc/init.d/waggle_first_boot.sh
+
+#chown root:root /etc/init.d/waggle_first_boot.sh
 update-rc.d waggle_first_boot.sh defaults
 
 rm -f /etc/network/interfaces.d/*
