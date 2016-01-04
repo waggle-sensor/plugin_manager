@@ -61,7 +61,7 @@ do_start()
 
 
 	# create Node ID
-	/usr/lib/waggle/nodecontroller/scripts/create_node_id.sh
+	/usr/lib/waggle/guestnodes/scripts/create_node_id.sh
 
 
 	# this script increases the partition size. It is an odroid script. The user will have to reboot afterwards.
