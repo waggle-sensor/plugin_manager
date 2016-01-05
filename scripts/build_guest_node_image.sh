@@ -10,6 +10,7 @@ export REPORT_FILE="/root/report.txt"
 set +e
 umount /mnt/newimage/{proc,dev,sys,}
 sleep 1
+losetup -d /dev/loop1
 losetup -d /dev/loop0
 set -e
 
@@ -76,25 +77,30 @@ if [ ! -e ${IMAGE}.xz ] ; then
 fi
 
 
-if [ ! "${SKIP_UNXZ}_" == "1_" ] ; then
-  rm -f ${IMAGE}
+if [ ! -e ${IMAGE} ] ; then
   unxz --keep ${IMAGE}.xz
 fi
 
+rm -f ${NEW_IMAGE}
+
+cp ${IMAGE} ${NEW_IMAGE}
+
+
 # get partition start position
 #fdisk -lu ${IMAGE}
-export START_BLOCK=$(fdisk -lu ${IMAGE} | grep "${IMAGE}2" | awk '{print $2}') ; echo "START_BLOCK: ${START_BLOCK}"
+export START_BLOCK=$(fdisk -lu ${NEW_IMAGE} | grep "${NEW_IMAGE}2" | awk '{print $2}') ; echo "START_BLOCK: ${START_BLOCK}"
 
 export START_POS=$(echo "${START_BLOCK}*512" | bc) ; echo "START_POS: ${START_POS}"
 
-# create loop device
-losetup -o ${START_POS} /dev/loop0 ${IMAGE}
+# create loop device for disk and for root partition
+losetup /dev/loop0 ${NEW_IMAGE}
+losetup -o ${START_POS} /dev/loop1 /dev/loop0
 
 
 export IMAGEDIR="/mnt/newimage/"
 
 mkdir -p ${IMAGEDIR}
-mount /dev/loop0 ${IMAGEDIR}
+mount /dev/loop1 ${IMAGEDIR}
 mount -o bind /proc ${IMAGEDIR}/proc
 mount -o bind /dev ${IMAGEDIR}/dev
 mount -o bind /sys ${IMAGEDIR}/sys
@@ -197,15 +203,15 @@ EOF
 
 
 
-export OLD_PARTITION_SIZE_KB=$(df -BK --output=size /dev/loop0 | tail -n 1 | grep -o "[0-9]\+") ; echo "OLD_PARTITION_SIZE_KB: ${OLD_PARTITION_SIZE_KB}"
+export OLD_PARTITION_SIZE_KB=$(df -BK --output=size /dev/loop1 | tail -n 1 | grep -o "[0-9]\+") ; echo "OLD_PARTITION_SIZE_KB: ${OLD_PARTITION_SIZE_KB}"
 
 umount /mnt/newimage/{proc,dev,sys,}
 
 
 
-export ESTIMATED_FS_SIZE_BLOCKS=$(resize2fs -P /dev/loop0 | grep -o "[0-9]*") ; echo "ESTIMATED_FS_SIZE_BLOCKS: ${ESTIMATED_FS_SIZE_BLOCKS}"
+export ESTIMATED_FS_SIZE_BLOCKS=$(resize2fs -P /dev/loop1 | grep -o "[0-9]*") ; echo "ESTIMATED_FS_SIZE_BLOCKS: ${ESTIMATED_FS_SIZE_BLOCKS}"
 
-export BLOCK_SIZE=`blockdev --getbsz /dev/loop0`; echo "BLOCK_SIZE: ${BLOCK_SIZE}"
+export BLOCK_SIZE=`blockdev --getbsz /dev/loop1`; echo "BLOCK_SIZE: ${BLOCK_SIZE}"
 
 export ESTIMATED_FS_SIZE_KB=$(echo "${ESTIMATED_FS_SIZE_BLOCKS}*${BLOCK_SIZE}/1024" | bc) ; echo "ESTIMATED_FS_SIZE_KB: ${ESTIMATED_FS_SIZE_KB}"
 
@@ -219,11 +225,11 @@ export NEW_FS_SIZE_KB=$(echo "${ESTIMATED_FS_SIZE_KB} + (1024)*100" | bc) ; echo
 
 
 # verify partition:
-e2fsck -f -y /dev/loop0
+e2fsck.ext4 -f -y /dev/loop1
 
 
 
-export SECTOR_SIZE=`fdisk -lu ${IMAGE} | grep "Sector size" | grep -o ": [0-9]*" | grep -o "[0-9]*"` ; echo "SECTOR_SIZE: ${SECTOR_SIZE}"
+export SECTOR_SIZE=`fdisk -lu ${NEW_IMAGE} | grep "Sector size" | grep -o ": [0-9]*" | grep -o "[0-9]*"` ; echo "SECTOR_SIZE: ${SECTOR_SIZE}"
 
 export FRONT_SIZE_KB=`echo "${SECTOR_SIZE} * ${START_BLOCK} / 1024" | bc` ; echo "FRONT_SIZE_KB: ${FRONT_SIZE_KB}"
 
@@ -233,40 +239,40 @@ if [ "${NEW_PARTITION_SIZE_KB}" -lt "${OLD_PARTITION_SIZE_KB}" ] ; then
   echo "NEW_PARTITION_SIZE_KB is smaller than OLD_PARTITION_SIZE_KB"
 
   # shrink filesystem (that does not shrink the partition!)
-  resize2fs -p /dev/loop0 ${NEW_FS_SIZE_KB}K
+  resize2fs -p /dev/loop1 ${NEW_FS_SIZE_KB}K
 
 
-  partprobe  /dev/loop0
+  partprobe  /dev/loop1
 
   sleep 3
 
   ### fdisk (shrink partition)
   # fdisk: (d)elete partition 2 ; (c)reate new partiton 2 ; specify start posirion and size of new partiton
   set +e
-  echo -e "d\n2\nn\np\n2\n${START_BLOCK}\n+${NEW_PARTITION_SIZE_KB}K\nw\n" | fdisk ${IMAGE}
+  echo -e "d\n2\nn\np\n2\n${START_BLOCK}\n+${NEW_PARTITION_SIZE_KB}K\nw\n" | fdisk ${NEW_IMAGE}
   set -e
 
 
-  partprobe /dev/loop0
+  partprobe /dev/loop1
 
   #set +e
-  #resize2fs /dev/loop0
+  #resize2fs /dev/loop1
   #set -e
 
   # does not show the new size
-  #fdisk -lu ${IMAGE}
+  #fdisk -lu ${NEW_IMAGE}
 
   # shows the new size (-b for bytes)
-  #partx --show /dev/loop0 (fails)
+  #partx --show /dev/loop1 (fails)
 
   sleep 3
 
-  e2fsck -n -f /dev/loop0
+  e2fsck.ext4 -n -f /dev/loop1
 
   #e2fsck_ok=1
   #set +e
   #while [ ${e2fsck_ok} != "0" ] ; do
-  #  e2fsck -f /dev/loop0
+  #  e2fsck -f /dev/loop1
   #  e2fsck_ok=$?
   #  sleep 2
   #done
@@ -276,7 +282,7 @@ else
   echo "NEW_PARTITION_SIZE_KB is NOT smaller than OLD_PARTITION_SIZE_KB"
 fi
 
-
+losetup -d /dev/loop1
 losetup -d /dev/loop0
 
 
@@ -291,7 +297,7 @@ export BLOCKS_TO_WRITE=`echo "${COMBINED_SIZE_KB}/1024" | bc` ; echo "BLOCKS_TO_
 
 
 # does not work: count=${BLOCKS_TO_WRITE}
-pv -per --width 80 --size ${COMBINED_SIZE_BYTES} -f ${IMAGE} | dd bs=1M iflag=fullblock count=${BLOCKS_TO_WRITE} | xz -1 --stdout - > ${NEW_IMAGE}.xz_part
+pv -per --width 80 --size ${COMBINED_SIZE_BYTES} -f ${NEW_IMAGE} | dd bs=1M iflag=fullblock count=${BLOCKS_TO_WRITE} | xz -1 --stdout - > ${NEW_IMAGE}.xz_part
 
 
 mv ${NEW_IMAGE}.xz_part ${NEW_IMAGE}.xz
