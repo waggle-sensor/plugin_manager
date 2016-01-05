@@ -225,7 +225,7 @@ export NEW_FS_SIZE_KB=$(echo "${ESTIMATED_FS_SIZE_KB} + (1024)*100" | bc) ; echo
 
 
 # verify partition:
-e2fsck.ext4 -f -y /dev/loop1
+e2fsck -f -y /dev/loop1
 
 
 
@@ -267,7 +267,7 @@ if [ "${NEW_PARTITION_SIZE_KB}" -lt "${OLD_PARTITION_SIZE_KB}" ] ; then
 
   sleep 3
 
-  e2fsck.ext4 -n -f /dev/loop1
+  e2fsck -n -f /dev/loop1
 
   #e2fsck_ok=1
   #set +e
