@@ -11,7 +11,12 @@ set -e
 
 
 
-./scripts/create_node_id.sh
+# set node controller IP for "internal" network
+echo "10.31.81.10" > /etc/waggle/NCIP
+
+if [ ! -e /etc/waggle/node_id ] ; then
+ source ./scripts/create_node_id.sh
+fi
 
 
 # workaround  (fix later):
