@@ -13,7 +13,8 @@ def msg_handler(msg):
         :param string msg: The packed message sent to the node.
         
     """
-    #TODO Add new message types that are created for waggle 
+    #TODO Add new message types that are created for waggle
+    header = None
     try:
         #unpacks the header
         header = get_header(msg)
