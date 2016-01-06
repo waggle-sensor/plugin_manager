@@ -75,6 +75,7 @@ class receive(Process):
                     #print 'Request sent: ', request
                     msg = s.recv(4028) #arbitrary. Can put in a config file
                     if msg != 'False':
+                        logger.debug("incoming message: %s" % (msg))
                         try:
                             #sends incoming messages to msg_handler class 
                             msg_handler(msg)
