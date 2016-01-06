@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from multiprocessing import Process, Queue
 import time, socket, sys
 from msg_handler import msg_handler
