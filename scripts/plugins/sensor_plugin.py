@@ -4,7 +4,7 @@
 
 def sensor_read():
     import time, serial, sys
-    sys.path.append('../../../devtools/protocol_common/')
+    sys.path.append('../waggle_protocol/')
     from utilities import packetmaker
     from send import send
     """
