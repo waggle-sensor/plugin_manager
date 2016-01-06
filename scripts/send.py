@@ -8,6 +8,8 @@ with open('/etc/waggle/hostname','r') as file_:
     HOSTNAME = file_.read().strip()
 
 
+logger = logging.getLogger(__name__)
+
 HOST = NCIP #sets to NodeController IP
 PORT = 9090 #port for push_server
     
