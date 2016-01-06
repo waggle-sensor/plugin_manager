@@ -80,8 +80,8 @@ class receive(Process):
                             msg_handler(msg)
                             s.close() #closes each time a message is received. 
                             #print 'Connection closed...'
-                        except:
-                            logger.error('Unpack unsuccessful.')
+                        except Exception as e:
+                            logger.error('Unpack unsuccessful: %s' % (str(e)))
                     else:
                         s.close() #closes each time a message is received.
                         time.sleep(1)
