@@ -70,16 +70,25 @@ def start_all_valid():
 	else:
 		print "Attempted to start all non-blacklisted plugins, failed to start", fail
 
+def read_file( str ):
+	if not os.path.isfile(str) :
+		return ""
+	with open(str,'r') as file_:
+		return file_.read().strip()
+	return ""
+
 #Checks if the plugin is on the blacklist
 def on_blacklist(name):
-	blacklist = open('plugins/blacklist.txt','r').read()
+	blacklist = read_file('plugins/blacklist.txt')
 	blacklist = re.split('\n', blacklist)
+	blacklist = filter(None, blacklist)
 	return (name in blacklist)
 
 #Checks if the plugin is on the whitelist
 def on_whitelist(name):
-	whitelist = open('plugins/whitelist.txt','r').read()
+	whitelist = read_file('plugins/whitelist.txt')
 	whitelist = re.split('\n', whitelist)
+	whitelist = filter(None, whitelist)
 	return (name in whitelist)
 
 #Lists available plugins, if they are active, and whether they are present on the whitelist and blacklist
