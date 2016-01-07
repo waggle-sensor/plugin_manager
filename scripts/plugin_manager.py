@@ -118,7 +118,24 @@ if __name__ == '__main__':
     print '\nAutomatically starting whitelisted plugins...'
     start_whitelist()
     time.sleep(2)
-    print '\nPlease enter the name of the plugin you would like to manipulate. \nEnter "startall" if you would like to activate all non-blacklisted plugins. \nUse "stopall" to stop all plugins, or "killall" to kill all plugins. \nUse "pauseall" and "unpauseall" on active plugins. \nYou can also use "infoall" to get information on all running plugins.\nType "whitelist" or "blacklist" to view their contents. \nUse "startwhite" to start plugins from the whitelist.\nType "quit" to exit. \n\nThe following plugins are available.'
+    print '''
+Available commands:
+<plugin>       The name of the plugin you would like to manipulate.
+startall       Activate all non-blacklisted plugins.
+stopall        Stop all plugins
+killall        Kill all plugins.
+pauseall       Pause all active plugins
+unpauseall     
+infoall        Information on all running plugins.
+whitelist      Show whitelist.
+blacklist      Show blacklist
+startwhite     Start plugins from the whitelist.
+quit           Quit.
+
+
+The following plugins are available.
+'''
+
     list_plugins_full()
     print 'To see this list again, type "list". \nIf you need to review the commands, type "help".'
 
