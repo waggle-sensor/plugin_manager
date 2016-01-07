@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 import time, serial, sys, datetime, os, random
-sys.path.append('../../')
-from waggle_protocol.utilities import packetmaker
-#sys.path.append('../Communications/')
-#from internal_communicator import send
+
 sys.path.append('../')
 from send import send
 
