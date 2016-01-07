@@ -1,5 +1,6 @@
-#class register(object):
-    def __init__(self):
+class register(object):
+    def __init__(self, name, man):
+    	man[name] = 1
         sensor_read()
 
 def sensor_read():
