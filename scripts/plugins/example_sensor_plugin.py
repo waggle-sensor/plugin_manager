@@ -16,12 +16,14 @@ def unix_time_millis(dt):
 
 class register(object):
     
-    temperature_file = '/sys/class/thermal/thermal_zone0/temp'
-    interval = 10
+    
     
     def __init__(self, name, man):
         import time
         man[name] = 1
+
+        temperature_file = '/sys/class/thermal/thermal_zone0/temp'
+        interval = 10
 
         if os.path.isfile(temperature_file): 
             count = 0
