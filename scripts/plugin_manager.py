@@ -50,9 +50,9 @@ def start_whitelist():
 			print 'Failed to start plugin', name
 			fail = fail + 1
 	if (fail == 0):
-		print "Started all", len(whitelist)-1, "whitelisted plugins."
+		print "Started all %d whitelisted plugins." % (len(whitelist))
 	else:
-		print "Attempted to start all whitelisted plugins, failed to start", fail
+		print "Attempted to start all whitelisted plugins, failed to start %d plugins" % (fail)
 
 #Starts all non-blacklisted plugins
 def start_all_valid():
