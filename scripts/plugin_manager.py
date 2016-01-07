@@ -120,17 +120,17 @@ if __name__ == '__main__':
     time.sleep(2)
     print '''
 Available commands:
-<plugin>       The name of the plugin you would like to manipulate.
-startall       Activate all non-blacklisted plugins.
-stopall        Stop all plugins
-killall        Kill all plugins.
-pauseall       Pause all active plugins
-unpauseall     
-infoall        Information on all running plugins.
-whitelist      Show whitelist.
-blacklist      Show blacklist
-startwhite     Start plugins from the whitelist.
-quit           Quit.
+  <plugin>       The name of the plugin you would like to manipulate.
+  startall       Activate all non-blacklisted plugins.
+  stopall        Stop all plugins
+  killall        Kill all plugins.
+  pauseall       Pause all active plugins
+  unpauseall     
+  infoall        Information on all running plugins.
+  whitelist      Show whitelist.
+  blacklist      Show blacklist
+  startwhite     Start plugins from the whitelist.
+  quit           Quit.
 
 
 The following plugins are available.
