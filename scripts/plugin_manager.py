@@ -139,102 +139,109 @@ The following plugins are available.
     list_plugins_full()
     print 'To see this list again, type "list". \nIf you need to review the commands, type "help".'
 
-    
-    while True:
+    try:
+        while True:
         
-        command = raw_input('\nMain menu\nEnter your command: ')
-        print ''
-        if (command == "startall"):
-            start_all_valid()
-        elif (command == "killall" or command == "ka"):
-            plug.kill_all()
-        elif (command == "startwhite" or command == "sw"):
-            start_whitelist()
-        elif (command == "stopall"):
-            plug.stop_all()
-        elif (command == "pauseall"):
-            plug.pause_all()
-        elif (command == "unpauseall"):
-            plug.unpause_all()
-        elif (command == "whitelist"):
-            whitelist = read_file('plugins/whitelist.txt')
-            print "Whitelist:\n",whitelist
-        elif (command == "blacklist"):
-            blacklist = read_file('plugins/blacklist.txt')
-            print "Blacklist:\n",blacklist
-        elif (command == "infoall"):
-            plug.info_all()
+            command = raw_input('\nMain menu\nEnter your command: ')
+            print ''
+            if (command == "startall"):
+                start_all_valid()
+            elif (command == "killall" or command == "ka"):
+                plug.kill_all()
+            elif (command == "startwhite" or command == "sw"):
+                start_whitelist()
+            elif (command == "stopall"):
+                plug.stop_all()
+            elif (command == "pauseall"):
+                plug.pause_all()
+            elif (command == "unpauseall"):
+                plug.unpause_all()
+            elif (command == "whitelist"):
+                whitelist = read_file('plugins/whitelist.txt')
+                print "Whitelist:\n",whitelist
+            elif (command == "blacklist"):
+                blacklist = read_file('plugins/blacklist.txt')
+                print "Blacklist:\n",blacklist
+            elif (command == "infoall"):
+                plug.info_all()
 
-        #if the entry matches the name of a plugin, go to plugin menu
-        elif (command in plugins.__all__):
-            while True:
-                print '\nWould you like to "start", "stop", "pause", "unpause", or "kill" the plugin? \nYou can also "blacklist" or "whitelist" the plugin, or get "info" on it. \nType "back" to go back to the main menu.'
-                command2 = raw_input('Enter your command: ')
-                if (command2 == "start"):
-                    if (on_blacklist(command)):
-                        print 'Cannot start plugin', command, 'because it is blacklisted.'
-                    else: 
-                        plug.start_plugin(command)
-                    break
-                elif (command2 == "kill" or command2 == "k"):
-                    plug.kill_plugin(command)
-                    break
-                elif (command2 == "stop"):
-                    plug.stop_plugin(command)
-                    break
-                elif (command2 == "pause" or command2 =="p"):
-                    plug.pause_plugin(command)
-                    break
-                elif (command2 == "unpause"):
-                    plug.unpause_plugin(command)
-                    break
-                elif (command2 == "pid"):
-                    print 'Plugin',command+"'s PID:",plug.plugin_pid(command)
-                    break
-                elif (command2 == "info"):
-                    plug.plugin_info(command)
-                    break
-                #elif (command2 == "suspend"):
-                #    plug.suspend_plugin(command)
-                #    break
-                #elif (command2 == "resume"):
-                #    plug.resume_plugin(command)
-                #    break
-
-                #Go to whitelist/blacklist process, choose whether to add or remove from list
-                elif (command2 == "whitelist" or command2 == "blacklist"):
-                    print 'Would you like to add or remove from', command2 + '?'
-                    command3 = raw_input('Enter your command (add/remove): ')
-                    if (command3 == "add"):
-                        change = manip_list(command,command2,"add")
-                        if (change == 1):
-                            print command, command2+"ed."
-                        elif (change == 0):
-                            print command, "already on", command2 + "."
+            #if the entry matches the name of a plugin, go to plugin menu
+            elif (command in plugins.__all__):
+                while True:
+                    print '\nWould you like to "start", "stop", "pause", "unpause", or "kill" the plugin? \nYou can also "blacklist" or "whitelist" the plugin, or get "info" on it. \nType "back" to go back to the main menu.'
+                    command2 = raw_input('Enter your command: ')
+                    if (command2 == "start"):
+                        if (on_blacklist(command)):
+                            print 'Cannot start plugin', command, 'because it is blacklisted.'
+                        else: 
+                            plug.start_plugin(command)
                         break
-                    if (command3 == "remove" or command3 == "rm"):
-                        change = manip_list(command,command2,"rm")
-                        if change:
-                            print command, "removed from", command2 + "."
+                    elif (command2 == "kill" or command2 == "k"):
+                        plug.kill_plugin(command)
+                        break
+                    elif (command2 == "stop"):
+                        plug.stop_plugin(command)
+                        break
+                    elif (command2 == "pause" or command2 =="p"):
+                        plug.pause_plugin(command)
+                        break
+                    elif (command2 == "unpause"):
+                        plug.unpause_plugin(command)
+                        break
+                    elif (command2 == "pid"):
+                        print 'Plugin',command+"'s PID:",plug.plugin_pid(command)
+                        break
+                    elif (command2 == "info"):
+                        plug.plugin_info(command)
+                        break
+                    #elif (command2 == "suspend"):
+                    #    plug.suspend_plugin(command)
+                    #    break
+                    #elif (command2 == "resume"):
+                    #    plug.resume_plugin(command)
+                    #    break
+
+                    #Go to whitelist/blacklist process, choose whether to add or remove from list
+                    elif (command2 == "whitelist" or command2 == "blacklist"):
+                        print 'Would you like to add or remove from', command2 + '?'
+                        command3 = raw_input('Enter your command (add/remove): ')
+                        if (command3 == "add"):
+                            change = manip_list(command,command2,"add")
+                            if (change == 1):
+                                print command, command2+"ed."
+                            elif (change == 0):
+                                print command, "already on", command2 + "."
+                            break
+                        if (command3 == "remove" or command3 == "rm"):
+                            change = manip_list(command,command2,"rm")
+                            if change:
+                                print command, "removed from", command2 + "."
+                            else:
+                                print command, "not on", command2 + "."
+                            break
                         else:
-                            print command, "not on", command2 + "."
+                            print "I didn't understand your answer."
+
+                    elif (command2 == "back"):
                         break
                     else:
-                        print "I didn't understand your answer."
+                        print "I didn't understand your command."
 
-                elif (command2 == "back"):
-                    break
-                else:
-                    print "I didn't understand your command."
-
-        #stops plugins (and kills if there's a stop failure) and exits the program            
-        elif (command == "quit" or command == "q"):
-            if (not (plug.stop_all() == 0)):
-                plug.kill_all()
-            break
-        elif (command == "list" or command == "l"):
-            list_plugins_full()
-        elif (command == "help" or command == "h"):
-            help_dialogue()
-        else:
-            print "I didn't understand your command. Type \"help\" or \"h\" to review commands."
+            #stops plugins (and kills if there's a stop failure) and exits the program            
+            elif (command == "quit" or command == "q"):
+                if (not (plug.stop_all() == 0)):
+                    plug.kill_all()
+                break
+            elif (command == "list" or command == "l"):
+                list_plugins_full()
+            elif (command == "help" or command == "h"):
+                help_dialogue()
+            else:
+                print "I didn't understand your command. Type \"help\" or \"h\" to review commands."
+            
+            
+        except KeyboardInterrupt:
+            print "exiting..."
+        except Exception as e:
+            print "error: "+str(e)
+            
