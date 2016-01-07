@@ -41,8 +41,8 @@ def manip_list(plugin, listtype, manipulation):
 
 #Starts all whitelisted plugins
 def start_whitelist():
-	whitelist = open('plugins/whitelist.txt','r').read()
-	whitelist = re.split('\n', whitelist)
+	
+	whitelist = get_whitelist()
 	fail = 0
 	for name in whitelist:
 		start = plug.start_plugin(name)
@@ -56,8 +56,8 @@ def start_whitelist():
 
 #Starts all non-blacklisted plugins
 def start_all_valid():
-	blacklist = open('plugins/blacklist.txt','r').read()
-	blacklist = re.split('\n', blacklist)
+	
+	blacklist = get_blacklist()
 	fail = 0
 	for plugin in plugins.__all__:
 		if (not (plugin in blacklist)):
@@ -77,19 +77,27 @@ def read_file( str ):
 		return file_.read().strip()
 	return ""
 
+
+def get_list(file):
+	mylist = read_file(file)
+	mylist = re.split('\n', mylist)
+	mylist = filter(None, mylist)
+	return mylist
+
+def get_blacklist():
+	return get_list('plugins/blacklist.txt')
+
+def get_whitelist():
+	return get_list('plugins/whitelist.txt')
+	
+
 #Checks if the plugin is on the blacklist
 def on_blacklist(name):
-	blacklist = read_file('plugins/blacklist.txt')
-	blacklist = re.split('\n', blacklist)
-	blacklist = filter(None, blacklist)
-	return (name in blacklist)
+	return (name in get_blacklist())
 
 #Checks if the plugin is on the whitelist
 def on_whitelist(name):
-	whitelist = read_file('plugins/whitelist.txt')
-	whitelist = re.split('\n', whitelist)
-	whitelist = filter(None, whitelist)
-	return (name in whitelist)
+	return (name in get_whitelist())
 
 #Lists available plugins, if they are active, and whether they are present on the whitelist and blacklist
 def list_plugins_full():
@@ -132,10 +140,10 @@ if __name__ == '__main__':
 		elif (command == "unpauseall"):
 			plug.unpause_all()
 		elif (command == "whitelist"):
-			whitelist = open('plugins/whitelist.txt','r').read()
+			whitelist = read_file('plugins/whitelist.txt')
 			print "Whitelist:\n",whitelist
 		elif (command == "blacklist"):
-			blacklist = open('plugins/blacklist.txt','r').read()
+			blacklist = read_file('plugins/blacklist.txt')
 			print "Blacklist:\n",blacklist
 		elif (command == "infoall"):
 			plug.info_all()
