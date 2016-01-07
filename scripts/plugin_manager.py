@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import multiprocessing, time, sys, re
+import multiprocessing, time, sys, re, os
 import plugins 
 import run_plugins_multi
 
