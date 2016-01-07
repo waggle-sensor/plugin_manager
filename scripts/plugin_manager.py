@@ -240,8 +240,8 @@ The following plugins are available.
                 print "I didn't understand your command. Type \"help\" or \"h\" to review commands."
             
             
-        except KeyboardInterrupt:
-            print "exiting..."
-        except Exception as e:
-            print "error: "+str(e)
+    except KeyboardInterrupt:
+        print "exiting..."
+    except Exception as e:
+        print "error: "+str(e)
             
