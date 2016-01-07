@@ -71,7 +71,7 @@ class plugin_runner(object):
                 if (j.is_alive()):
                     os.kill(self.plugin_pid(j.name), signal.SIGKILL)
                     j.join(5)
-                    if (j.is_alive():
+                    if (j.is_alive()):
                         break
                     print 'Plugin', j.name, 'ended with kill signal.'
                 else: 
