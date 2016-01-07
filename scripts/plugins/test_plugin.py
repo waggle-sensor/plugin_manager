@@ -1,24 +1,20 @@
-#class register(object):
-    
-    def __init__(self):
+class register(object):
+    def __init__(self, name, man):
+    	man[name] = 1
 	print 'Hello world!'
 	print ' '
 	print 'We are printing from the __init__ of the register class'
 	print ' '
     value = 20
-    #self.test()
-	test_function()
-	testplug = test_plugin()
-	testplug.run()
-
+   
     def test(self):
 	print 'running from test() inside register class'
 
-def test_function():
-    print 'We can print from functions defined in the test_plugin.py'
-    print 'outside of the register class'
-    print ' '
-    print value
+    def test_function():
+        print 'We can print from functions defined in the test_plugin.py'
+        print 'outside of the register class'
+        print ' '
+        print value
 
 class test_plugin(object):
     
@@ -27,3 +23,8 @@ class test_plugin(object):
     
     def run(self):
         print 'And then perform functions through those objects as normal'
+        
+#self.test()
+	test_function()
+	testplug = test_plugin()
+	testplug.run()
