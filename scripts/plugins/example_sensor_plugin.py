@@ -4,6 +4,8 @@ import time, serial, sys, datetime, os, random
 sys.path.append('../')
 from send import send
 
+sys.path.append('../../')
+from waggle_protocol.utilities import packetmaker
 
 def unix_time(dt):
     epoch = datetime.datetime.utcfromtimestamp(0)
