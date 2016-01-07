@@ -39,7 +39,7 @@ cp /etc/waggle/node_id /etc/waggle/hostname
 apt-get install -y python-pip python-dev
 pip install pyserial
 pip install crcmod
-
+pip install psutil
 
 #scan for node controller IP 
 #GN must be able to see node controller the first time it is configured
