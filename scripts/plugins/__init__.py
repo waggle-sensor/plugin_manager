@@ -10,10 +10,14 @@ from os.path import dirname, join, split, splitext
 basedir = dirname(__file__)
 
 __all__ = []
-for name in glob(join(basedir, '*.py')):
+#for name in glob(join(basedir, '*.py')):
+cwd = os.getcwd()
+for directory in filter(os.path.isdir, os.listdir(cwd)):
+    name = directory
+    module = directory
     print 'Name: ',name
-    module = splitext(split(name)[-1])[0]
-    print 'Module: ', module
+    #module = splitext(split(name)[-1])[0]
+    #print 'Module: ', module
     if not module.startswith('_') and not iskeyword(module):
         try:
             __import__(__name__+'.'+module) #TODO need to be able to check if the plug in has the required methods before importing
