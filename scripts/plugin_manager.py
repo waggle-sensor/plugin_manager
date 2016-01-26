@@ -105,7 +105,7 @@ def list_plugins_full():
     headers = ["plugin", "instance", "active", "whitelist", "blacklist"]
     table=[]
     tabulate(table, headers, tablefmt="fancy_grid")
-    print 'Plugins List:'
+    print 'Available plugins:'
     for name in plugins.__all__:
         plugin = getattr(plugins, name)
         active = 0
