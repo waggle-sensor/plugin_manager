@@ -2,6 +2,7 @@
 import multiprocessing, time, sys, re, os
 import plugins 
 import run_plugins_multi
+from tabulate import tabulate
 
 #instructions for user
 def help_dialogue():
@@ -101,17 +102,23 @@ def on_whitelist(name):
 
 #Lists available plugins, if they are active, and whether they are present on the whitelist and blacklist
 def list_plugins_full():
+    headers = ["plugin", "instance", "active", "whitelist", "blacklist"]
+    table=[]
+    tabulate(table, headers, tablefmt="fancy_grid")
     print 'Plugins List:'
     for name in plugins.__all__:
         plugin = getattr(plugins, name)
         active = 0
         for j in plug.jobs:
             if (j.name == name):
-                print 'Plugin', name, 'is active. Whitelist:', on_whitelist(name), '  |  Blacklist:', on_blacklist(name)
+                #print 'Plugin', name, 'is active. Whitelist:', on_whitelist(name), '  |  Blacklist:', on_blacklist(name)
+                table.append([name, "", True, on_whitelist(name), on_blacklist(name)])
                 active = 1
                 break
         if (not active):
-            print 'Plugin', name, 'is inactive. Whitelist:', on_whitelist(name), '  |  Blacklist:', on_blacklist(name)
+            #print 'Plugin', name, 'is inactive. Whitelist:', on_whitelist(name), '  |  Blacklist:', on_blacklist(name)
+            table.append([name, "", False, on_whitelist(name), on_blacklist(name)])
+    print tabulate(table, headers, tablefmt="fancy_grid")
 
 if __name__ == '__main__':
     plug = run_plugins_multi.plugin_runner()

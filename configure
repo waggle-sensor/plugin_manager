@@ -37,6 +37,7 @@ cp /etc/waggle/node_id /etc/waggle/hostname
 
 #change this to offline install
 apt-get install -y python-pip python-dev
+pip install tabulate
 pip install pyserial
 pip install crcmod
 pip install psutil
