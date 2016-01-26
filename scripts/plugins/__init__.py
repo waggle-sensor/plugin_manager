@@ -11,11 +11,12 @@ basedir = dirname(__file__)
 
 __all__ = []
 #for name in glob(join(basedir, '*.py')):
-cwd = os.getcwd()
-for directory in filter(os.path.isdir, os.listdir(cwd)):
-    name = directory
-    module = directory
+cwd = os.getcwd()+"/plugins"
+for name in filter(os.path.isdir, os.listdir(cwd)):
     print 'Name: ',name
+    directory = cwd + "/" + name
+    module = name
+    
     #module = splitext(split(name)[-1])[0]
     #print 'Module: ', module
     if not module.startswith('_') and not iskeyword(module):
