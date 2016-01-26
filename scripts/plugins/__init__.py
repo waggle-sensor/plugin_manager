@@ -2,7 +2,7 @@
 #This code is taken from https://github.com/samwyse/sspp/blob/master/__init__.py
 #####################
 
-
+import os
 from glob import glob
 from keyword import iskeyword
 from os.path import dirname, join, split, splitext
