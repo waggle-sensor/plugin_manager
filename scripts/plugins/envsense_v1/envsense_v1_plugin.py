@@ -197,4 +197,11 @@ def sensor_read():
          wxsensor.close()
      except: 
          pass
- 
+
+
+if __name__ == '__main__':
+     sensor_read()
+     
+     
+     
+     
