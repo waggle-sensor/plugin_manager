@@ -21,35 +21,38 @@ def process_data(output2sensor, data):
         except:
             pass
 
-    if sensorDataAvail == True:
-        if sensorsData[0] == 'WXSensor' and sensorsData[-1]=='WXSensor\r\n':
+    if not sensorDataAvail:
+        return
+        
+    if not (sensorsData[0] == 'WXSensor' and sensorsData[-1]=='WXSensor\r\n'):
+        return
 
-            timestamp_utc = datetime.datetime.utcnow()
-            timestamp_date = timestamp_utc.date()
-            timestamp_epoch =  int(float(timestamp_utc.strftime("%s.%f"))* 1000)
-
-
-            # extract sensor name    
-            output_array = sensorsData[1].split(':')
-            output_name = output_array[0]
+    timestamp_utc = datetime.datetime.utcnow()
+    timestamp_date = timestamp_utc.date()
+    timestamp_epoch =  int(float(timestamp_utc.strftime("%s.%f"))* 1000)
 
 
-            try:
-                sensor_name = output2sensor[output_name]
-            except Exception as e:
-                print "Output %s unknown" % (output_name)
-                sensor_name = ''
+    # extract sensor name    
+    output_array = sensorsData[1].split(':')
+    output_name = output_array[0]
 
-            if sensor_name:
-                sendData=[str(timestamp_date), 'env_sense', '1', 'default', str(timestamp_epoch), sensor_name, "meta.txt", sensorsData[1:-1]]
-                print 'Sending data: ', str(sendData)
-                #packs and sends the data
-                packet = packetmaker.make_data_packet(sendData)
-                for pack in packet:
-                    try:
-                        send(pack)
-                    except Exception as e:
-                        raise
+
+    try:
+        sensor_name = output2sensor[output_name]
+    except Exception as e:
+        print "Output %s unknown" % (output_name)
+        return
+
+    
+    sendData=[str(timestamp_date), 'env_sense', '1', 'default', str(timestamp_epoch), sensor_name, "meta.txt", sensorsData[1:-1]]
+    print 'Sending data: ', str(sendData)
+    #packs and sends the data
+    packet = packetmaker.make_data_packet(sendData)
+    for pack in packet:
+        try:
+            send(pack)
+        except Exception as e:
+            raise
                     
 
 def sensor_read():
