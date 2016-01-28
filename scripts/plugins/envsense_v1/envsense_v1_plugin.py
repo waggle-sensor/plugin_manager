@@ -2,12 +2,12 @@ import time, serial, sys, datetime, pprint
 sys.path.append('../waggle_protocol/')
 from utilities import packetmaker
 from send import send
-
+from multiprocessing import Queue
 
 class register(object):
-    def __init__(self, name, man):
+    def __init__(self, name, man, mailbox_outgoing):
     	man[name] = 1
-        sensor_read()
+        sensor_read(mailbox_outgoing)
 
 
 def process_data(output2sensor, readData):
@@ -46,19 +46,12 @@ def process_data(output2sensor, readData):
         return
 
     
-    sendData=[str(timestamp_date), 'env_sense', '1', 'default', str(timestamp_epoch), sensor_name, "meta.txt", sensorsData[1:-1]]
-    print 'Sending data: ', str(sendData)
-    #packs and sends the data
-    packet = packetmaker.make_data_packet(sendData)
-    for pack in packet:
-        try:
-            send(pack)
-        except Exception as e:
-            print "Exception sending pack: "+str(e)
-            raise
+    
+    return [str(timestamp_date), 'env_sense', '1', 'default', str(timestamp_epoch), sensor_name, "meta.txt", sensorsData[1:-1]]
+    
                     
 
-def sensor_read():
+def sensor_read(mailbox_outgoing):
     
     """
     This connects to a sensor board via a serial connection. It reads and parses the sensor data into meaningful information, packs, and sends the data packet to the cloud. 
@@ -276,11 +269,30 @@ def sensor_read():
                     wxconnection = False
                     break
                 try:     
-                    process_data(output2sensor, readData)
+                    sendData = process_data(output2sensor, readData)
                 except Exception as e:
                     print "process_data failed: "+ str(e)
                     break
-                        
+                
+                if not sendData:
+                    print "process_data returned nothing"
+                    break
+                
+                if mailbox_outgoing:
+                    print 'Sending data via queue mailbox_outgoing: ', str(sendData)
+                    mailbox_outgoing.put(sendData)
+                    
+                    
+                else:
+                    print 'Sending data via send.py: ', str(sendData)
+                    #packs and sends the data
+                    packet = packetmaker.make_data_packet(sendData)
+                    for pack in packet:
+                        try:
+                            send(pack)
+                        except Exception as e:
+                            print "Exception sending pack: "+str(e)
+                            raise        
                             
                    
                         
@@ -295,7 +307,7 @@ def sensor_read():
 
 
 if __name__ == '__main__':
-     sensor_read()
+     sensor_read(None)
      
      
      

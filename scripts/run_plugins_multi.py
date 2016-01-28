@@ -1,5 +1,5 @@
 import multiprocessing, time, sys, psutil, os, signal
-from multiprocessing import Manager
+from multiprocessing import Manager, Queue
 
 """
     A simple multiprocessing plugin architecture. 
@@ -14,6 +14,7 @@ class plugin_runner(object):
         self.jobs = []
         self.manager = Manager()
         self.man = self.manager.dict()
+        self.mailbox_outgoing = Queue()
 
     #Lists all available plugins and their status
     def list_plugins(self):
@@ -50,7 +51,7 @@ class plugin_runner(object):
             else:
                 print 'Calling plugin', plugin_name + '...'
                 #Starts plugin as a process named the same as plugin name
-                j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man))
+                j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.mailbox_outgoing))
                 self.jobs.append(j)
                 j.start()
                 print 'Plugin', j.name, 'started.'
