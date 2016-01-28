@@ -10,7 +10,7 @@ class register(object):
         sensor_read()
 
 
-def process_data(output2sensor, data):
+def process_data(output2sensor, readData):
     sensorDataAvail = False
     if len(readData) > 0:
         try:
