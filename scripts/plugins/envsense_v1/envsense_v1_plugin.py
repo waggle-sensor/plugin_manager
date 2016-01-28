@@ -22,9 +22,11 @@ def process_data(output2sensor, data):
             pass
 
     if not sensorDataAvail:
+        print "Data empty or format wrong"
         return
         
     if not (sensorsData[0] == 'WXSensor' and sensorsData[-1]=='WXSensor\r\n'):
+        print "Format wrong, WXSensor keywords missing"
         return
 
     timestamp_utc = datetime.datetime.utcnow()
@@ -52,6 +54,7 @@ def process_data(output2sensor, data):
         try:
             send(pack)
         except Exception as e:
+            print "Exception sending pack: "+str(e)
             raise
                     
 
@@ -267,13 +270,15 @@ def sensor_read():
                 try:
                     readData = ' '
                     readData=wxsensor.readline()
-                except:
+                except Exception as e:
+                    print "wxsensor.readline failed: "+str(e)
                     wxsensor.close()
                     wxconnection = False
                     break
                 try:     
                     process_data(output2sensor, readData)
-                except:
+                except Exception as e:
+                    print "process_data failed: "+ str(e)
                     break
                         
                             
