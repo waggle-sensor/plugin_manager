@@ -131,7 +131,7 @@ def guest_node_registration():
 
     #send registration to NC
     #destination ID
-    packet = packetmaker.make_GN_reg(int(NC_ID))
+    packet = packetmaker.make_GN_reg(1)
     print 'Registration packet made. Sending to ', NC_ID 
     for pack in packet:
         send(pack)
