@@ -11,15 +11,15 @@ class register(object):
 
 
 def process_data(output2sensor, data):
-    if len(readData) > 0 and wxconnection == True:
+    sensorDataAvail = False
+    if len(readData) > 0:
         try:
             sensorsData = readData.split(';')
             if len(sensorsData) > 2:
                 sensorDataAvail = True
-            else:
-                sensorDataAvail = False
-    except:
-        sensorDataAvail = False
+            
+        except:
+            pass
 
     if sensorDataAvail == True:
         if sensorsData[0] == 'WXSensor' and sensorsData[-1]=='WXSensor\r\n':
@@ -257,7 +257,8 @@ def sensor_read():
                 wxsensor.flushOutput()
             except:
                 wxsensor.close()
-                wxconnection = False
+                continue
+                
             while wxconnection == True:
                 time.sleep(1)
                 try:
@@ -266,10 +267,12 @@ def sensor_read():
                 except:
                     wxsensor.close()
                     wxconnection = False
+                    break
                 try:     
                     process_data(output2sensor, readData)
                 except:
-                    raise    
+                    break
+                        
                             
                    
                         
