@@ -126,13 +126,12 @@ def list_plugins_full():
 
 
 def guest_node_registration():
-    with open('/etc/waggle/NCID','r') as file_:
-        NC_ID = file_.read().strip() 
-
+#    with open('/etc/waggle/NCID','r') as file_:
+#        NC_ID = file_.read().strip() 
     #send registration to NC
     #destination ID
     packet = packetmaker.make_GN_reg(1)
-    print 'Registration packet made. Sending to ', NC_ID 
+    print 'Registration packet made. Sending to 1' 
     for pack in packet:
         send(pack)
 
