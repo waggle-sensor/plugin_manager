@@ -4,6 +4,10 @@ import plugins
 import run_plugins_multi
 from tabulate import tabulate
 
+sys.path.append('../waggle_protocol/')
+from utilities import packetmaker
+from send import send
+
 #instructions for user
 def help_dialogue():
     print '\nIf you want to work with a specific plugin, enter the name of the plugin you would like to manipulate. \nEnter "startall" if you would like to activate all non-blacklisted plugins.\nUse "whitelist" or "blacklist" to view them. \nUse "stopall" to stop all plugins, or "killall" to kill all plugins. \nUse "pauseall" or "unpauseall" to pause and unpause active plugins. \nUse "startwhite" or "sw" to start plugins from the whitelist. \nType "list" or "l" for a list of available plugins. \nType "quit" or "q" to exit. \n\n'
@@ -120,7 +124,24 @@ def list_plugins_full():
             table.append([name, "", False, on_whitelist(name), on_blacklist(name)])
     print tabulate(table, headers, tablefmt="fancy_grid")
 
+
+def guest_node_registration():
+    with open('/etc/waggle/NCID','r') as file_:
+        NC_ID = file_.read().strip() 
+
+    #send registration to NC
+    #destination ID
+    packet = packetmaker.make_GN_reg(int(NC_ID))
+    print 'Registration packet made. Sending to ', NC_ID 
+    for pack in packet:
+        send(pack)
+
 if __name__ == '__main__':
+    
+    # TODO this guest node registration is not need when the plugin_manager
+    # 
+    guest_node_registration()
+    
     plug = run_plugins_multi.plugin_runner()
     print '\nAutomatically starting whitelisted plugins...'
     start_whitelist()
