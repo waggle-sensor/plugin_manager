@@ -59,7 +59,7 @@ class system_send(object):
             raise
             
 
-    def read_mailbox(self, mailbox_outgoing):
+    def read_mailbox(self):
 
     
     
