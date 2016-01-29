@@ -78,6 +78,7 @@ class system_send(object):
                 logger.error("Could not send guest node registration: %s" % (str(e)))
                 time.sleep(2)
                 continue
+            break
     
     
         
