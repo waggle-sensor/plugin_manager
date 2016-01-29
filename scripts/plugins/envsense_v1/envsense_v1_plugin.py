@@ -250,13 +250,14 @@ def sensor_read(mailbox_outgoing):
             while wxconnection == False:
                 try:
                     #TODO change this if the serial port is different than the one specified
+                    logger.debug("connecting to /dev/ttyACM0 ...")
                     wxsensor = serial.Serial('/dev/ttyACM0',57600,timeout=300)
                     wxconnection = True
                 except:
                     #Will not work if sensor board is not plugged in. 
                     #If sensor board is plugged in, check to see if it is trying to connect to the right port
                     #TODO may want to add a rule to the configuration to specify which port will be used.
-                    logger.warning( "Still waiting for connection... Is the sensor board plugged in?")
+                    logger.warning( "Could not connect. Is the sensor board plugged in?")
                     time.sleep(1)
             try:
                 wxsensor.flushInput()
