@@ -275,7 +275,12 @@ def sensor_read(mailbox_outgoing):
                     wxsensor.close()
                     wxconnection = False
                     break
-                    
+                
+                if not readData:
+                    break
+                
+                logger.debug("readData: %s" %(readData))
+                sendData = None  
                 try:     
                     sendData = process_data(output2sensor, readData)
                 except Exception as e:
