@@ -294,12 +294,12 @@ def sensor_read(mailbox_outgoing):
                     continue
                 
                 if mailbox_outgoing:
-                    logger.debug( 'Sending data via queue mailbox_outgoing: ', str(sendData))
+                    logger.debug( 'Sending data via queue mailbox_outgoing.')
                     mailbox_outgoing.put(sendData)
                     
                     
                 else:
-                    logger.debug( 'Sending data via send.py: ', str(sendData))
+                    logger.debug( 'Sending data via send.py.')
                     #packs and sends the data
                     packet = packetmaker.make_data_packet(sendData)
                     for pack in packet:
