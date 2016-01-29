@@ -6,7 +6,25 @@ from tabulate import tabulate
 
 sys.path.append('../waggle_protocol/')
 from utilities import packetmaker
-from send import send
+
+
+
+LOG_FORMAT='%(asctime)s - %(name)s - %(levelname)s - line=%(lineno)d - %(message)s'
+formatter = logging.Formatter(LOG_FORMAT)
+handler = logging.StreamHandler(stream=sys.stdout)
+handler.setFormatter(formatter)
+
+
+logger = logging.getLogger(__name__)
+logger.handlers = []
+logger.addHandler(handler)
+
+#root_logger = logging.getLogger()
+#root_logger.handlers = []
+#root_logger.addHandler(handler)
+
+
+
 
 #instructions for user
 def help_dialogue():
@@ -125,21 +143,12 @@ def list_plugins_full():
     print tabulate(table, headers, tablefmt="fancy_grid")
 
 
-def guest_node_registration():
-#    with open('/etc/waggle/NCID','r') as file_:
-#        NC_ID = file_.read().strip() 
-    #send registration to NC
-    #destination ID
-    packet = packetmaker.make_GN_reg(1)
-    print 'Registration packet made. Sending to 1' 
-    for pack in packet:
-        send(pack)
+
 
 if __name__ == '__main__':
     
     # TODO this guest node registration is not need when the plugin_manager
     # 
-    guest_node_registration()
     
     plug = run_plugins_multi.plugin_runner()
     print '\nAutomatically starting whitelisted plugins...'

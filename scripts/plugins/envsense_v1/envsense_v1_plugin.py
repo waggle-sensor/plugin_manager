@@ -1,8 +1,12 @@
-import time, serial, sys, datetime, pprint
+import time, serial, sys, datetime, pprint, logging
 sys.path.append('../waggle_protocol/')
 from utilities import packetmaker
 from send import send
 from multiprocessing import Queue
+
+
+logger = logging.getLogger(__name__)
+
 
 class register(object):
     def __init__(self, name, man, mailbox_outgoing):
@@ -22,11 +26,11 @@ def process_data(output2sensor, readData):
             pass
 
     if not sensorDataAvail:
-        print "Data empty or format wrong"
+        logger.error( "Data empty or format wrong")
         return
         
     if not (sensorsData[0] == 'WXSensor' and sensorsData[-1]=='WXSensor\r\n'):
-        print "Format wrong, WXSensor keywords missing"
+        logger.error( "Format wrong, WXSensor keywords missing")
         return
 
     timestamp_utc = datetime.datetime.utcnow()
@@ -42,7 +46,7 @@ def process_data(output2sensor, readData):
     try:
         sensor_name = output2sensor[output_name]
     except Exception as e:
-        print "Output %s unknown" % (output_name)
+        logger.warning( "Output %s unknown" % (output_name))
         return
 
     
@@ -59,7 +63,7 @@ def sensor_read(mailbox_outgoing):
 
     """
 
-    print 'Beginning sensor script...'
+    logger.info( 'Beginning sensor script...')
 
     sensors = {   'BMP180.Bosch.2_5-2013': {   'BMP_180_1_P_PA': {   'data_type': 'f',
                                                            'measurement': 'Pressure',
@@ -249,7 +253,7 @@ def sensor_read(mailbox_outgoing):
                     #Will not work if sensor board is not plugged in. 
                     #If sensor board is plugged in, check to see if it is trying to connect to the right port
                     #TODO may want to add a rule to the configuration to specify which port will be used.
-                    print "Still waiting for connection... Is the sensor board plugged in?"
+                    logger.warning( "Still waiting for connection... Is the sensor board plugged in?")
                     time.sleep(1)
             try:
                 wxsensor.flushInput()
@@ -260,38 +264,39 @@ def sensor_read(mailbox_outgoing):
                 
             while wxconnection == True:
                 time.sleep(1)
+                readData = None
                 try:
-                    readData = ' '
                     readData=wxsensor.readline()
                 except Exception as e:
-                    print "wxsensor.readline failed: "+str(e)
+                    logger.error("wxsensor.readline failed: "+str(e))
                     wxsensor.close()
                     wxconnection = False
                     break
+                    
                 try:     
                     sendData = process_data(output2sensor, readData)
                 except Exception as e:
-                    print "process_data failed: "+ str(e)
+                    logger.error( "process_data failed: "+ str(e))
                     break
                 
                 if not sendData:
-                    print "process_data returned nothing"
+                    logger.warning( "process_data returned nothing")
                     break
                 
                 if mailbox_outgoing:
-                    print 'Sending data via queue mailbox_outgoing: ', str(sendData)
+                    logger.debug( 'Sending data via queue mailbox_outgoing: ', str(sendData))
                     mailbox_outgoing.put(sendData)
                     
                     
                 else:
-                    print 'Sending data via send.py: ', str(sendData)
+                    logger.debug( 'Sending data via send.py: ', str(sendData))
                     #packs and sends the data
                     packet = packetmaker.make_data_packet(sendData)
                     for pack in packet:
                         try:
                             send(pack)
                         except Exception as e:
-                            print "Exception sending pack: "+str(e)
+                            logger.error( "Exception sending pack: "+str(e))
                             raise        
                             
                    
@@ -302,7 +307,7 @@ def sensor_read(mailbox_outgoing):
         except: 
              pass
     except Exception as e:
-        print "Exception: "+str(e)
+        logger.error( "Exception: "+str(e))
         
 
 
