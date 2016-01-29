@@ -18,6 +18,7 @@ handler.setFormatter(formatter)
 logger = logging.getLogger(__name__)
 logger.handlers = []
 logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
 
 #root_logger = logging.getLogger()
 #root_logger.handlers = []
