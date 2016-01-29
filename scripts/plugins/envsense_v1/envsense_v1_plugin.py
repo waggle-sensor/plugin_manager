@@ -6,6 +6,7 @@ from multiprocessing import Queue
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class register(object):
