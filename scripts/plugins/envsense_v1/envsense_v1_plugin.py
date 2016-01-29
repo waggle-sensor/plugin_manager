@@ -279,7 +279,7 @@ def sensor_read(mailbox_outgoing):
                     break
                 
                 if not readData:
-                    break
+                    continue
                 
                 logger.debug("readData: %s" %(readData))
                 sendData = None  
@@ -287,11 +287,11 @@ def sensor_read(mailbox_outgoing):
                     sendData = process_data(output2sensor, readData)
                 except Exception as e:
                     logger.error( "process_data failed: "+ str(e))
-                    break
+                    continue
                 
                 if not sendData:
                     logger.warning( "process_data returned nothing")
-                    break
+                    continue
                 
                 if mailbox_outgoing:
                     logger.debug( 'Sending data via queue mailbox_outgoing: ', str(sendData))
