@@ -17,11 +17,18 @@ logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
 
-HOST = '/etc/waggle/node_controller_host' #sets to NodeController IP
+HOST = read_file('/etc/waggle/node_controller_host')
 PORT = 9090 #port for push_server
 
-    
-    
+
+
+def read_file( str ):
+    if not os.path.isfile(str) :
+        return ""
+    with open(str,'r') as file_:
+        return file_.read().strip()
+    return ""
+
 
 class register(object):
     def __init__(self, name, man, mailbox_outgoing):
