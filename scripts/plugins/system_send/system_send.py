@@ -1,7 +1,9 @@
-import time, serial, sys, datetime, pprint, logging
+import time, serial, sys, datetime, pprint, logging, socket
 sys.path.append('../waggle_protocol/')
 from utilities import packetmaker
 from multiprocessing import Queue
+
+
 
 class register(object):
     def __init__(self, name, man, mailbox_outgoing):
