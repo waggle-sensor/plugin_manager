@@ -38,7 +38,7 @@ class system_send(object):
         self.socket = None
     
     
-    def send(msg):
+    def send(self, msg):
         if not self.socket:
             try: 
                 self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -59,7 +59,7 @@ class system_send(object):
             raise
             
 
-    def read_mailbox(mailbox_outgoing):
+    def read_mailbox(self, mailbox_outgoing):
 
     
     
@@ -80,7 +80,7 @@ class system_send(object):
         
         while 1:
          
-            msg = mailbox_outgoing.get() # a blocking call.
+            msg = self.mailbox_outgoing.get() # a blocking call.
          
             while 1:
             
