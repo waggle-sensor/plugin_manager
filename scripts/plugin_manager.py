@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import multiprocessing, time, sys, re, os
+import multiprocessing, time, sys, re, os, logging
 import plugins 
 import run_plugins_multi
 from tabulate import tabulate
