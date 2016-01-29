@@ -17,11 +17,6 @@ logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
 
-HOST = read_file('/etc/waggle/node_controller_host')
-PORT = 9090 #port for push_server
-
-
-
 def read_file( str ):
     if not os.path.isfile(str) :
         return ""
@@ -43,26 +38,27 @@ class system_send(object):
     def __init__(self,mailbox_outgoing):
         self.mailbox_outgoing = mailbox_outgoing
         self.socket = None
-    
+        self.HOST = read_file('/etc/waggle/node_controller_host')
+        self.PORT = 9090 #port for push_server
     
     def send(self, msg):
         if not self.socket:
             try: 
                 self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             except Exception as e: 
-                logger.error("Could not create socket to %s:%d : %s" % (HOST, PORT, str(e)))
+                logger.error("Could not create socket to %s:%d : %s" % (self.HOST, self.PORT, str(e)))
                 raise
 
         try: 
-            self.socket.connect((HOST,PORT))
+            self.socket.connect((self.HOST,self.PORT))
         except Exception as e: 
-            logger.error("Could not connect to %s:%d : %s" % (HOST, PORT, str(e)))
+            logger.error("Could not connect to %s:%d : %s" % (self.HOST, self.PORT, str(e)))
             raise
 
         try:
             self.socket.send(msg)
         except Exception as e: 
-            logger.error("Could not send message to %s:%d : %s" % (HOST, PORT, str(e)))
+            logger.error("Could not send message to %s:%d : %s" % (self.HOST, self.PORT, str(e)))
             raise
             
 
@@ -94,7 +90,7 @@ class system_send(object):
                 try:
                     self.send(msg)
                 except Exception as e: 
-                    logger.error("Could not send message to %s:%d : %s" % (HOST, PORT, str(e)))
+                    logger.error("Could not send message to %s:%d : %s" % (self.HOST, self.PORT, str(e)))
                     
                     time.sleep(2)
                     continue
