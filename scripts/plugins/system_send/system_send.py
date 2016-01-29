@@ -1,4 +1,4 @@
-import time, serial, sys, datetime, pprint, logging, socket
+import time, serial, sys, datetime, pprint, logging, socket, os
 sys.path.append('../waggle_protocol/')
 from utilities import packetmaker
 from multiprocessing import Queue
