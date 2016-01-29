@@ -24,6 +24,9 @@ logger.addHandler(handler)
 #root_logger.addHandler(handler)
 
 
+system_plugins={}
+system_plugins['system_send']=1
+
 
 
 #instructions for user
@@ -125,10 +128,17 @@ def on_whitelist(name):
 #Lists available plugins, if they are active, and whether they are present on the whitelist and blacklist
 def list_plugins_full():
     headers = ["plugin", "instance", "active", "whitelist", "blacklist"]
-    table=[]
-    tabulate(table, headers, tablefmt="fancy_grid")
-    print 'Available plugins:'
+    system_table=[]
+    user_table=[]
+    
+    #tabulate(table, headers, tablefmt="fancy_grid")
+    
+    
     for name in plugins.__all__:
+        if name in system_plugins:
+            table=system_table
+        else:
+            table=user_table
         plugin = getattr(plugins, name)
         active = 0
         for j in plug.jobs:
@@ -140,7 +150,12 @@ def list_plugins_full():
         if (not active):
             #print 'Plugin', name, 'is inactive. Whitelist:', on_whitelist(name), '  |  Blacklist:', on_blacklist(name)
             table.append([name, "", False, on_whitelist(name), on_blacklist(name)])
-    print tabulate(table, headers, tablefmt="fancy_grid")
+            
+    print 'System plugins:'
+    print tabulate(system_table, headers, tablefmt="fancy_grid")
+    
+    print 'User plugins:'        
+    print tabulate(user_table, headers, tablefmt="fancy_grid")
 
 
 
