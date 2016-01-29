@@ -17,7 +17,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
 
-HOST = NCIP #sets to NodeController IP
+HOST = '/etc/waggle/node_controller_host' #sets to NodeController IP
 PORT = 9090 #port for push_server
 
     
