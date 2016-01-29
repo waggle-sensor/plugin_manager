@@ -1,7 +1,6 @@
 import time, serial, sys, datetime, pprint, logging
 sys.path.append('../waggle_protocol/')
 from utilities import packetmaker
-from send import send
 from multiprocessing import Queue
 
 class register(object):
