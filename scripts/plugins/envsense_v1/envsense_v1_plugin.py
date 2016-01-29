@@ -24,6 +24,9 @@ def process_data(output2sensor, readData):
             
         except:
             pass
+    else:
+        logger.error( "len(readData) == 0")
+        return
 
     if not sensorDataAvail:
         logger.error( "Data empty or format wrong")
