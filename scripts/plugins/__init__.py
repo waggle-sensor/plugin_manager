@@ -26,7 +26,7 @@ for name in os.listdir(cwd):
     if not module.startswith('_') and not iskeyword(module):
         try:
             __import__(__name__+'.'+module) #TODO need to be able to check if the plug in has the required methods before importing
-        except Exception as a:
+        except Exception as e:
             import logging
             logger = logging.getLogger(__name__)
             logger.warning('Ignoring exception while loading the %r plug-in. Exception: %s' % (module, str(e)) )
