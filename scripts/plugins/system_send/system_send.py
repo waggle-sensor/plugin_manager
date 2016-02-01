@@ -87,7 +87,7 @@ class system_send(object):
          
             msg = self.mailbox_outgoing.get() # a blocking call.
          
-            packet = packetmaker.make_data_packet(sendData)
+            packet = packetmaker.make_data_packet(msg)
             for pack in packet:
                 while 1:
                     try:
