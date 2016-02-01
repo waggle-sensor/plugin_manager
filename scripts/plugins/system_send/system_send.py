@@ -40,6 +40,19 @@ class system_send(object):
         self.socket = None
         self.HOST = read_file('/etc/waggle/node_controller_host')
         self.PORT = 9090 #port for push_server
+        
+        packet = packetmaker.make_GN_reg(1)
+    
+        while 1:
+            print 'Registration packet made. Sending to 1.'
+            try:
+                for pack in packet:
+                    self.send(pack)
+            except Exception as e:
+                logger.error("Could not send guest node registration: %s" % (str(e)))
+                time.sleep(2)
+                continue
+            break
     
     def send(self, msg):
         if not self.socket:
@@ -64,23 +77,6 @@ class system_send(object):
 
     def read_mailbox(self):
 
-    
-    
-    
-        packet = packetmaker.make_GN_reg(1)
-    
-        while 1:
-            print 'Registration packet made. Sending to 1.'
-            try:
-                for pack in packet:
-                    self.send(pack)
-            except Exception as e:
-                logger.error("Could not send guest node registration: %s" % (str(e)))
-                time.sleep(2)
-                continue
-            break
-    
-    
         
         while 1:
          
