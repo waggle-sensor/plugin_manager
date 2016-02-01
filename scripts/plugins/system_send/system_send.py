@@ -55,12 +55,15 @@ class system_send(object):
             break
     
     def send(self, msg):
-        if not self.socket:
-            try: 
-                self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            except Exception as e: 
-                logger.error("Could not create socket to %s:%d : %s" % (self.HOST, self.PORT, str(e)))
-                raise
+        if self.socket:
+            self.socket.close()
+            
+        
+        try: 
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        except Exception as e: 
+            logger.error("Could not create socket to %s:%d : %s" % (self.HOST, self.PORT, str(e)))
+            raise
 
         try: 
             self.socket.connect((self.HOST,self.PORT))
@@ -95,8 +98,7 @@ class system_send(object):
                 #TODO get ack
             
                 logger.debug("Did send message to nodecontroller.")
-                if self.socket:
-                    self.socket.close()
+                
                 
             
                 # once message msg has been delivered, the inner loop can be left.    
