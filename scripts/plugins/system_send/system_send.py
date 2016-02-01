@@ -3,6 +3,8 @@ sys.path.append('../waggle_protocol/')
 from utilities import packetmaker
 from multiprocessing import Queue
 
+sys.path.append('../waggle_protocol/')
+from utilities import packetmaker
 
 
 LOG_FORMAT='%(asctime)s - %(name)s - %(levelname)s - line=%(lineno)d - %(message)s'
@@ -85,23 +87,17 @@ class system_send(object):
          
             msg = self.mailbox_outgoing.get() # a blocking call.
          
-            while 1:
-            
-                try:
-                    self.send(msg)
-                except Exception as e: 
-                    logger.error("Could not send message to %s:%d : %s" % (self.HOST, self.PORT, str(e)))
+            packet = packetmaker.make_data_packet(sendData)
+            for pack in packet:
+                while 1:
+                    try:
+                        self.send(pack)
+                    except Exception as e:
+                        logger.error("Could not send message to %s:%d : %s" % (self.HOST, self.PORT, str(e)))
                     
-                    time.sleep(2)
-                    continue
-                    
-                #TODO get ack
-            
-                logger.debug("Did send message to nodecontroller.")
+                        time.sleep(2)
+                        continue
+                    break
+            logger.debug("Did send message to nodecontroller.")
                 
                 
-            
-                # once message msg has been delivered, the inner loop can be left.    
-                break
-         
-         
