@@ -51,9 +51,11 @@ class plugin_runner(object):
             else:
                 print 'Calling plugin', plugin_name + '...'
                 #Starts plugin as a process named the same as plugin name
+                sys.stdout = open('/dev/null', 'w')
                 j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.mailbox_outgoing))
                 self.jobs.append(j)
                 j.start()
+                sys.stdout = sys.__stdout__
                 print 'Plugin', j.name, 'started.'
                 return 1
      
