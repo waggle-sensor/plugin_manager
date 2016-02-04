@@ -59,7 +59,7 @@ if not os.path.isfile('waggle_first_boot.sh') :
 #SCRIPT_data_directory=os.getcwd()
 
 
-if not call('hash partprobe &> /dev/null'):
+if not call('hash partprobe &> /dev/null', shell=True):
     run_command('apt-get install -y parted')
 
 
