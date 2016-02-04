@@ -43,7 +43,7 @@ def write_file(filename, content):
             
 
 run_command_anyway('umount /mnt/newimage/proc /mnt/newimage/dev /mnt/newimage/sys /mnt/newimage/')
-stime.sleep(1)
+time.sleep(1)
 run_command_anyway('losetup -d /dev/loop1')
 run_command_anyway('losetup -d /dev/loop0')
 
