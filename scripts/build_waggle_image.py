@@ -111,14 +111,14 @@ shutil.copyfile(base_image, new_image)
 
 # get partition start position
 #fdisk -lu ${base_image}
-start_block=int(get_output("fdisk -lu {0} | grep '{0}2' | awk '{print $2}'".format(new_image))
+start_block=int(get_output("fdisk -lu {0} | grep '{0}2' | awk '{print $2}'".format(new_image)))
 
-START_POS=start_block*512  #get_output('echo "%s*512" | bc' % (start_block)) 
+start_pos=start_block*512  #get_output('echo "%s*512" | bc' % (start_block)) 
 
 
 # create loop device for disk and for root partition
 run_command('losetup /dev/loop0 ' + new_image)
-run_command('losetup -o %s /dev/loop1 /dev/loop0' % (str(START_POS)))
+run_command('losetup -o %s /dev/loop1 /dev/loop0' % (str(start_pos)))
 
 
 mount_point="/mnt/newimage/"
