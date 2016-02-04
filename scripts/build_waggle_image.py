@@ -20,10 +20,17 @@ def run_command(cmd):
     print "execute: %s" % (cmd) 
     try:
         check_call(cmd, shell=True)
-    except CalledProcessError as e:
+    except subprocess.CalledProcessError as e:
         print "Commmand exited with return code other than zero: %s" % (str(e)) 
         sys.exit(1)
         
+
+def run_command_anyway(cmd):
+    print "execute: %s" % (cmd) 
+    try:
+        check_call(cmd, shell=True)
+    except subprocess.CalledProcessError as e:
+        pass
 
 def get_output(cmd):
     print "execute: %s" % (cmd) 
@@ -35,10 +42,10 @@ def write_file(filename, content):
         text_file.write(content)
             
 
-run_command('umount /mnt/newimage/proc /mnt/newimage/dev /mnt/newimage/sys /mnt/newimage/')
+run_command_anyway('umount /mnt/newimage/proc /mnt/newimage/dev /mnt/newimage/sys /mnt/newimage/')
 stime.sleep(1)
-run_command('losetup -d /dev/loop1')
-run_command('losetup -d /dev/loop0')
+run_command_anyway('losetup -d /dev/loop1')
+run_command_anyway('losetup -d /dev/loop0')
 
 
 
