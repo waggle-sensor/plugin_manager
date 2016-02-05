@@ -5,24 +5,21 @@ set -e
 
 
 # set node controller IP for "internal" network
-echo "10.31.81.10" > /etc/waggle/node_controller_host
-
-if [ ! -e /etc/waggle/node_id ] ; then
- source ./scripts/create_node_id.sh
+if [ ! -e /etc/waggle/node_controller_host ] ; then
+  echo "10.31.81.10" > /etc/waggle/node_controller_host
 fi
 
+if [ ! -e /etc/waggle/node_id ] ; then
+ source /usr/lib/waggle/waggle_image/scripts/create_node_id.sh
+fi
 
 # workaround  (fix later):
 cp /etc/waggle/node_id /etc/waggle/hostname
 
-
 #change this to offline install
-apt-get install -y python-pip python-dev
-pip install tabulate
-pip install pyserial
-pip install crcmod
-pip install psutil
+./scripts/install_dependencies.sh
 
+# daemons
 ln -sf /usr/lib/waggle/guestnodes/scripts/communicator.sh /etc/init.d/communicator.sh
 update-rc.d communicator.sh defaults 
 
