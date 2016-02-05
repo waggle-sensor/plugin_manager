@@ -375,8 +375,8 @@ class coresense_reader(object):
 
 class register(object):
 
-    plugin_name = 'Dummy'
-    plugin_version = '1'
+    plugin_name = 'envsense'
+    plugin_version = '2'
 
     def __init__(self, name, man, mailbox_outgoing):
         man[name] = 1
@@ -401,9 +401,12 @@ class register(object):
 
     def run(self):
         while True:
-            for ts, ident, values in coresense_reader('/dev/tty.usbmodem1421'):
-                self.send_values(ident, ['{}:{}'.format(name, value)
-                                         for name, value in values])
+            try:
+                for ts, ident, values in coresense_reader('/dev/ttyACM0'):
+                    self.send_values(ident, ['{}:{}'.format(name, value)
+                                             for name, value in values])
+            except:
+                pass
 
 
 if __name__ == '__main__':
