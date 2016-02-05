@@ -31,6 +31,6 @@ class register(object):
 
     def run(self):
         while True:
-            self.send_values('NONSENSE', ['Temperature', '-43K',
-                                          'Pressure', '123456789 Pa'])
+            self.send_values('NONSENSE', ['Temperature:-43K',
+                                          'Pressure:123456789 Pa'])
             time.sleep(30)
