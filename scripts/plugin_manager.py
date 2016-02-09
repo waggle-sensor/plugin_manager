@@ -178,8 +178,8 @@ def list_plugins_full():
     user_obj['header']=headers
     user_obj['data']=user_table
     
-    results['tables'].append(system_obj)
-    results['tables'].append(user_obj)
+    results['objects'].append(system_obj)
+    results['objects'].append(user_obj)
     
     return json.dumps(results)
     
@@ -279,27 +279,18 @@ def do_command(command):
             plug.kill_all()
         return
     elif (command == "list" or command == "l"):
-        result_json = list_plugins_full()
-        client_sock.sendall(result_json+"\n")
+        return list_plugins_full()
+        
     elif (command == "help" or command == "h"):
-        help_dialogue()
+        #help_dialogue()
+        return help()
     else:
         print "I didn't understand your command \"%s\". Type \"help\" or \"h\" to review commands." % (command)
 
 
 
-
-
-if __name__ == '__main__':
-    
-    # TODO this guest node registration is not need when the plugin_manager
-    # 
-    
-    plug = run_plugins_multi.plugin_runner()
-    print '\nAutomatically starting whitelisted plugins...'
-    start_whitelist()
-    time.sleep(2)
-    print '''
+def help():
+    help_text = '''
 Available commands:
   <plugin>       The name of the plugin you would like to manipulate.
   startall       Activate all non-blacklisted plugins.
@@ -316,6 +307,21 @@ Available commands:
 
 The following plugins are available.
 '''
+
+    return json.dumps({'help': help_text})
+
+
+
+if __name__ == '__main__':
+    
+    # TODO this guest node registration is not need when the plugin_manager
+    # 
+    
+    plug = run_plugins_multi.plugin_runner()
+    print '\nAutomatically starting whitelisted plugins...'
+    start_whitelist()
+    time.sleep(2)
+    
 
     #list_plugins_full(None)
 
@@ -355,7 +361,7 @@ The following plugins are available.
 
 
         try:
-            data = client_sock.recv(512) #arbitrary
+            data = client_sock.recv(8192) #arbitrary
         
         except KeyboardInterrupt, k:
             logger.info("KeyboardInterrupt")
@@ -364,13 +370,20 @@ The following plugins are available.
             logger.error("client_sock.recv failed: %s" % (str(e) ))
             break    
         
-        client_sock.sendall('hi there')
-            
-        logger.debug("got data: %s" % (str(data)))
         
         command = str(data).rstrip()
+        logger.debug("received command \"%s\"" % (command))
         result_json = do_command(command )
-        client_sock.sendall(result_json+"\n")
+        
+        try:
+            client_sock.sendall(result_json+"\n")
+        except Exception as e:
+            logger.warning("Could not reply: %s" % (str(e)) )
+            continue
+        
+        logger.debug("got data: \"%s\"" % (str(data)))
+        
+        
         
         
     sys.exit(0)    
