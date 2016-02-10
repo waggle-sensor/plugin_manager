@@ -32,18 +32,57 @@ class PluginManagerAPI:
         self.system_plugins={}
         self.system_plugins['system_send']=1
         self.command_functions = {
-            "list" : self.list_plugins_full,
-            "help" : self.help,
-            "start" : self.start_plugin,
-            "stop" : self.stop_plugin
+            "list" : {  'function' : self.command_list_plugins_full, 
+                        'description' : 'list plugins'
+            },
+            "help" : {  'function' : self.command_help, 
+                        'description' : ''
+            },
+            "start" : { 'function' : self.command_start_plugin,
+                        'arguments' : '<plugin>',
+                        'description' : 'start plugin'
+            },
+            "stop" : {  'function' : self.command_stop_plugin, 
+                        'arguments' : '<plugin>',
+                        'description' : 'stop plugin'
+            },
+            "kill" : {  'function' : self.command_kill_plugin,
+                        'arguments' : '<plugin>',
+                        'description' : 'kill plugin'
+            },
+            "pause" : { 'function' : self.command_pause_plugin,
+                        'arguments' : '<plugin>',
+                        'description' : 'pause plugin'
+            },
+            "unpause" : {
+                        'function' : self.command_unpause_plugin,
+                        'arguments' : '<plugin>',
+                        'description' : 'unpause plugin'
+            },
+            "get_pid" : {
+                        'function' : self.command_plugin_pid,
+                        'arguments' : '<plugin>',
+                        'description' : 'get PID of plugin'
+            },
+            "info" : {  'function' : self.command_plugin_info,
+                        'arguments' : '<plugin>',
+                        'description' : 'get info about plugin'
+            },
+            "startall" : {  'function' : self.command_start_all, 
+                        'description' : 'start all plugins'
+            },
+            "stopall" : {  'function' : self.command_stop_all, 
+                        'description' : 'stop all plugins'
+            },
+            "killall" : {  'function' : self.command_kill_all, 
+                        'description' : 'kill all plugins'
+            }
+            
         }
         self.blacklist = self.get_list('plugins/blacklist.txt')
         self.whitelist = self.get_list('plugins/whitelist.txt')
 
-    #instructions for user
-    def help_dialogue(self):
-        print '\nIf you want to work with a specific plugin, enter the name of the plugin you would like to manipulate. \nEnter "startall" if you would like to activate all non-blacklisted plugins.\nUse "whitelist" or "blacklist" to view them. \nUse "stopall" to stop all plugins, or "killall" to kill all plugins. \nUse "pauseall" or "unpauseall" to pause and unpause active plugins. \nUse "startwhite" or "sw" to start plugins from the whitelist. \nType "list" or "l" for a list of available plugins. \nType "quit" or "q" to exit. \n\n'
-
+   
     #takes a plugin name and adds or removes it from the blacklist or whitelist, as specified by caller
     def manip_list(self, plugin, listtype, manipulation):
         if (listtype == "whitelist"):
@@ -136,8 +175,10 @@ class PluginManagerAPI:
     def on_whitelist(self, name):
         return (name in self.get_whitelist())
 
+    #### commands ####
+
     #Lists available plugins, if they are active, and whether they are present on the whitelist and blacklist
-    def list_plugins_full(self):
+    def command_list_plugins_full(self):
         headers                                                       = ["plugin", "instance", "active", "whitelist", "blacklist"]
         system_table                                                  = []
         user_table                                                    = []
@@ -195,7 +236,7 @@ class PluginManagerAPI:
         #client_sock.sendall(tabulate(user_table, headers, tablefmt   = "fancy_grid"))
 
 
-    def start_plugin(self, plugin):
+    def command_start_plugin(self, plugin):
         result                                                        = {}
         if (self.on_blacklist(plugin)):
             message                                                   = 'Cannot start plugin', plugin, 'because it is blacklisted.'
@@ -204,38 +245,144 @@ class PluginManagerAPI:
             result['message']                                         = message
         
             return json.dumps(result)
+        
+        if self.plug.start_plugin(plugin):
+            result['status']    = 'success'
+            return json.dumps(result)
+        else:
+            result['status']    = 'error'
+            return json.dumps(result)
+        
+
+
+    def command_stop_plugin(self, plugin):
+        result = {}
+        if self.plug.stop_plugin(plugin):
+            result['status']    = 'success'
+            return json.dumps(result)
+        else:
+            result['status']    = 'error'
+            return json.dumps(result)
+    
+    def command_kill_plugin(self, plugin):
+        result = {}
+        if self.plug.kill_plugin(command):
+            result['status']    = 'success'
+            return json.dumps(result)
+        else:
+            result['status']    = 'error'
+            return json.dumps(result)
+    
+
+    def command_pause_plugin(self, plugin):
+        result = {}
+        if self.plug.pause_plugin(command):
+            result['status']    = 'success'
+            return json.dumps(result)
+        else:
+            result['status']    = 'error'
+            return json.dumps(result)
             
-         
-        started = self.plug.start_plugin(plugin)
-        
-        if started:
-            result['status']    = 'success'
-            return json.dumps(result)
-        else:
-            result['status']    = 'error'
-            return json.dumps(result)
-        
-
-
-    def stop_plugin(self, plugin):
-        stopped = self.plug.stop_plugin(plugin)
-        if stopped:
+    def command_unpause_plugin(self, plugin):
+        result = {}
+        if self.plug.unpause_plugin(command):
             result['status']    = 'success'
             return json.dumps(result)
         else:
             result['status']    = 'error'
             return json.dumps(result)
     
-
+    def command_plugin_pid(self, plugin):
+        result = {}
+        print 'Plugin',plugin+"'s PID:",self.plug.plugin_pid(plugin)
+        result['status']    = 'success'
+        return json.dumps(result)
+        
+    def command_plugin_info(self, plugin):
+        result = {}
+        self.plug.plugin_info(plugin)
+        result['status']    = 'success'
+        return json.dumps(result)
     
+    
+    def command_start_all(self):
+        result = {}
+        start_all_valid()
+        result['status']    = 'success'
+        return json.dumps(result)
 
+    def command_kill_all(self):
+        result = {}
+        self.plug.kill_all()
+        result['status']    = 'success'
+        return json.dumps(result)
+
+    def command_stop_all(self):
+        result = {}
+        self.plug.stop_all()
+        result['status']    = 'success'
+        return json.dumps(result)
+
+    def command_start_whitelist(self):
+        result = {}
+        self.start_whitelist()
+        result['status']    = 'success'
+        return json.dumps(result)
+        
+    
+    def command_pause_all(self):
+        result = {}
+        self.plug.pause_all()
+        result['status']    = 'success'
+        return json.dumps(result)
+      
+    def command_unpause_all(self):
+        result = {}
+        self.plug.unpause_all()
+        result['status']    = 'success'
+        return json.dumps(result)
+      
+    def command_info_all(self):
+        result = {}
+        self.plug.info_all()
+        result['status']    = 'success'
+        return json.dumps(result)
+        
+    def command_help(self):
+        
+        headers = ['command', 'arguments', 'description']
+        
+        help_table_data=[]
+        
+        for i in self.command_functions:
+            args = ''
+            if 'arguments' in self.command_functions[i]:
+                args = self.command_functions[i]['arguments']
+            help_table_data.append([i, args, self.command_functions[i]['description'] ] )        
+        result = {}
+        result['objects']=[]
+        
+        help_table                                                      = {}
+        help_table['type']                                              = 'table'
+        help_table['title']                                             = 'help overview'
+        help_table['header']                                            = headers
+        help_table['data']                                              = help_table_data
+        result['objects'].append(help_table)
+        
+        result['status']    = 'success'
+        
+        return json.dumps(result)
+    
+    
+    
+        
 
     def do_command(self, command_line):
     
         command = command_line[0]
     
         try:
-            command_function                                          = self.command_functions[command]
+            command_function                                          = self.command_functions[command]['function']
         except KeyError:
             print "Command %s unknown." % (command)
             return '{"error":"command %s is unknown"}' % (command)
@@ -243,130 +390,28 @@ class PluginManagerAPI:
     
         arguments = command_line[1:]
         if len(arguments) > 0:
-            return command_function(arguments)
+            logger.debug("with %d arguments" % (len(arguments)))
+            try:
+                results = command_function(*arguments)
+            except Exception as e:
+                logger.error("error in command_function: %s" % (str(e)))
+                return
+            return results
         else:
-            return command_function()
+            logger.debug("no arguments")
+            try:
+                results = command_function()
+            except Exception as e:
+                logger.error("error in command_function: %s" % (str(e)))
+                return
+            
+            return results
     
     
     
+
+
     
-    
-    
-        if (command == "startall"):
-            start_all_valid()
-        elif (command == "killall" or command == "ka"):
-            self.plug.kill_all()
-        elif (command == "startwhite" or command == "sw"):
-            self.start_whitelist()
-        elif (command == "stopall"):
-            self.plug.stop_all()
-        elif (command == "pauseall"):
-            self.plug.pause_all()
-        elif (command == "unpauseall"):
-            self.plug.unpause_all()
-        elif (command == "whitelist"):
-            whitelist                                                 = self.read_file('plugins/whitelist.txt')
-            print "Whitelist:\n",whitelist
-        elif (command == "blacklist"):
-            blacklist                                                 = self.read_file('plugins/blacklist.txt')
-            print "Blacklist:\n",blacklist
-        elif (command == "infoall"):
-            self.plug.info_all()
-
-        #if the entry matches the name of a plugin, go to plugin menu
-        elif (command in plugins.__all__):
-            while True:
-                print '\nWould you like to "start", "stop", "pause", "unpause", or "kill" the plugin? \nYou can also "blacklist" or "whitelist" the plugin, or get "info" on it. \nType "back" to go back to the main menu.'
-                command2                                              = raw_input('Enter your command: ')
-                if (command2 == "start"):
-                    if (on_blacklist(command)):
-                        print 'Cannot start plugin', command, 'because it is blacklisted.'
-                    else: 
-                        self.plug.start_plugin(command)
-                    break
-                elif (command2 == "kill" or command2 == "k"):
-                    self.plug.kill_plugin(command)
-                    break
-                elif (command2 == "stop"):
-                    self.plug.stop_plugin(command)
-                    break
-                elif (command2 == "pause" or command2 =="p"):
-                    self.plug.pause_plugin(command)
-                    break
-                elif (command2 == "unpause"):
-                    self.plug.unpause_plugin(command)
-                    break
-                elif (command2 == "pid"):
-                    print 'Plugin',command+"'s PID:",self.plug.plugin_pid(command)
-                    break
-                elif (command2 == "info"):
-                    self.plug.plugin_info(command)
-                    break
-                #elif (command2 == "suspend"):
-                #    self.plug.suspend_plugin(command)
-                #    break
-                #elif (command2 == "resume"):
-                #    self.plug.resume_plugin(command)
-                #    break
-
-                #Go to whitelist/blacklist process, choose whether to add or remove from list
-                elif (command2 == "whitelist" or command2 == "blacklist"):
-                    print 'Would you like to add or remove from', command2 + '?'
-                    command3                                          = raw_input('Enter your command (add/remove): ')
-                    if (command3 == "add"):
-                        change                                        = self.manip_list(command,command2,"add")
-                        if (change == 1):
-                            print command, command2+"ed."
-                        elif (change == 0):
-                            print command, "already on", command2 + "."
-                        break
-                    if (command3 == "remove" or command3 == "rm"):
-                        change                                        = self.manip_list(command,command2,"rm")
-                        if change:
-                            print command, "removed from", command2 + "."
-                        else:
-                            print command, "not on", command2 + "."
-                        break
-                    else:
-                        print "I didn't understand your answer."
-
-                elif (command2 == "back"):
-                    break
-                else:
-                    print "I didn't understand your command \"%s\"." % (command2)
-
-        #stops plugins (and kills if there's a stop failure) and exits the program            
-        elif (command == "quit" or command == "q"):
-            if (not (self.plug.stop_all() == 0)):
-                self.plug.kill_all()
-            return
-    
-        else:
-            print "I didn't understand your command \"%s\". Type \"help\" or \"h\" to review commands." % (command)
-
-
-
-    def help(self):
-        help_text                                                     = '''
-    Available commands:
-      <plugin>       The name of the plugin you would like to manipulate.
-      startall       Activate all non-blacklisted plugins.
-      stopall        Stop all plugins
-      killall        Kill all plugins.
-      pauseall       Pause all active plugins
-      unpauseall     
-      infoall        Information on all running plugins.
-      whitelist      Show whitelist.
-      blacklist      Show blacklist
-      startwhite     Start plugins from the whitelist.
-      quit           Quit.
-
-
-    The following plugins are available.
-    '''
-
-        return json.dumps({'help': help_text, 'status': 'success'})
-
 
 
 if __name__ == '__main__':
@@ -378,8 +423,9 @@ if __name__ == '__main__':
     
     
     
-        print '\nAutomatically starting whitelisted plugins...'
+        logger.info('Automatically starting whitelisted plugins...')
         pmAPI.start_whitelist()
+        logger.info('whitelisted plugins started.')
         time.sleep(2)
     
 
@@ -430,7 +476,15 @@ if __name__ == '__main__':
         
             command = str(data).rstrip()
             logger.debug("received command \"%s\"" % (command))
-            result_json = pmAPI.do_command(command.split())
+            try:
+                result_json = pmAPI.do_command(command.split())
+            except Exception as e:
+                logger.error("command execution failed: %s" % (str(e)) )
+                continue
+        
+            if not 'status' in result_json:
+                logger.error("result_json has not status")
+                continue
         
             try:
                 client_sock.sendall(result_json+"\n")

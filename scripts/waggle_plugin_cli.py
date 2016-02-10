@@ -1,22 +1,22 @@
 #!/usr/bin/env python
 
-import sys, os, json, socket, time
+import sys, os, json, socket, time, select
 
 
 from tabulate import tabulate
 
 
 
-def command_list(results):
+def print_table(obj):
+    print "%s:" % (obj['title'])
+    print tabulate(obj['data'], obj['header'], tablefmt="fancy_grid")
+    print "\n"
 
+
+def print_tables(results):
     for obj in results['objects']:
-        print "%s:" % (obj['title'])
-        print tabulate(obj['data'], obj['header'], tablefmt="fancy_grid")
-        print "\n"
+        print_table(obj)
     
-    
-def command_help(results):
-    print results['help']
     
     
 def command_dummy(results):
@@ -27,23 +27,34 @@ def read_api(command):
     socket_file = '/tmp/plugin_manager'
     
     client_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-
-
+    #client_sock.setblocking(0)
+    client_sock.settimeout(3)
     client_sock.connect(socket_file)
 
+    try:
+        client_sock.sendall(command)
+    except Exception as e:
+         print "Error talking to socket: %s" % (str(e))
+         client_sock.close()
+         return None   
 
-    client_sock.sendall(command)
-
-    data = client_sock.recv(2048) #TODO need better solution
-
+    #ready = select.select([mysocket], [], [], timeout_in_seconds)
+    try:
+        data = client_sock.recv(2048) #TODO need better solution
+    except Exception as e:
+        print "Error reading socket: %s" % (str(e))
+        client_sock.close()
+        return None
+        
 
     client_sock.close()
 
 
     
-
-    results = json.loads(data.rstrip())
-    
+    try:
+        results = json.loads(data.rstrip())
+    except Exception as e:
+        return {'status' : 'error', 'message':'Could not parse JSON: '+str(e)}
     
     return results
 
@@ -56,8 +67,19 @@ def execute_command(command_line):
         print "Command \"%s\" unknown." % (command)
         sys.exit(1)
 
-    results = read_api(command)
+    results = read_api(" ".join(command_line))
     
+    if not results:
+        print "read_api() returned no results"
+        return
+    
+    if 'status' in results:
+        if results['status']=='error':
+            if 'message' in results:
+                print 'error: ', results['message']
+            else:
+                print 'error.'
+            return
 
     try:
         command_function(results)
@@ -72,8 +94,8 @@ if __name__ == '__main__':
 
 
     command_functions={
-        'help': command_help,
-        'list': command_list,
+        'help': print_tables,
+        'list': print_tables,
         'start' : command_dummy,
         'stop' : command_dummy
     }
