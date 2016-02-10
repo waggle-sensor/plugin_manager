@@ -19,6 +19,10 @@ def command_help(results):
     print results['help']
     
     
+def command_dummy(results):
+    print json.dumps(results, sort_keys=True, indent=4, separators=(',', ': '))
+    
+    
 def read_api(command): 
     socket_file = '/tmp/plugin_manager'
     
@@ -44,11 +48,12 @@ def read_api(command):
     return results
 
 
-def execute_command(command):
+def execute_command(command_line):
+    command = command_line[0]
     try:
         command_function = command_functions[command]
     except KeyError:
-        print "Command %s unknown." % (command)
+        print "Command \"%s\" unknown." % (command)
         sys.exit(1)
 
     results = read_api(command)
@@ -68,18 +73,24 @@ if __name__ == '__main__':
 
     command_functions={
         'help': command_help,
-        'list': command_list
+        'list': command_list,
+        'start' : command_dummy,
+        'stop' : command_dummy
     }
     
     
-    execute_command('help')
-    execute_command('list')
+    execute_command(['help'])
+    
     
     while True:
+        execute_command(['list'])
         
-        command = raw_input('\nMain menu\nEnter your command: ')
-    
-        execute_command(command)
+        command_line = raw_input('\nMain menu\nEnter your command: ')
+        
+        print command_line
+        print command_line.split()
+        
+        execute_command(command_line.split())
         
 
 
