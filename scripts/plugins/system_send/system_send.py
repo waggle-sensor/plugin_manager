@@ -7,16 +7,16 @@ sys.path.append('../waggle_protocol/')
 from utilities import packetmaker
 
 
-LOG_FORMAT='%(asctime)s - %(name)s - %(levelname)s - line=%(lineno)d - %(message)s'
-formatter = logging.Formatter(LOG_FORMAT)
-handler = logging.StreamHandler(stream=sys.stdout)
-handler.setFormatter(formatter)
+#LOG_FORMAT='%(asctime)s - %(name)s - %(levelname)s - line=%(lineno)d - %(message)s'
+#formatter = logging.Formatter(LOG_FORMAT)
+#handler = logging.StreamHandler(stream=sys.stdout)
+#handler.setFormatter(formatter)
 
 
 logger = logging.getLogger(__name__)
-logger.handlers = []
-logger.addHandler(handler)
-logger.setLevel(logging.DEBUG)
+#logger.handlers = []
+#logger.addHandler(handler)
+#logger.setLevel(logging.DEBUG)
 
 
 def read_file( str ):
@@ -46,7 +46,7 @@ class system_send(object):
         packet = packetmaker.make_GN_reg(1)
     
         while 1:
-            print 'Registration packet made. Sending to 1.'
+            logger.info('Registration packet made. Sending to 1.')
             try:
                 for pack in packet:
                     self.send(pack)
