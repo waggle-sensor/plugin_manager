@@ -30,8 +30,13 @@ def read_api(command, timeout=3):
     #client_sock.setblocking(0)
     
     client_sock.settimeout(timeout)
-    client_sock.connect(socket_file)
-
+    try:
+        client_sock.connect(socket_file)
+    except Exception as e:
+        print "Error connecting to socket: %s" % (str(e))
+        client_sock.close()
+        return None
+        
     try:
         client_sock.sendall(command)
     except Exception as e:
