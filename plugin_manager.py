@@ -2,10 +2,10 @@
 import multiprocessing, time, sys, re, os, socket, json, argparse
 import logging, logging.handlers
 import plugins 
-import run_plugins_multi
+import lib.run_plugins_multi
 from tabulate import tabulate
 
-sys.path.append('../waggle_protocol/')
+sys.path.append('waggle_protocol/')
 from utilities import packetmaker
 
 
@@ -39,7 +39,7 @@ root_logger.addHandler(handler)
 
 class PluginManagerAPI:
     def __init__(self):
-        self.plug = run_plugins_multi.plugin_runner()
+        self.plug = lib.run_plugins_multi.plugin_runner()
         self.system_plugins={}
         self.system_plugins['system_send']=1
         self.command_functions = {
