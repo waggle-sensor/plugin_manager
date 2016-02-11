@@ -12,7 +12,7 @@ logger.setLevel(logging.DEBUG)
 class register(object):
     def __init__(self, name, man, mailbox_outgoing):
     	man[name] = 1
-        sensor_read(mailbox_outgoing)
+        sensor_read(name, man, mailbox_outgoing)
 
 
 def process_data(output2sensor, readData):
@@ -59,7 +59,7 @@ def process_data(output2sensor, readData):
     
                     
 
-def sensor_read(mailbox_outgoing):
+def sensor_read(name, man, mailbox_outgoing):
     
     """
     This connects to a sensor board via a serial connection. It reads and parses the sensor data into meaningful information, packs, and sends the data packet to the cloud. 
@@ -246,7 +246,7 @@ def sensor_read(mailbox_outgoing):
 
 
     try:
-        while True:
+        while man[name]:
             wxconnection = False
             while wxconnection == False:
                 try:
