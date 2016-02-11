@@ -32,7 +32,11 @@ class register(object):
     	man[name] = 1
         
         ss = system_send(mailbox_outgoing)
-        ss.read_mailbox()
+        
+        try:
+            ss.read_mailbox(name, man)
+        except KeyboardInterrupt:
+            sys.exit(0)
         
 
 class system_send(object):
@@ -80,12 +84,14 @@ class system_send(object):
             raise
             
 
-    def read_mailbox(self):
+    def read_mailbox(self, name, man):
 
         
-        while 1:
+        while man[name]:
          
+            
             msg = self.mailbox_outgoing.get() # a blocking call.
+           
          
             packet = packetmaker.make_data_packet(msg)
             for pack in packet:
