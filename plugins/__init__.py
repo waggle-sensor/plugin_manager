@@ -2,12 +2,19 @@
 #This code is taken from https://github.com/samwyse/sspp/blob/master/__init__.py
 #####################
 
-import os
+import os, logging
 from glob import glob
 from keyword import iskeyword
 from os.path import dirname, join, split, splitext
 
+
+#logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+
 basedir = dirname(__file__)
+
 
 __all__ = []
 #for name in glob(join(basedir, '*.py')):
@@ -17,7 +24,6 @@ for name in os.listdir(cwd):
     if not os.path.isdir(directory):
         continue
         
-    print 'Name: ',name
    
     module = name
     
@@ -27,9 +33,12 @@ for name in os.listdir(cwd):
         try:
             __import__(__name__+'.'+module) #TODO need to be able to check if the plug in has the required methods before importing
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
+            
             logger.warning('Ignoring exception while loading the %r plug-in. Exception: %s' % (module, str(e)) )
         else:
+            logger.info('added plugin %s' % (module))
             __all__.append(module)
+    else:
+        logger.warning( "%s not a module" % (module))
+        
 __all__.sort()
