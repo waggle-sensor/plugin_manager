@@ -1,12 +1,6 @@
 #!/usr/bin/env python
 import multiprocessing, time, sys, re, os, socket, json, argparse
 import logging, logging.handlers
-import plugins 
-import lib.run_plugins_multi
-from tabulate import tabulate
-
-sys.path.append('waggle_protocol/')
-from utilities import packetmaker
 
 
 loglevel=logging.DEBUG
@@ -18,22 +12,23 @@ formatter = logging.Formatter(LOG_FORMAT)
 handler = logging.StreamHandler(stream=sys.stdout)
 handler.setFormatter(formatter)
 
+root_logger = logging.getLogger()
+root_logger.setLevel(loglevel)
+root_logger.handlers = []
+root_logger.addHandler(handler)
 
 logger = logging.getLogger(__name__)
 logger.handlers = []
-logger.addHandler(handler)
-logger.setLevel(loglevel)
+
+import plugins 
+import lib.run_plugins_multi
+from tabulate import tabulate
+
+sys.path.append('waggle_protocol/')
+from utilities import packetmaker
 
 
-root_logger = logging.getLogger()
-root_logger.setLevel(loglevel)
-formatter = logging.Formatter(LOG_FORMAT)
 
-handler = logging.StreamHandler(stream=sys.stdout)
-handler.setFormatter(formatter)
-
-root_logger.handlers = []
-root_logger.addHandler(handler)
 
 
 
