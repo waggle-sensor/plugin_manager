@@ -13,7 +13,7 @@ class register(object):
     def __init__(self, name, man, mailbox_outgoing):
         man[name] = 1
         self.outqueue = mailbox_outgoing
-        self.run()
+        self.run(name, man)
 
     def send_values(self, sensor_name, sensor_values):
         timestamp_utc = datetime.datetime.utcnow()
@@ -31,8 +31,8 @@ class register(object):
             sensor_values,
         ])
 
-    def run(self):
-        while True:
+    def run(self, name, man):
+        while man[name]:
             try:
                 for ts, ident, values in coresense_reader('/dev/ttyACM0'):
                     self.send_values(ident, ['{}:{}'.format(name, value)
