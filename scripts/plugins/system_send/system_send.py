@@ -98,6 +98,8 @@ class system_send(object):
                 while 1:
                     try:
                         self.send(pack)
+                    except KeyboardInterrupt as e:
+                        raise
                     except Exception as e:
                         logger.error("Could not send message to %s:%d : %s" % (self.HOST, self.PORT, str(e)))
                     
