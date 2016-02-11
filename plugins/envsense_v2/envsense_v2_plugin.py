@@ -20,7 +20,7 @@ class register(object):
         timestamp_date = timestamp_utc.date()
         timestamp_epoch = int(float(timestamp_utc.strftime("%s.%f")) * 1000)
 
-        self.outqueue.put([
+        message = [
             str(timestamp_date),
             self.plugin_name,
             self.plugin_version,
@@ -29,12 +29,17 @@ class register(object):
             sensor_name,
             'meta.txt',
             sensor_values,
-        ])
+        ]
+        
+        print str(message)
+        self.outqueue.put(message)
 
     def run(self, name, man):
         while man[name]:
             try:
                 for ts, ident, values in coresense_reader('/dev/ttyACM0'):
+                    if not man[name]:
+                        break
                     self.send_values(ident, ['{}:{}'.format(name, value)
                                              for name, value in values])
             except:
