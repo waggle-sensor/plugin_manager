@@ -267,7 +267,7 @@ def sensor_read(name, man, mailbox_outgoing):
                 wxsensor.close()
                 continue
                 
-            while wxconnection == True && man[name]:
+            while wxconnection == True and man[name]:
                 time.sleep(1)
                 readData = None
                 try:
