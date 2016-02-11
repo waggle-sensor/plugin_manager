@@ -9,7 +9,7 @@ from tabulate import tabulate
 
 def print_table(obj):
     print "%s:" % (obj['title'])
-    print tabulate(obj['data'], obj['header'], tablefmt="fancy_grid")
+    print tabulate(obj['data'], obj['header'], tablefmt="psql")
     print "\n"
 
 
@@ -62,14 +62,14 @@ def read_api(command, timeout=3):
 
 def execute_command(command_line):
     if not command_line:
-        return
+        command_line = ['list']
     
     command = command_line[0]
     try:
         command_function = command_functions[command]
     except KeyError:
         print "Command \"%s\" unknown." % (command)
-        sys.exit(1)
+        return
 
     results = read_api(" ".join(command_line), timeout = 20)
     
@@ -109,16 +109,17 @@ if __name__ == '__main__':
     
     
     while True:
-        execute_command(['list'])
+        #execute_command(['list'])
         
+        command_line = None
         try:
-            command_line = raw_input('\nMain menu\nEnter your command: ')
+            command_line = raw_input('\nEnter your command: ')
         except KeyboardInterrupt:
             print "leaving..."
             sys.exit(0)
             
-        print command_line
-        print command_line.split()
+        #print command_line
+        #print command_line.split()
         
         execute_command(command_line.split())
         
