@@ -61,6 +61,9 @@ def read_api(command, timeout=3):
 
 
 def execute_command(command_line):
+    if not command_line:
+        return
+    
     command = command_line[0]
     try:
         command_function = command_functions[command]
@@ -108,8 +111,12 @@ if __name__ == '__main__':
     while True:
         execute_command(['list'])
         
-        command_line = raw_input('\nMain menu\nEnter your command: ')
-        
+        try:
+            command_line = raw_input('\nMain menu\nEnter your command: ')
+        except KeyboardInterrupt:
+            print "leaving..."
+            sys.exit(0)
+            
         print command_line
         print command_line.split()
         

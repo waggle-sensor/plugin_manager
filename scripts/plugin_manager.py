@@ -451,11 +451,11 @@ if __name__ == '__main__':
                 client_sock, address = server_sock.accept()
             except KeyboardInterrupt:
                 logger.info("Shutdown requested...exiting")
-                self.stop()
+                #self.stop()
                 sys.exit(0)
             except Exception as e:
                 logger.info("server_sock.accept: "+str(e))
-                self.stop()
+                #self.stop()
                 sys.exit(1)
 
 
