@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-import multiprocessing, time, sys, re, os, logging, socket, json
+import multiprocessing, time, sys, re, os, socket, json, argparse
+import logging, logging.handlers
 import plugins 
 import run_plugins_multi
 from tabulate import tabulate
@@ -8,8 +9,11 @@ sys.path.append('../waggle_protocol/')
 from utilities import packetmaker
 
 
-
+loglevel=logging.DEBUG
 LOG_FORMAT='%(asctime)s - %(name)s - %(levelname)s - line=%(lineno)d - %(message)s'
+LOG_FILENAME="/var/log/waggle/plugin_manager.log"
+
+
 formatter = logging.Formatter(LOG_FORMAT)
 handler = logging.StreamHandler(stream=sys.stdout)
 handler.setFormatter(formatter)
@@ -18,11 +22,18 @@ handler.setFormatter(formatter)
 logger = logging.getLogger(__name__)
 logger.handlers = []
 logger.addHandler(handler)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(loglevel)
 
-#root_logger = logging.getLogger()
-#root_logger.handlers = []
-#root_logger.addHandler(handler)
+
+root_logger = logging.getLogger()
+root_logger.setLevel(loglevel)
+formatter = logging.Formatter(LOG_FORMAT)
+
+handler = logging.StreamHandler(stream=sys.stdout)
+handler.setFormatter(formatter)
+
+root_logger.handlers = []
+root_logger.addHandler(handler)
 
 
 
@@ -115,36 +126,7 @@ class PluginManagerAPI:
             else:
                 return 0
 
-    #Starts all whitelisted plugins
-    def start_whitelist(self):
-    
-        whitelist = self.get_whitelist()
-        fail = 0
-        for name in whitelist:
-            start = self.plug.start_plugin(name)
-            if (not start) and (not name == ""):
-                print 'Failed to start plugin', name
-                fail = fail + 1
-        if (fail == 0):
-            print "Started all %d whitelisted plugins." % (len(whitelist))
-        else:
-            print "Attempted to start all whitelisted plugins, failed to start %d plugins" % (fail)
-
-    #Starts all non-blacklisted plugins
-    def start_all_valid(self):
-    
-        blacklist = self.get_blacklist()
-        fail = 0
-        for plugin in plugins.__all__:
-            if (not (plugin in blacklist)):
-                start = self.plug.start_plugin(plugin)
-                if not start:
-                    print 'Failed to start plugin', plugin
-                    fail = fail + 1
-        if (fail == 0):
-            print "Started all non-blacklisted plugins."
-        else:
-            print "Attempted to start all non-blacklisted plugins, failed to start", fail
+        
 
     def read_file(self, str ):
         if not os.path.isfile(str) :
@@ -183,7 +165,7 @@ class PluginManagerAPI:
         system_table                                                  = []
         user_table                                                    = []
     
-        #tabulate(table, headers, tablefmt                            = "fancy_grid")
+        #example: tabulate(table, headers, tablefmt = "fancy_grid")
     
     
         for name in plugins.__all__:
@@ -204,11 +186,6 @@ class PluginManagerAPI:
                 table.append([name, "", False, self.on_whitelist(name), self.on_blacklist(name)])
     
             
-        #client_sock.sendall('System plugins:'+"\n")
-        #client_sock.sendall(tabulate(system_table, headers, tablefmt = "fancy_grid"))
-        #client_sock.sendall(str(system_table)+"\n")
-        #client_sock.sendall('User plugins:'+"\n")
-        #client_sock.sendall(str(user_table)+"\n")
     
         results                                                       = {}
         results['objects']                                            = []
@@ -235,118 +212,119 @@ class PluginManagerAPI:
     
         #client_sock.sendall(tabulate(user_table, headers, tablefmt   = "fancy_grid"))
 
+    def create_status_message(self, status, message):
+        result = {}
+        result['status'] = self.status_code_to_text(status)
+        result['message'] = message
+     
+        return json.dumps(result)
+
+    def status_code_to_text(self, code):
+        if code==1:
+            return 'success'
+        return 'error'
 
     def command_start_plugin(self, plugin):
-        result                                                        = {}
+        
         if (self.on_blacklist(plugin)):
-            message                                                   = 'Cannot start plugin', plugin, 'because it is blacklisted.'
+            message = 'Cannot start plugin %s because it is blacklisted.' % (plugin)
         
-            result['status']                                          = 'error'
-            result['message']                                         = message
+            return self.create_status_message(0, message)
         
-            return json.dumps(result)
+        status, message = self.plug.start_plugin(plugin)
         
-        if self.plug.start_plugin(plugin):
-            result['status']    = 'success'
-            return json.dumps(result)
-        else:
-            result['status']    = 'error'
-            return json.dumps(result)
+        return self.create_status_message(status, message)
         
 
 
     def command_stop_plugin(self, plugin):
-        result = {}
-        if self.plug.stop_plugin(plugin):
-            result['status']    = 'success'
-            return json.dumps(result)
-        else:
-            result['status']    = 'error'
-            return json.dumps(result)
+        status, message =  self.plug.stop_plugin(plugin)
+        return self.create_status_message(status, message)
+        
     
     def command_kill_plugin(self, plugin):
-        result = {}
-        if self.plug.kill_plugin(command):
-            result['status']    = 'success'
-            return json.dumps(result)
-        else:
-            result['status']    = 'error'
-            return json.dumps(result)
+        status, message =  self.plug.kill_plugin(plugin)
+        return self.create_status_message(status, message)
+       
     
 
     def command_pause_plugin(self, plugin):
-        result = {}
-        if self.plug.pause_plugin(command):
-            result['status']    = 'success'
-            return json.dumps(result)
-        else:
-            result['status']    = 'error'
-            return json.dumps(result)
+        status, message = self.plug.pause_plugin(plugin)
+        return self.create_status_message(status, message)
             
-    def command_unpause_plugin(self, plugin):
-        result = {}
-        if self.plug.unpause_plugin(command):
-            result['status']    = 'success'
-            return json.dumps(result)
-        else:
-            result['status']    = 'error'
-            return json.dumps(result)
+    def command_unpause_plugin(self, plugin): 
+        status, message =  self.plug.unpause_plugin(plugin)
+        return self.create_status_message(status, message)
+       
     
     def command_plugin_pid(self, plugin):
-        result = {}
-        print 'Plugin',plugin+"'s PID:",self.plug.plugin_pid(plugin)
-        result['status']    = 'success'
-        return json.dumps(result)
+        status, message = self.plug.plugin_pid(plugin)
+        return self.create_status_message(status, message)
+       
         
     def command_plugin_info(self, plugin):
-        result = {}
-        self.plug.plugin_info(plugin)
-        result['status']    = 'success'
-        return json.dumps(result)
-    
+        status, message =  self.plug.plugin_info(plugin)
+        return self.create_status_message(status, message)
+        
+      
     
     def command_start_all(self):
-        result = {}
-        start_all_valid()
-        result['status']    = 'success'
-        return json.dumps(result)
+
+        blacklist = self.get_blacklist()
+        fail = 0
+        for plugin in plugins.__all__:
+            if (not (plugin in blacklist)):
+                start, msg = self.plug.start_plugin(plugin)
+                if not start:
+                    print 'Failed to start plugin', plugin
+                    fail = fail + 1
+        if (fail == 0):
+            return self.create_status_message(1, "Started all non-blacklisted plugins.")
+       
+        
+        return self.create_status_message(0, "Attempted to start all non-blacklisted plugins, failed to start " + fail)
+        
+        
 
     def command_kill_all(self):
-        result = {}
-        self.plug.kill_all()
-        result['status']    = 'success'
-        return json.dumps(result)
+        status, message =  self.plug.kill_all()
+        return self.create_status_message(status, message)
+        
 
     def command_stop_all(self):
-        result = {}
-        self.plug.stop_all()
-        result['status']    = 'success'
-        return json.dumps(result)
+        status, message =  self.plug.stop_all()
+        return self.create_status_message(status, message)
 
     def command_start_whitelist(self):
-        result = {}
-        self.start_whitelist()
-        result['status']    = 'success'
-        return json.dumps(result)
+        #status, message =  self.start_whitelist()
         
+        whitelist = self.get_whitelist()
+        fail = 0
+        for name in whitelist:
+            start = self.plug.start_plugin(name)
+            if (not start) and (not name == ""):
+                print 'Failed to start plugin', name
+                fail = fail + 1
+        if (fail == 0):
+           
+            return self.create_status_message(1, "Started all %d whitelisted plugins." % (len(whitelist)))
+        
+        return self.create_status_message(0,  "Attempted to start all whitelisted plugins, failed to start %d plugins" % (fail))
     
     def command_pause_all(self):
-        result = {}
-        self.plug.pause_all()
-        result['status']    = 'success'
-        return json.dumps(result)
+        status, message =  self.plug.pause_all()
+        return self.create_status_message(status, message)
+        
       
     def command_unpause_all(self):
-        result = {}
-        self.plug.unpause_all()
-        result['status']    = 'success'
-        return json.dumps(result)
+        status, message =  self.plug.unpause_all()
+        return self.create_status_message(status, message)
+        
       
     def command_info_all(self):
-        result = {}
-        self.plug.info_all()
-        result['status']    = 'success'
-        return json.dumps(result)
+        status, message =  self.plug.info_all()
+        return self.create_status_message(status, message)
+        
         
     def command_help(self):
         
@@ -416,6 +394,24 @@ class PluginManagerAPI:
 
 if __name__ == '__main__':
     
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--logging', dest='enable_logging', help='write to log files instead of stdout', action='store_true')
+    args = parser.parse_args()
+    
+        
+    if args.enable_logging:
+        # 5 times 10MB
+        sys.stdout.write('logging to '+LOG_FILENAME+'\n')
+        log_dir = os.path.dirname(LOG_FILENAME)
+        if not os.path.isdir(log_dir):
+            os.makedirs(log_dir)
+        handler = logging.handlers.RotatingFileHandler(LOG_FILENAME, maxBytes=1485760, backupCount=5)
+    
+        handler.setFormatter(formatter)
+        root_logger.handlers = []
+        root_logger.addHandler(handler)
+        
+    
     # TODO this guest node registration is not need when the plugin_manager
     # 
     try:
@@ -424,7 +420,7 @@ if __name__ == '__main__':
     
     
         logger.info('Automatically starting whitelisted plugins...')
-        pmAPI.start_whitelist()
+        pmAPI.command_start_whitelist()
         logger.info('whitelisted plugins started.')
         time.sleep(2)
     
@@ -489,7 +485,7 @@ if __name__ == '__main__':
             try:
                 client_sock.sendall(result_json+"\n")
             except Exception as e:
-                logger.warning("Could not reply: %s" % (str(e)) )
+                logger.warning("Could not reply to client: %s" % (str(e)) )
                 continue
         
             logger.debug("got data: \"%s\"" % (str(data)))

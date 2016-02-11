@@ -23,12 +23,13 @@ def command_dummy(results):
     print json.dumps(results, sort_keys=True, indent=4, separators=(',', ': '))
     
     
-def read_api(command): 
+def read_api(command, timeout=3): 
     socket_file = '/tmp/plugin_manager'
     
     client_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     #client_sock.setblocking(0)
-    client_sock.settimeout(3)
+    
+    client_sock.settimeout(timeout)
     client_sock.connect(socket_file)
 
     try:
@@ -67,7 +68,7 @@ def execute_command(command_line):
         print "Command \"%s\" unknown." % (command)
         sys.exit(1)
 
-    results = read_api(" ".join(command_line))
+    results = read_api(" ".join(command_line), timeout = 20)
     
     if not results:
         print "read_api() returned no results"
@@ -78,7 +79,7 @@ def execute_command(command_line):
             if 'message' in results:
                 print 'error: ', results['message']
             else:
-                print 'error.'
+                print 'error, but got no specifc error message.'
             return
 
     try:
