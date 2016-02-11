@@ -1,8 +1,13 @@
-# guestnodes
-Software for guest nodes
-How to configure your odroid as a guest node:
+# waggle plugin manager
 
-1) Type ./configure into the command line. 
-2) Follow instructions to enter a new name for your guest node. 
-3) Wait for the odroid to reboot. 
-4) Enjoy your new guestnode! 
+
+
+## Installation
+
+```bash
+mkdir -p /usr/lib/waggle
+git clone https://github.com/waggle-sensor/waggle_image.git
+git clone --recursive https://github.com/waggle-sensor/plugin_manager.git
+cd plugin_manager
+./configure
+```
