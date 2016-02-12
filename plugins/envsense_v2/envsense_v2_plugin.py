@@ -35,6 +35,10 @@ class register(object):
         self.outqueue.put(message)
 
     def run(self, name, man):
+        while not name in man:
+            time.sleep(1)
+            print "waiting..."
+        
         while man[name]:
             try:
                 for ts, ident, values in coresense_reader('/dev/ttyACM0'):
