@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-import os
-import time
-import datetime
+import os, time, datetime, logging
 from coresense import coresense_reader
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 class register(object):
 
@@ -44,10 +44,14 @@ class register(object):
                 for ts, ident, values in coresense_reader('/dev/ttyACM0'):
                     if not man[name]:
                         break
-                    self.send_values(ident, ['{}:{}'.format(name, value)
+                    try:    
+                        self.send_values(ident, ['{}:{}'.format(name, value)
                                              for name, value in values])
-            except:
-                pass
+                    except Exception as e:
+                        logger.error('error(send_values): %s' % (str(e)))
+            except Exception as e:
+                logger.error('error(coresense_reader): %s' % (str(e)))
+                
 
 
 if __name__ == '__main__':
