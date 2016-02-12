@@ -35,18 +35,15 @@ class register(object):
         self.outqueue.put(message)
 
     def run(self, name, man):
-        while not name in man:
-            time.sleep(1)
-            print "waiting..."
-        
+       
         while man[name]:
             try:
                 for ts, ident, values in coresense_reader('/dev/ttyACM0'):
                     if not man[name]:
                         break
                     try:    
-                        self.send_values(ident, ['{}:{}'.format(name, value)
-                                             for name, value in values])
+                        self.send_values(ident, ['{}:{}'.format(key, value)
+                                             for key, value in values])
                     except Exception as e:
                         logger.error('error(send_values): %s' % (str(e)))
             except Exception as e:
