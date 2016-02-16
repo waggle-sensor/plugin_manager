@@ -47,11 +47,12 @@ class register(object):
 
     def run(self, name, man):
         while man[name]:
-            entries = self.connection.recv()
+            message = self.connection.recv()
 
-            logger.info('Packet received.')
+            logger.info(message)
 
-            for entry in entries:
+            for entry in message.entries:
                 formatted_values = ['{}:{}'.format(key, value)
                                     for key, value in entry.values]
                 self.send_values(entry.sensor, formatted_values)
+                # logger.info(entry)
