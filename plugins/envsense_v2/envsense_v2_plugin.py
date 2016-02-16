@@ -16,16 +16,7 @@ class register(object):
     def __init__(self, name, man, mailbox_outgoing):
         man[name] = 1
         self.outqueue = mailbox_outgoing
-
-        # self.connection = coresense.Connection('/dev/ttyACM0')
-        self.connection = coresense.Connection('/dev/tty.usbmodem1421')
-
-        try:
-            self.run(name, man)
-        except Exception as e:
-            logger.error('error(coresense_reader): {}'.format(e))
-        finally:
-            self.connection.close()
+        self.run(name, man)
 
     def send_values(self, sensor_name, sensor_values):
         timestamp_utc = datetime.datetime.utcnow()
@@ -46,13 +37,13 @@ class register(object):
         self.outqueue.put(message)
 
     def run(self, name, man):
-        while man[name]:
-            message = self.connection.recv()
+        with coresense.create_connection('/dev/ttyACM0') as conn:
+            while man[name]:
+                message = conn.recv()
 
-            logger.info(message)
+                # logger.info(message)
 
-            for entry in message.entries:
-                formatted_values = ['{}:{}'.format(key, value)
-                                    for key, value in entry.values]
-                self.send_values(entry.sensor, formatted_values)
-                # logger.info(entry)
+                for entry in message.entries:
+                    formatted_values = ['{}:{}'.format(key, value)
+                                        for key, value in entry.values]
+                    self.send_values(entry.sensor, formatted_values)
