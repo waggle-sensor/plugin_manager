@@ -37,11 +37,13 @@ class register(object):
         self.outqueue.put(message)
 
     def run(self, name, man):
-        with coresense.create_connection('/dev/ttyACM0') as conn:
+        # device = '/dev/tty.usbmodem1421'
+        device = '/dev/ttyACM0'
+
+        with coresense.create_connection(device) as conn:
             while man[name]:
                 message = conn.recv()
-
-                # logger.info(message)
+                logger.info(message)
 
                 for entry in message.entries:
                     formatted_values = ['{}:{}'.format(key, value)
