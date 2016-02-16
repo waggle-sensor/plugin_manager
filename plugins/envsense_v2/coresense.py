@@ -1,46 +1,108 @@
 # -*- coding: utf-8 -*-
-import time
-import datetime
 from serial import Serial
+from contextlib import contextmanager
+
+
+START_BYTE = 0xAA
+END_BYTE = 0x55
+
+
+class Connection(object):
+    'Provides a socket-like interface to a coresense device.'
+
+    def __init__(self, device):
+        self.serial = Serial(device)
+
+    def close(self):
+        'Closes the connection to the device.'
+        self.serial.close()
+
+    def recv(self):
+        'Receives a list of sensor entries from the device.'
+        data = self.recv_packet_data()
+        offset = 0
+
+        while offset < len(data):
+            identifier = ord(data[offset])
+
+            header = ord(data[offset + 1])
+            length = header & 0x7F
+            valid = ((header & 0x80) >> 7) == 1
+
+            entry_data = data[offset+2:offset+2+length]
+
+            if valid:
+                yield parse_sensor(identifier, entry_data)
+
+            offset += 2 + length  # header + contents
+
+    def recv_packet_data(self):
+        'Receives raw packet data from the device.'
+        for attempt in range(10):
+
+            # align stream to (possible) start of packet
+            while ord(self.serial.read(1)) != START_BYTE:
+                pass
+
+            header = self.serial.read(2)
+            length = ord(header[1])
+
+            data = self.serial.read(length)
+
+            footer = self.serial.read(2)
+            crc = ord(footer[0])
+            end = ord(footer[1])
+
+            if end == END_BYTE and crc8(data) == crc:
+                return data
+        else:
+            raise NoPacketError(attempt)
+
+
+class Entry(object):
+    'Contains information about a particular sensor from a packet.'
+
+    def __init__(self, sensor, values):
+        self.sensor = sensor
+        self.values = values
+
+    def __repr__(self):
+        values_string = '; '.join('{}: {}'.format(name, value)
+                                  for name, value in self.values)
+        return '<{} | {}>'.format(self.sensor, values_string)
+
+
+class NoPacketError(Exception):
+
+    def __init__(self, attempts):
+        self.attempts = attempts
+
+    def __str__(self):
+        return 'No packet received after {} attempts.'.format(self.attempts)
 
 
 class UnknownSensorError(Exception):
 
-    def __init__(self, sensor_id):
-        self.sensor_id = sensor_id
+    def __init__(self, identifier):
+        self.identifier = identifier
 
     def __str__(self):
-        return 'Unknown sensor ID {}.'.format(self.sensor_id)
+        return 'Unknown sensor ID {}.'.format(self.identifier)
 
 
-def crc8(data, start, end):
-    remainder = 0
-
-    for i in range(start, end):
-        remainder ^= ord(data[i])
+def crc8(data, crc=0):
+    for i in range(len(data)):
+        crc ^= ord(data[i])
         for j in range(8):
-            if remainder & 1 != 0:
-                remainder = (remainder >> 1) ^ 0x8C
+            if crc & 1 != 0:
+                crc = (crc >> 1) ^ 0x8C
             else:
-                remainder >>= 1
-
-    return remainder
-
-
-_preamble = '\xaa'
-_postScript = '\x55'
-
-_datLenFieldDelta = 0x02
-_protVerFieldDelta = 0x01
-_msgCRCFieldDelta = 0x01
-_msgPSDelta = 0x02
-_maxPacketSize = 256
+                crc >>= 1
+    return crc
 
 
 def format1(input):
-    """
-    unsigned 16-bit integer
-    """
+    'unsigned 16-bit integer'
     byte1 = ord(input[0])
     byte2 = ord(input[1])
     value = (byte1 << 8) | byte2
@@ -50,9 +112,7 @@ format1.length = 2
 
 
 def format2(input):
-    """
-    signed 16-bit integer
-    """
+    'signed 16-bit integer'
     byte1 = ord(input[0])
     byte2 = ord(input[1])
     value = ((byte1 & 0x7F) << 8) | byte2
@@ -62,18 +122,14 @@ format2.length = 2
 
 
 def format3(input):
-    """
-    hex string
-    """
+    'hex string'
     return str(hex(ord(input)))[2:]  # explain [2:]?
 
 format3.length = 6
 
 
 def format4(input):
-    """
-    unsigned 24-bit integer
-    """
+    'unsigned 24-bit integer'
     byte1 = ord(input[0])
     byte2 = ord(input[1])
     byte3 = ord(input[2])
@@ -84,9 +140,7 @@ format4.length = 3
 
 
 def format5(input):
-    """
-    signed 24-bit integer
-    """
+    'signed 24-bit integer'
     byte1 = ord(input[0])
     byte2 = ord(input[1])
     byte3 = ord(input[2])
@@ -96,13 +150,8 @@ def format5(input):
 format5.length = 3
 
 
-def format5str(input):
-    return str(format5str)
-
-format5str.length = format5.length
-
-
 def format6(input):
+    'floating point 1'
     # F6 - float input, +-{0-127}.{0-99} - 1S|7Bit_Int 0|7Bit_Frac{0-99}
     byte1 = ord(input[0])
     byte2 = ord(input[1])
@@ -116,6 +165,7 @@ format6.length = 2
 
 
 def format7(input):
+    'unsigned 8-bit integer[4]'
     # F7 - byte input[4], {0-0xffffffff} - Byte1 Byte2 Byte3 Byte4
     byte1 = ord(input[0])
     byte2 = ord(input[1])
@@ -127,6 +177,7 @@ format7.length = 4
 
 
 def format8(input):
+    'floating point 2'
     # F8 - float input, +-{0-31}.{0-999} - 1S|5Bit_Int|2MSBit_Frac 8LSBits_Frac
     byte1 = ord(input[0])
     byte2 = ord(input[1])
@@ -139,18 +190,21 @@ format8.length = 2
 
 
 def string3(input):
+    'string of format3'
     return ''.join([str(format3(byte)) for byte in input])
 
 string3.length = -1
 
 
 def string6(input):
+    'string of format6'
     return ''.join([str(format6(byte)) for byte in input])
 
 string6.length = -1
 
 
 def sensor17(input):
+    'temperature array sensor'
     return string6(input[::2])
 
 sensor17.length = -1
@@ -186,14 +240,14 @@ sensor_table = {
     0x12: ('MLX90614', [('Temperature', format6)]),
     0x13: ('TMP421', [('Temperature', format6)]),
     0x14: ('SPV1840LR5H-B', [('Sound Pressure', format1)]),
-    0x15: ('Total reducing gases', [('Concentration', format5str)]),
-    0x16: ('Ethanol (C2H5-OH)', [('Concentration', format5str)]),
-    0x17: ('Nitrogen Di-oxide (NO2)', [('Concentration', format5str)]),
-    0x18: ('Ozone (03)', [('Concentration', format5str)]),
-    0x19: ('Hydrogen Sulphide (H2S)', [('Concentration', format5str)]),
-    0x1A: ('Total Oxidizing gases', [('Concentration', format5str)]),
-    0x1B: ('Carbon Monoxide (C0)', [('Concentration', format5str)]),
-    0x1C: ('Sulfur Dioxide (SO2)', [('Concentration', format5str)]),
+    0x15: ('Total reducing gases', [('Concentration', format5)]),
+    0x16: ('Ethanol (C2H5-OH)', [('Concentration', format5)]),
+    0x17: ('Nitrogen Di-oxide (NO2)', [('Concentration', format5)]),
+    0x18: ('Ozone (03)', [('Concentration', format5)]),
+    0x19: ('Hydrogen Sulphide (H2S)', [('Concentration', format5)]),
+    0x1A: ('Total Oxidizing gases', [('Concentration', format5)]),
+    0x1B: ('Carbon Monoxide (C0)', [('Concentration', format5)]),
+    0x1C: ('Sulfur Dioxide (SO2)', [('Concentration', format5)]),
     0x1D: ('SHT25', [('Temperature', format2),
                      ('Humidity', format2)]),
     0x1E: ('LPS25H', [('???', format2),
@@ -205,7 +259,7 @@ sensor_table = {
 
 
 def sensor_format_slices(formats):
-    """
+    '''
     Yields the sensor data slices start:end for a list of sensor data formats.
 
     For example, if fmt1 has length 3 and fmt2 has length 4, then this
@@ -213,7 +267,7 @@ def sensor_format_slices(formats):
 
     It also allows for a `tail` slices when a negative length is reached. In
     this case, the format will be applied to the tail of the sensor data.
-    """
+    '''
     start = 0
 
     for name, fmt in formats:
@@ -230,143 +284,21 @@ def unpack_sensor_data(sensor_format, sensor_data):
             for name, fmt, start, end in sensor_format_slices(sensor_format)]
 
 
-def parse_sensor(sensor_id, sensor_data):
-    if sensor_id not in sensor_table:
-        raise UnknownSensorError(sensor_id=sensor_id)
+def parse_sensor(identifier, sensor_data):
+    if identifier not in sensor_table:
+        raise UnknownSensorError(sensor_id=identifier)
 
-    ident, sensor_format = sensor_table[sensor_id]
-    values = unpack_sensor_data(sensor_format, sensor_data)
+    entry_sensor, sensor_format = sensor_table[identifier]
+    entry_values = unpack_sensor_data(sensor_format, sensor_data)
+    entry_names = [name for name, _ in sensor_format]
 
-    return ident, [(name, value)
-                   for (name, _), value in zip(sensor_format, values)]
+    return Entry(entry_sensor, list(zip(entry_names, entry_values)))
 
 
-class coresense_reader(object):
-
-    def __init__(self, port):
-        self.port = port
-        self.lastSeq = 0
-        self.currentSeq = 0
-        self.repeatInt = 0.01
-        self.data = []
-        self.CoreSenseConf = 1
-        self.dataLenBit = 0
-        self.packetmismatch = 0
-        self.keepAlive = 1
-
-    def __iter__(self):
-        self.ser = Serial(self.port, timeout=0)
-
-        try:
-            self.ser.flushInput()
-            self.ser.flushOutput()
-
-            self.counter = 0
-
-            while True:
-                time.sleep(self.repeatInt)
-                streamData = ''
-                try:
-                    self.counter = self.counter + 1
-                    if self.ser.inWaiting() > 0:
-                        streamData = self.ser.read(self.ser.inWaiting())
-                        self.counter = 0
-                except:
-                    raise StopIteration('Serial port connection lost.')
-
-                if len(streamData) > 0:
-                    for data in self.marshalData(streamData):
-                        yield data
-
-                if self.counter > 100000 or self.packetmismatch > 10:
-                    raise StopIteration('Too many bad packets. Are you using the correct sensor?')
-        finally:
-            self.ser.close()
-
-    def marshalData(self, _dataNew):
-        self.data.extend(_dataNew)
-        bufferLength = len(self.data)
-        while self.keepAlive:
-
-            try:
-                # lock header
-                del self.data[:self.data.index(_preamble)]
-                _preambleLoc = 0
-                bufferLength = len(self.data)
-            except:
-                # no header found, we ended up purging the data
-                del self.data[:bufferLength]
-                break
-
-            if (len(self.data) < 4):
-                # not enough data for a legal packet, we have to wait...
-                break
-            else:
-                if ((ord(self.data[_preambleLoc+_protVerFieldDelta]) & 0x0f) != 0):
-
-                    # we have a packet of version we do not understand - either wrong version or
-                    # we have a wrong byte as the header. We will delete a byte and try header lock again.
-                    del self.data[0]
-
-                else:
-                    _msg_seq_num = (ord(self.data[_preambleLoc+_protVerFieldDelta]) & 0xf0) >> 4
-
-                    #it is protocol version 0, and we can parse that data, using this script.
-
-                    _postscriptLoc = ord(self.data[_preambleLoc+_datLenFieldDelta]) + _msgPSDelta + _datLenFieldDelta
-                    if (_postscriptLoc > _maxPacketSize):
-                        #the packet size if huge, it is unlikely that we have cuaght the header, so consume a
-                        #byte.
-                        del self.data[0]
-
-                    else:
-                        if (_postscriptLoc > bufferLength+2):
-                        # We do not have full packet in the buffer, cannot process.
-                            break
-                        else:
-                            if self.data[_postscriptLoc] != _postScript:
-                                #we probably have not locked to the header, consume and retry locking to header
-                                del self.data[0]
-                            else:
-                                # we may have a valid packet
-
-                                _packetCRC = crc8(self.data, _preambleLoc + _datLenFieldDelta + 1, _postscriptLoc)
-                                packetmismatch = 0
-
-                                if _packetCRC != 0:
-                                    # bad packet or we probably have not locked to the header, consume and retry locking to header
-                                    # ideally we should be able to throw the whole packet out, but purging just a byte for avoiding corner cases.
-                                    del self.data[0]
-
-                                else:
-
-                                    # print time.asctime(), _msg_seq_num, _postscriptLoc
-                                    # extract the data bytes alone, exclude preamble, prot version, len, crc and postScript
-                                    extractedData = self.data[_preambleLoc+3:_postscriptLoc-1]
-                                    fullPaket = self.data[_preambleLoc:_postscriptLoc+1]
-                                    # print fullPaket
-                                    consume_ptr = 0x00
-                                    self.CoreSenseConf = 0
-
-                                    del self.data[:self.data.index(_postScript) + 1]
-
-                                    print('-------------')
-
-                                    timestamp = datetime.datetime.now()
-
-                                    while consume_ptr < len(extractedData):
-                                        This_id = ord(extractedData[consume_ptr])
-                                        This_id_msg_size_valid = ord(extractedData[consume_ptr+1])
-                                        This_id_msg_size = This_id_msg_size_valid & 0x7F
-                                        This_id_msg_valid = (This_id_msg_size_valid & 0x80) >> 7
-                                        This_id_msg = extractedData[consume_ptr+2:consume_ptr+2+This_id_msg_size]
-
-                                        consume_ptr = consume_ptr + 2 + This_id_msg_size
-
-                                        if (This_id_msg_valid == 1):
-                                            try:
-                                                yield (timestamp,) + parse_sensor(This_id, This_id_msg)
-                                            except Exception as e:
-                                                print(e)
-                                        else:
-                                            pass
+@contextmanager
+def create_connection(device):
+    try:
+        socket = Connection(device)
+        yield socket
+    finally:
+        socket.close()
