@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from serial import Serial
 from contextlib import contextmanager
+import datetime
 
 
 START_BYTE = 0xAA
@@ -20,6 +21,9 @@ class Connection(object):
     def recv(self):
         'Receives a list of sensor entries from the device.'
         data = self.recv_packet_data()
+
+        entries = []
+
         offset = 0
 
         while offset < len(data):
@@ -32,9 +36,11 @@ class Connection(object):
             entry_data = data[offset+2:offset+2+length]
 
             if valid:
-                yield parse_sensor(identifier, entry_data)
+                entries.append(parse_sensor(identifier, entry_data))
 
             offset += 2 + length  # header + contents
+
+        return Message(datetime.datetime.now(), entries)
 
     def recv_packet_data(self):
         'Receives raw packet data from the device.'
@@ -59,7 +65,18 @@ class Connection(object):
             raise NoPacketError(attempt)
 
 
-class Entry(object):
+class Message(object):
+    'Contains a list of sensor entries.'
+
+    def __init__(self, timestamp, entries):
+        self.timestamp = timestamp
+        self.entries = entries
+
+    def __repr__(self):
+        return '[{} : {}]'.format(self.timestamp, self.entries)
+
+
+class MessageEntry(object):
     'Contains information about a particular sensor from a packet.'
 
     def __init__(self, sensor, values):
@@ -292,7 +309,7 @@ def parse_sensor(identifier, sensor_data):
     entry_values = unpack_sensor_data(sensor_format, sensor_data)
     entry_names = [name for name, _ in sensor_format]
 
-    return Entry(entry_sensor, list(zip(entry_names, entry_values)))
+    return MessageEntry(entry_sensor, list(zip(entry_names, entry_values)))
 
 
 @contextmanager
