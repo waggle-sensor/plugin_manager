@@ -22,6 +22,7 @@ class Connection(object):
         'Receives a list of sensor entries from the device.'
         data = self.recv_packet_data()
 
+        timestamp = datetime.datetime.now()
         entries = []
 
         offset = 0
@@ -31,7 +32,7 @@ class Connection(object):
 
             header = ord(data[offset + 1])
             length = header & 0x7F
-            valid = ((header & 0x80) >> 7) == 1
+            valid = header & 0x80 != 0
 
             entry_data = data[offset+2:offset+2+length]
 
@@ -40,7 +41,7 @@ class Connection(object):
 
             offset += 2 + length  # header + contents
 
-        return Message(datetime.datetime.now(), entries)
+        return Message(timestamp, entries)
 
     def recv_packet_data(self):
         'Receives raw packet data from the device.'
@@ -63,6 +64,16 @@ class Connection(object):
                 return data
         else:
             raise NoPacketError(attempt)
+
+
+@contextmanager
+def create_connection(device):
+    'Yields a managed coresense connection.'
+    conn = Connection(device)
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 
 class Message(object):
@@ -310,12 +321,3 @@ def parse_sensor(identifier, sensor_data):
     entry_names = [name for name, _ in sensor_format]
 
     return MessageEntry(entry_sensor, list(zip(entry_names, entry_values)))
-
-
-@contextmanager
-def create_connection(device):
-    try:
-        socket = Connection(device)
-        yield socket
-    finally:
-        socket.close()
