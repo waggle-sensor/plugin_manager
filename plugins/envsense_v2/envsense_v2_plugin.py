@@ -25,7 +25,7 @@ class register(object):
                 self.handle_message(conn.recv())
 
     def stop(self):
-        self.man[self.name] = 0
+        self.running = False
 
     def handle_message(self, message):
         logger.info(message)
