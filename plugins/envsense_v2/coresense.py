@@ -26,17 +26,17 @@ END_BYTE = 0x55
 
 
 class Connection(object):
-    'Provides a socket-like interface to a coresense device.'
+    """Provides a socket-like interface to a coresense device."""
 
     def __init__(self, device):
         self.serial = Serial(device)
 
     def close(self):
-        'Closes the connection to the device.'
+        """Closes the connection to the device."""
         self.serial.close()
 
     def recv(self):
-        'Receives a list of sensor entries from the device.'
+        """Receives a list of sensor entries from the device."""
         data = self.recv_packet_data()
 
         timestamp = datetime.datetime.now()
@@ -61,7 +61,7 @@ class Connection(object):
         return Message(timestamp, entries)
 
     def recv_packet_data(self):
-        'Receives raw packet data from the device.'
+        """Receives raw packet data from the device."""
         for attempt in range(10):
 
             # align stream to (possible) start of packet
@@ -85,7 +85,7 @@ class Connection(object):
 
 @contextmanager
 def create_connection(device, version='2'):
-    'Yields a managed coresense connection.'
+    """Yields a managed coresense connection."""
     conn = Connection(device)
     try:
         yield conn
@@ -94,7 +94,7 @@ def create_connection(device, version='2'):
 
 
 class Message(object):
-    'Contains a list of sensor entries.'
+    """Contains a list of sensor entries."""
 
     def __init__(self, timestamp, entries):
         self.timestamp = timestamp
@@ -105,7 +105,7 @@ class Message(object):
 
 
 class MessageEntry(object):
-    'Contains information about a particular sensor from a packet.'
+    """Contains information about a particular sensor from a packet."""
 
     def __init__(self, sensor, values):
         self.sensor = sensor
