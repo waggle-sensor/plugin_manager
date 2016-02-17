@@ -1,4 +1,21 @@
-# -*- coding: utf-8 -*-
+"""
+This module provides an interface to the Waggle coresense device. The Waggle
+coresense devices show up as USB serial devices. For example, the device may
+show us as '/dev/ttyACMX' on a Linux system.
+
+In order to access the data provided by this device, we'll create a Connection
+object provided by this module (or with the contextmanager create_connection).
+
+>>> import coresense
+
+>>> with coresense.create_connection('/dev/ttyACM0') as conn:
+>>>     message = conn.recv()
+>>>     for entry in message:
+>>>         print(entry)
+
+This will connect to the coresense device, receive a decoded message and then
+print each of the sensor entries received.
+"""
 from serial import Serial
 from contextlib import contextmanager
 import datetime
@@ -67,7 +84,7 @@ class Connection(object):
 
 
 @contextmanager
-def create_connection(device):
+def create_connection(device, version='2'):
     'Yields a managed coresense connection.'
     conn = Connection(device)
     try:
