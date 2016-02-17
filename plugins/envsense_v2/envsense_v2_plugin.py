@@ -16,13 +16,12 @@ class register(object):
         self.name = name
         self.man = man
         self.outqueue = mailbox_outgoing
-
         self.run(name, man)
 
     def run(self):
         with coresense.create_connection('/dev/ttyACM0') as conn:
-            self.man[self.name] = 1
-            while self.man[self.name] != 0:
+            self.running = True
+            while self.running:
                 self.handle_message(conn.recv())
 
     def stop(self):
@@ -44,6 +43,14 @@ class register(object):
             'meta.txt',
             format_entry_values(entry),
         ])
+
+    @property
+    def running(self):
+        return self.man[self.name] != 0
+
+    @running.setter
+    def running(self, state):
+        self.man[self.name] = 1 if state else 0
 
 
 def format_entry_values(entry):
