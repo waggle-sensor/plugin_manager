@@ -15,7 +15,7 @@ if [ ! -e /etc/waggle/node_id ] ; then
    echo "node_id is missing and create_node_id.sh script was not found."
    echo "Please execute:"
    echo "  cd /usr/lib/waggle/ ; git clone https://github.com/waggle-sensor/waggle_image.git"
-   exit(1)
+   exit 1
  fi
 
  source ${CRT_ND_SCR}
