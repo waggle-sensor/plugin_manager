@@ -23,14 +23,13 @@ class register(object):
         with coresense.create_connection('/dev/ttyACM0') as conn:
             self.man[self.name] = 1
             while self.man[self.name] != 0:
-                message = conn.recv()
-                logger.info(message)
-                self.handle_message(message)
+                self.handle_message(conn.recv())
 
     def stop(self):
         self.man[self.name] = 0
 
     def handle_message(self, message):
+        logger.info(message)
         for entry in message.entries:
             self.handle_message_entry(entry)
 
