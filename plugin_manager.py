@@ -35,8 +35,8 @@ from utilities import packetmaker
 class PluginManagerAPI:
     def __init__(self):
         self.plug = lib.run_plugins_multi.plugin_runner()
-        self.system_plugins={}
-        self.system_plugins['system_send']=1
+        self.system_plugins={'system_send': 1 ,'system_router': 1 }
+        
         self.command_functions = {
             "list" : {  'function' : self.command_list_plugins_full, 
                         'description' : 'list plugins'
