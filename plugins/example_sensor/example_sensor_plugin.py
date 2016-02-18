@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 import time, serial, sys, datetime, os, random
 
-sys.path.append('../')
-from send import send
 
-sys.path.append('../../')
-from waggle_protocol.utilities import packetmaker
 
 def unix_time(dt):
     epoch = datetime.datetime.utcfromtimestamp(0)
@@ -20,40 +16,35 @@ class register(object):
     
     
     
-    def __init__(self, name, man):
+    def __init__(self, name, man, mailbox_outgoing):
         import time
         man[name] = 1
 
         temperature_file = '/sys/class/thermal/thermal_zone0/temp'
         interval = 10
 
-        if os.path.isfile(temperature_file): 
-            count = 0
-            while 1:
+        use_temp = 0
+        if os.path.isfile(temperature_file):
+            use_temp = 1 
+            
+            
+        count = 0
+        while 1:
+            if use_temp:
                 tempC = int(open(temperature_file).read()) / 1e3
                 sendData=['CPU temperature', int(unix_time_millis(datetime.datetime.now())), ['Temperature']  , ['i'], [tempC], ['Celsius'], ['count='+str(count)]]
-                print 'Sending data: ',sendData
-                #packs and sends the data
-                packet = packetmaker.make_data_packet(sendData)
-                for pack in packet:
-                    send(pack)
-                #send a packet every 10 seconds
-                time.sleep(interval)
-                count = count + 1
-        
-        else:
-            count = 0
-            while 1:
+            else:
                 rint = random.randint(1, 100)
                 sendData=['RandomNumber', int(unix_time_millis(datetime.datetime.now())), ['Random']  , ['i'], [rint], ['NA'], ['count='+str(count)]]
-                print 'Sending data: ',sendData
-                #packs and sends the data
-                packet = packetmaker.make_data_packet(sendData)
-                for pack in packet:
-                    send(pack)
-                #send a packet every 10 seconds
-                time.sleep(interval)
-                count = count + 1
+            
+            print 'Sending data: ',sendData
+            
+            mailbox_outgoing.put(sendData)
+            #send a packet every 10 seconds
+            time.sleep(interval)
+            count = count + 1
+        
+
 
 
 
