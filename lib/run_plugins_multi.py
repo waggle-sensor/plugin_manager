@@ -59,12 +59,21 @@ class plugin_runner(object):
                 j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.mailbox_outgoing, self.listeners))
             elif  plugin_name == 'system_send':
                 
-                if not 'system_send' in self.listeners:
-                    self.listeners['system_send'] = self.man.Queue()
+                try:
+                    system_send_queue = None
+                    if not 'system_send' in self.listeners:
+                        system_send_queue = Queue()
+                        self.listeners['system_send'] = system_send_queue
+                    else:
+                        system_send_queue = self.listeners['system_send']
                     
-                system_send_queue  = self.listeners['system_send']
+                    system_send_queue  = self.listeners['system_send']
                 
-                j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, system_send_queue))
+                
+                
+                    j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, system_send_queue))
+                except Exception as e:
+                    logger.error("argh: %s" % (str(e)))
                 
             else:
                 j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.mailbox_outgoing))
