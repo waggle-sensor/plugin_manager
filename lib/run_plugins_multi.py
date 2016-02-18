@@ -62,7 +62,7 @@ class plugin_runner(object):
                 try:
                     system_send_queue = None
                     if not 'system_send' in self.listeners:
-                        system_send_queue = Queue()
+                        system_send_queue = self.manager.Queue()
                         self.listeners['system_send'] = system_send_queue
                     else:
                         system_send_queue = self.listeners['system_send']
