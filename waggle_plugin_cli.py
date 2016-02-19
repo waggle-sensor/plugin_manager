@@ -33,7 +33,7 @@ def read_streaming_api():
         client_sock.close()
         return None
         
-        
+    print "listening for stream..."    
     while 1:    
         try:
             data = client_sock.recv(2048) #TODO need better solution
@@ -41,7 +41,7 @@ def read_streaming_api():
             print "Error reading socket: %s" % (str(e))
             client_sock.close()
             break
-        print data
+        print "got data: ", data
 
 
     
