@@ -349,10 +349,10 @@ class PluginManagerAPI:
     
     def message_log_process(self, client_sock, queue):
         
-        
+        logger.debug('process for listener is running')
         while 1:
             msg = queue.get()
-            #logger.info("myq message: %s" % (str(msg)))
+            logger.info("message for listener: %s" % (str(msg)))
             try:
                 client_sock.sendall(str(msg)+"\n")
             except Exception as e:
@@ -489,7 +489,7 @@ if __name__ == '__main__':
                 pmAPI.plug.add_listener('listener', myq)
         
                 pmAPI.plug.restart_plugin('system_router')
-                
+                logger.debug('spawning process for listener')
                 j = multiprocessing.Process(name='listener', target=pmAPI.message_log_process, args=(client_sock, myq))
                 
                 j.start()
