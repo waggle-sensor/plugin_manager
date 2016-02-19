@@ -32,6 +32,14 @@ def read_streaming_api():
         print "Error connecting to socket: %s" % (str(e))
         client_sock.close()
         return None
+    
+    try:
+        client_sock.sendall('log')
+    except Exception as e:
+         print "Error talking to socket: %s" % (str(e))
+         client_sock.close()
+         return None
+    
         
     print "listening for stream..."    
     while 1:    
