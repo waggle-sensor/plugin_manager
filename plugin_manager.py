@@ -486,13 +486,17 @@ if __name__ == '__main__':
             if command == 'log':
                 myq  = Queue()
         
-                pmAPI.plug.add_listener('listener', myq)
-        
-                pmAPI.plug.restart_plugin('system_router')
+                
                 logger.debug('spawning process for listener')
                 j = multiprocessing.Process(name='listener', target=pmAPI.message_log_process, args=(client_sock, myq))
                 
                 j.start()
+                
+                pmAPI.plug.add_listener('listener', myq, j)
+        
+                pmAPI.plug.restart_plugin('system_router')
+                
+                
                 
                 continue;
             

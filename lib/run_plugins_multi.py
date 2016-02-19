@@ -21,12 +21,12 @@ class plugin_runner(object):
         
         self.mailbox_outgoing = Queue()
         self.system_send_queue = self.manager.Queue()
-        self.listeners = { 'system_send' : self.system_send_queue }
+        self.listeners = {} 
         
-    def add_listener(self, name, queue):
+    def add_listener(self, name, queue, process):
         if name in self.listeners:
             return [0, 'listener with that name already exists']
-        self.listeners[name] = queue
+        self.listeners[name] = {'queue': queue, 'process': process} 
         
         return [1, '']
         
@@ -74,6 +74,9 @@ class plugin_runner(object):
                     j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.system_send_queue))
                 except Exception as e:
                     logger.error("Starting process failed: %s" % (str(e)))
+                
+                self.add_listener('system_send', self.system_send_queue, j)
+                
                 
             else:
                 j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.mailbox_outgoing))

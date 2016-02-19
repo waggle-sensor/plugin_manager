@@ -43,11 +43,22 @@ class system_router(object):
             for listener_name in self.listeners:
                 
                 #logger.debug("listener: %s" % (listener_name))
-                queue = self.listeners[listener_name]
+                listener = self.listeners[listener_name]
+                queue = listener['queue']
                 
-                try:
-                    queue.put(msg)
-                except Queue.Full:
-                    logger.warning("Queue %s is full, cannot push messages" % (listener_name))
-                except Exception as e:
-                    logger.error("Error trying to put message into queue %s: %s" % (listener_name, str(e)))
+                do_send = 1
+                if 'process' in listener:
+                    process = listener['process']
+                    if not process.is_alive():
+                        do_send = 0
+                        del self.listeners['listener_name']
+                        
+                if do_send:
+                    try:
+                        queue.put(msg)
+                    except Queue.Full:
+                        logger.warning("Queue %s is full, cannot push messages" % (listener_name))
+                    except Exception as e:
+                        logger.error("Error trying to put message into queue %s: %s" % (listener_name, str(e)))
+                    
+                    
