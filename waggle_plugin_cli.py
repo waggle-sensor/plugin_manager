@@ -5,7 +5,7 @@ import sys, os, json, socket, time, select
 
 from tabulate import tabulate
 
-
+socket_file = '/tmp/plugin_manager'
 
 def print_table(obj):
     print "%s:" % (obj['title'])
@@ -22,9 +22,31 @@ def print_tables(results):
 def command_dummy(results):
     print json.dumps(results, sort_keys=True, indent=4, separators=(',', ': '))
     
+
+def read_streaming_api():
+    client_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    
+    try:
+        client_sock.connect(socket_file)
+    except Exception as e:
+        print "Error connecting to socket: %s" % (str(e))
+        client_sock.close()
+        return None
+        
+        
+    while 1:    
+        try:
+            data = client_sock.recv(2048) #TODO need better solution
+        except Exception as e:
+            print "Error reading socket: %s" % (str(e))
+            client_sock.close()
+            break
+        print data
+
+
     
 def read_api(command, timeout=3): 
-    socket_file = '/tmp/plugin_manager'
+    
     
     client_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     #client_sock.setblocking(0)
@@ -126,7 +148,13 @@ if __name__ == '__main__':
         #print command_line
         #print command_line.split()
         
-        execute_command(command_line.split())
+        command_array = command_line.split()
+        
+        if command_array[0] == 'log':
+            read_streaming_api()
+            continue
+        
+        execute_command(command_array)
         
 
 
