@@ -45,6 +45,8 @@ def read_streaming_api():
     while 1:    
         try:
             data = client_sock.recv(2048) #TODO need better solution
+        except KeyboardInterrupt:
+            break
         except Exception as e:
             print "Error reading socket: %s" % (str(e))
             client_sock.close()
