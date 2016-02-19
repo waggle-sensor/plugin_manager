@@ -347,7 +347,18 @@ class PluginManagerAPI:
         return json.dumps(result)
     
     
-    
+    def message_log_process(self, client_sock, queue):
+        
+        
+        while 1:
+            msg = queue.get()
+            #logger.info("myq message: %s" % (str(msg)))
+            try:
+                client_sock.sendall(str(msg)+"\n")
+            except Exception as e:
+                logger.warning("Could not reply to client: %s" % (str(e)) )
+                break
+        
         
 
     def do_command(self, command_line):
@@ -421,15 +432,7 @@ if __name__ == '__main__':
     
 
         #list_plugins_full(None)
-        myq  = Queue()
         
-        pmAPI.plug.add_listener('hello_world', myq)
-        
-        pmAPI.plug.restart_plugin('system_router')
-        
-        while 1:
-            msg = myq.get()
-            logger.info("myq message: %s" % (str(msg)))
         
         
 
@@ -477,6 +480,24 @@ if __name__ == '__main__':
         
         
             command = str(data).rstrip()
+            
+            
+            
+            if command == 'log':
+                myq  = Queue()
+        
+                pmAPI.plug.add_listener('listener', myq)
+        
+                pmAPI.plug.restart_plugin('system_router')
+                
+                j = multiprocessing.Process(name='listener', target=pmAPI.message_log_process, args=(client_sock, myq))
+                
+                j.start()
+                
+                continue;
+            
+            
+            
             logger.debug("received command \"%s\"" % (command))
             try:
                 result_json = pmAPI.do_command(command.split())
