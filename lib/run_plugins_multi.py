@@ -17,9 +17,11 @@ class plugin_runner(object):
         self.jobs = []
         self.manager = Manager()
         self.man = self.manager.dict()
-        #self.listeners = self.manager.dict()
+        
+        
         self.mailbox_outgoing = Queue()
         self.system_send_queue = self.manager.Queue()
+        self.listeners = { 'system_send' : self.system_send_queue }
 
     #Lists all available plugins and their status
     def list_plugins(self):
@@ -57,7 +59,7 @@ class plugin_runner(object):
             #Starts plugin as a process named the same as plugin name
             #sys.stdout = open('/dev/null', 'w')
             if plugin_name == 'system_router':
-                j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.mailbox_outgoing, [self.system_send_queue]))
+                j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.mailbox_outgoing, self.listeners ))
             elif  plugin_name == 'system_send':
                 
                 try:

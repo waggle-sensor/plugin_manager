@@ -36,10 +36,10 @@ class system_router(object):
             # TODO select.select statment to read from multiple plugin queues
             msg = self.plugin_mailbox.get() # a blocking call.
             
-            for queue in self.listeners:
-                listener_name = 'unknown' # TODO get name !
+            for listener_name in self.listeners:
+                
                 #logger.debug("listener: %s" % (listener_name))
-                #queue = self.listeners[listener_name]
+                queue = self.listeners[listener_name]
                 
                 try:
                     queue.put(msg)
