@@ -150,7 +150,8 @@ if __name__ == '__main__':
         
         command_array = command_line.split()
         
-        if command_array[0] == 'log':
+            
+        if len(command_array) > 0 and command_array[0] == 'log':
             read_streaming_api()
             continue
         
