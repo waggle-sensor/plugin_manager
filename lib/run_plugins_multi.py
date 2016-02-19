@@ -17,8 +17,9 @@ class plugin_runner(object):
         self.jobs = []
         self.manager = Manager()
         self.man = self.manager.dict()
-        self.listeners = self.manager.dict()
+        #self.listeners = self.manager.dict()
         self.mailbox_outgoing = Queue()
+        self.system_send_queue = self.manager.Queue()
 
     #Lists all available plugins and their status
     def list_plugins(self):
@@ -56,24 +57,13 @@ class plugin_runner(object):
             #Starts plugin as a process named the same as plugin name
             #sys.stdout = open('/dev/null', 'w')
             if plugin_name == 'system_router':
-                j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.mailbox_outgoing, self.listeners))
+                j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.mailbox_outgoing, [self.system_send_queue]))
             elif  plugin_name == 'system_send':
                 
                 try:
-                    system_send_queue = None
-                    if not 'system_send' in self.listeners:
-                        system_send_queue = self.manager.Queue()
-                        self.listeners['system_send'] = system_send_queue
-                    else:
-                        system_send_queue = self.listeners['system_send']
-                    
-                    system_send_queue  = self.listeners['system_send']
-                
-                
-                
-                    j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, system_send_queue))
+                    j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.system_send_queue))
                 except Exception as e:
-                    logger.error("argh: %s" % (str(e)))
+                    logger.error("Starting process failed: %s" % (str(e)))
                 
             else:
                 j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.mailbox_outgoing))
