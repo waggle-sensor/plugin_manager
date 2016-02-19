@@ -22,6 +22,14 @@ class plugin_runner(object):
         self.mailbox_outgoing = Queue()
         self.system_send_queue = self.manager.Queue()
         self.listeners = { 'system_send' : self.system_send_queue }
+        
+    def add_listener(self, name, queue):
+        if name in self.listeners:
+            return [0, 'listener with that name already exists']
+        self.listeners[name] = queue
+        
+        return [1, '']
+        
 
     #Lists all available plugins and their status
     def list_plugins(self):

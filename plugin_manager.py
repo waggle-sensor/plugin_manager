@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import multiprocessing, time, sys, re, os, socket, json, argparse
 import logging, logging.handlers
-
+from multiprocessing import Manager, Queue
 
 loglevel=logging.DEBUG
 LOG_FORMAT='%(asctime)s - %(name)s - %(levelname)s - line=%(lineno)d - %(message)s'
@@ -421,6 +421,15 @@ if __name__ == '__main__':
     
 
         #list_plugins_full(None)
+        myq  = Queue()
+        
+        myq.plug.add_listener(myq)
+        
+        while 1:
+            msg = myq.get()
+            logger.info("myq message: %s" % (str(msg)))
+        
+        
 
 
         socket_file = '/tmp/plugin_manager'
