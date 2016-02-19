@@ -28,7 +28,7 @@ cp /etc/waggle/node_id /etc/waggle/hostname
 ./scripts/install_dependencies.sh
 
 # daemons
-ln -sf /usr/lib/waggle/guestnodes/scripts/communicator.sh /etc/init.d/communicator.sh
+ln -sf /usr/lib/waggle/plugin_manager/scripts/communicator.sh /etc/init.d/communicator.sh
 update-rc.d communicator.sh defaults 
 
 
