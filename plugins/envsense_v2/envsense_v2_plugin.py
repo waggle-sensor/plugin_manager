@@ -40,7 +40,7 @@ class envsense(object):
     def handle_message(self, message):
         logger.info(message)
         for entry in message.entries:
-            self.handle_message_entry(entry)
+            self.handle_message_entry(message, entry)
 
     def handle_message_entry(self, message, entry):
         self.outqueue.put([
