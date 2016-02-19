@@ -425,6 +425,8 @@ if __name__ == '__main__':
         
         pmAPI.plug.add_listener('hello_world', myq)
         
+        pmAPI.plug.restart_plugin('system_router')
+        
         while 1:
             msg = myq.get()
             logger.info("myq message: %s" % (str(msg)))
