@@ -423,7 +423,7 @@ if __name__ == '__main__':
         #list_plugins_full(None)
         myq  = Queue()
         
-        pmAPI.plug.add_listener(myq)
+        pmAPI.plug.add_listener('hello_world', myq)
         
         while 1:
             msg = myq.get()
