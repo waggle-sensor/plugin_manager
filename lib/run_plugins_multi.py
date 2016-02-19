@@ -130,6 +130,13 @@ class plugin_runner(object):
         
         return [stopped, 'Plugin %s not active - cannot stop.' % (plugin_name)]
 
+    def plugin_exists(self, plugin_name):
+        stopped = 0
+        for j in self.jobs:
+            if (j.name == plugin_name):
+                return [1, '']
+        return [0,'']
+
     #sends plugin a pause signal
     def pause_plugin(self, plugin_name):
         paused = 0
@@ -176,9 +183,20 @@ class plugin_runner(object):
         return [1 , '']
 
     #runs kill_plugin, then start_plugin if the first is successful
-    def restart_plugin(self, plugin_name):
+    def restart_plugin(self, plugin_name, force=False):
         logger.debug('Restarting plugin '+ plugin_name)
-        if (self.kill_plugin(plugin_name)):
+        
+        
+        exists = self.plugin_exists(plugin_name)
+        if exists[0]:
+            if force:
+                stopped = self.kill_plugin(plugin_name)
+            else:
+                stopped = self.stop_plugin(plugin_name)
+        else:
+            stopped = [1,'']
+        
+        if stopped[0]:
             #If stopping plugin worked, try to start it again
             if(self.start_plugin(plugin_name)):
                 return [1, 'Plugin %s restarted.' % (plugin_name)]
@@ -186,6 +204,7 @@ class plugin_runner(object):
                 return [0, 'Plugin %s stopped, but not restarted. Did you alter the plugin?' % (plugin_name)]
         
         return [0,  'Plugin %s did not terminate - cannot restart.' % (plugin_name)]
+
 
 
     #terminates all active processes
