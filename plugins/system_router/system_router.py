@@ -31,6 +31,10 @@ class system_router(object):
     
     def route(self):
         
+        for listener_name in self.listeners:
+            logger.info("listener: %s" % (listener_name))
+            
+            
         while self.man[self.name]:
             
             # TODO select.select statment to read from multiple plugin queues
