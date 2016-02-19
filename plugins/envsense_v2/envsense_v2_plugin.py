@@ -9,6 +9,16 @@ logger.setLevel(logging.DEBUG)
 
 class register(object):
 
+    def __init__(self, name, man, mailbox_outgoing):
+        
+        env = envsense(name, man, mailbox_outgoing)
+        
+        env.run()
+    
+
+
+class envsense(object):
+
     plugin_name = 'envsense'
     plugin_version = '2'
 
@@ -16,7 +26,7 @@ class register(object):
         self.name = name
         self.man = man
         self.outqueue = mailbox_outgoing
-        self.run(name, man)
+        
 
     def run(self):
         with coresense.create_connection('/dev/ttyACM0') as conn:
@@ -51,6 +61,7 @@ class register(object):
     @running.setter
     def running(self, state):
         self.man[self.name] = 1 if state else 0
+
 
 
 def format_entry_values(entry):
