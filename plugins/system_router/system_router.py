@@ -11,33 +11,35 @@ class register(object):
     def __init__(self, name, man, plugin_mailbox, listeners):
     	man[name] = 1
         
-        ss = system_router(plugin_mailbox, listeners)
+        sr = system_router(name, man, plugin_mailbox, listeners)
         
         try:
-            ss.read_mailbox(name, man)
+            sr.route()
         except KeyboardInterrupt:
             sys.exit(0)
         
 
 class system_router(object):
     
-    def __init__(self,plugin_mailbox, listeners):
+    def __init__(self,name, man, plugin_mailbox, listeners):
+        self.name = name
+        self.man = man
         self.plugin_mailbox = plugin_mailbox
         self.listeners = listeners
         
-        self.route()
         
     
     def route(self):
         
-        while man[name]:
+        while self.man[self.name]:
             
             # TODO select.select statment to read from multiple plugin queues
             msg = self.plugin_mailbox.get() # a blocking call.
             
-            for listener_name in self.listeners:
-                logger.debug("listener: %s" % (listener_name))
-                queue = self.listeners[listener_name]
+            for queue in self.listeners:
+                listener_name = 'unknown' # TODO get name !
+                #logger.debug("listener: %s" % (listener_name))
+                #queue = self.listeners[listener_name]
                 
                 try:
                     queue.put(msg)
