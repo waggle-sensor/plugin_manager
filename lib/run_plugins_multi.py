@@ -12,6 +12,19 @@ import plugins
 
 logger = logging.getLogger(__name__)
 
+
+
+def check_pid(pid):        
+    """ Check For the existence of a unix pid. """
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    else:
+        return True
+
+
+
 class plugin_runner(object):
     def __init__(self):
         self.jobs = []
@@ -23,12 +36,29 @@ class plugin_runner(object):
         self.system_send_queue = self.manager.Queue()
         self.listeners = {} 
     
+    
+    def listener_consolidate(self, name):
+        if not name in self.listeners:
+            return
+            
+        pid = self.listeners[name]['pid']
+        
+        if not pid:
+            return
+            
+        if not check_pid(pid):
+            del self.listeners[name]    
+    
     def listener_exists(self, name):
+        self.listener_consolidate(name)
+        
         if name in self.listeners:
             return [1, '']
         return [0, '']
         
     def add_listener(self, name, queue, pid):
+        self.listener_consolidate(name)
+        
         if name in self.listeners:
             return [0, 'listener with that name already exists']
             
