@@ -1,6 +1,6 @@
-# waggle plugin manager
+# Waggle Plugin Manager
 
-
+Plugins provide the functionality to read and preprocess raw sensor values from attached sensors (e.g. attached via USB or GPIOs) locally on the compute nodes.
 
 ## Installation
 
