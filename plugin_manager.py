@@ -384,6 +384,7 @@ class PluginManagerAPI:
                         break
                     counter = 0
         logger.info("Closing listener process: %d" % (os.getpid()))
+        sys.exit(0)
         
 
     def do_command(self, command_line):
