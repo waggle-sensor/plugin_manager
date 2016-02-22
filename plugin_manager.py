@@ -510,10 +510,14 @@ if __name__ == '__main__':
             if data:
                 count = 0
             else:
+                logger.debug("no command")
                 count = count + 1
                 time.sleep(1)
                 # this will join all children and thus remove zombies
-                multiprocessing.active_children()
+                if count >= 10:
+                    logger.debug("call active_children()")
+                    multiprocessing.active_children()
+                    count = 0
                 continue
         
             command = str(data).rstrip()
