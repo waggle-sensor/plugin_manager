@@ -53,7 +53,7 @@ class system_router(object):
             
             # TODO select.select statment to read from multiple plugin queues
             msg = self.plugin_mailbox.get() # a blocking call.
-            count = count + 1
+            
             
             check_listener = 0
             current = time.time()
