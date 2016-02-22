@@ -533,7 +533,7 @@ if __name__ == '__main__':
                 logger.debug("received command \"log\"" )
                 myq  = Queue()
         
-                #listener_name = 'client'
+                listener_name = 'client'
                 #listener_e = pmAPI.plug.listener_exists(listener_name)
                 #if listener_e[0]:
                 #    result_json = pmAPI.create_status_message(0, 'listener already exists')
