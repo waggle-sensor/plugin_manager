@@ -76,7 +76,7 @@ class system_router(object):
                     logger.debug("checking pid: %d" % (pid))
                     if not check_pid(pid):
                         do_send = 0
-                        del self.listeners['listener_name']
+                        del self.listeners[listener_name]
                         
                 if do_send:
                     try:
