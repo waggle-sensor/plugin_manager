@@ -64,6 +64,7 @@ class Connection(object):
         """Receives raw packet data from the device."""
         for attempt in range(10):
 
+            
             # align stream to (possible) start of packet
             while ord(self.serial.read(1)) != START_BYTE:
                 pass
@@ -74,11 +75,15 @@ class Connection(object):
             data = self.serial.read(length)
 
             footer = self.serial.read(2)
+                
+        
             crc = ord(footer[0])
             end = ord(footer[1])
 
             if end == END_BYTE and crc8(data) == crc:
                 return data
+                
+                
         else:
             raise NoPacketError(attempt)
 

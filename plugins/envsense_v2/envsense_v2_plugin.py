@@ -32,7 +32,15 @@ class envsense(object):
         with coresense.create_connection('/dev/ttyACM0') as conn:
             self.running = True
             while self.running:
-                self.handle_message(conn.recv())
+                
+                try:
+                    msg = conn.recv()
+                except Exception as e:
+                    logger.error("Error of type %s: %s" % (str(type(e)), str(e)))
+                    msg = None
+                    
+                if msg:    
+                    self.handle_message()
 
     def stop(self):
         self.running = False
