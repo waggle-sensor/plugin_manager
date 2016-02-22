@@ -145,7 +145,7 @@ if __name__ == '__main__':
     
     
     execute_command(['help'])
-    
+    execute_command(['list'])
     
     while True:
         #execute_command(['list'])
