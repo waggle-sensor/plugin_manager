@@ -498,7 +498,7 @@ if __name__ == '__main__':
                 if add_listener_result[0] == 0:
                     result_json = pmAPI.create_status_message(add_listener_result[0], add_listener_result[1])
                     j.terminate()
-                else    
+                else:
                     pmAPI.plug.restart_plugin('system_router')
                     continue;
             
