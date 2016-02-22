@@ -19,6 +19,18 @@ class register(object):
             sys.exit(0)
         
 
+
+def check_pid(pid):        
+    """ Check For the existence of a unix pid. """
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    else:
+        return True
+        
+        
+
 class system_router(object):
     
     def __init__(self,name, man, plugin_mailbox, listeners):
@@ -31,14 +43,24 @@ class system_router(object):
     
     def route(self):
         
+        check_interval = 10
+        
         for listener_name in self.listeners:
             logger.info("listener: %s" % (listener_name))
             
-            
+        last_check = time.time()
         while self.man[self.name]:
             
             # TODO select.select statment to read from multiple plugin queues
             msg = self.plugin_mailbox.get() # a blocking call.
+            count = count + 1
+            
+            check_listener = 0
+            current = time.time()
+            
+            if current > (last_check + check_interval):
+                check_listener = 1
+                last_check = current
             
             for listener_name in self.listeners:
                 
@@ -47,9 +69,10 @@ class system_router(object):
                 queue = listener['queue']
                 
                 do_send = 1
-                if 'process' in listener:
-                    process = listener['process']
-                    if not process.is_alive():
+                
+                if check_listener and 'pid' in listener:
+                    pid = listener['pid']
+                    if not check_pid(pid):
                         do_send = 0
                         del self.listeners['listener_name']
                         

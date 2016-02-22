@@ -492,7 +492,7 @@ if __name__ == '__main__':
                 
                 j.start()
                 
-                pmAPI.plug.add_listener('listener', myq, j)
+                pmAPI.plug.add_listener('listener', myq, j.pid)
         
                 pmAPI.plug.restart_plugin('system_router')
                 

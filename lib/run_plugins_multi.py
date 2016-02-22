@@ -23,10 +23,10 @@ class plugin_runner(object):
         self.system_send_queue = self.manager.Queue()
         self.listeners = {} 
         
-    def add_listener(self, name, queue, process):
+    def add_listener(self, name, queue, pid):
         if name in self.listeners:
             return [0, 'listener with that name already exists']
-        self.listeners[name] = {'queue': queue, 'process': process} 
+        self.listeners[name] = {'queue': queue, 'pid': pid} 
         
         return [1, '']
         
@@ -75,7 +75,7 @@ class plugin_runner(object):
                 except Exception as e:
                     logger.error("Starting process failed: %s" % (str(e)))
                 
-                self.add_listener('system_send', self.system_send_queue, j)
+                self.add_listener('system_send', self.system_send_queue, j.pid)
                 
                 
             else:
