@@ -40,7 +40,7 @@ class envsense(object):
                     msg = None
                     
                 if msg:    
-                    self.handle_message()
+                    self.handle_message(msg)
 
     def stop(self):
         self.running = False
