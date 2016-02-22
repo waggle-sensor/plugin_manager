@@ -1,4 +1,4 @@
-import multiprocessing, time, sys, psutil, os, signal, logging
+import multiprocessing, time, sys, psutil, os, signal, logging, uuid
 from multiprocessing import Manager, Queue
 
 """
@@ -12,14 +12,69 @@ import plugins
 
 logger = logging.getLogger(__name__)
 
+
+
+def check_pid(pid):        
+    """ Check For the existence of a unix pid. """
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    else:
+        return True
+
+
+
 class plugin_runner(object):
     def __init__(self):
         self.jobs = []
         self.manager = Manager()
         self.man = self.manager.dict()
-        #self.listeners = self.manager.dict()
+        
+        
         self.mailbox_outgoing = Queue()
         self.system_send_queue = self.manager.Queue()
+        self.listeners = {} 
+    
+    
+    #def listener_consolidate(self, name):
+    #    if not name in self.listeners:
+    #        return
+    #        
+    #    pid = self.listeners[name]['pid']
+    #    
+    #    if not pid:
+    #        return
+    #        
+    #    if not check_pid(pid):
+    #        del self.listeners[name]    
+    
+    #def listener_exists(self, name):
+    #    #self.listener_consolidate(name)
+    #    
+    #   if name in self.listeners:
+    #        return [1, '']
+    #    return [0, '']
+        
+    def add_listener(self, name, queue, pid):
+        #self.listener_consolidate(name)
+        
+        listener_uuid = str(uuid.uuid4())
+        
+        if listener_uuid in self.listeners:
+            return [0, 'listener with that uuid already exists']
+            
+        if not pid:
+            return [0, 'pid is not defined']
+            
+        if not type(pid) is int:
+            return [0, 'pid is not int']
+        
+            
+        self.listeners[listener_uuid] = {'name': name, 'queue': queue, 'pid': pid} 
+        
+        return [1, listener_uuid]
+        
 
     #Lists all available plugins and their status
     def list_plugins(self):
@@ -57,7 +112,10 @@ class plugin_runner(object):
             #Starts plugin as a process named the same as plugin name
             #sys.stdout = open('/dev/null', 'w')
             if plugin_name == 'system_router':
-                j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.mailbox_outgoing, [self.system_send_queue]))
+                j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.mailbox_outgoing, self.listeners ))
+                self.jobs.append(j)
+                j.start()
+                
             elif  plugin_name == 'system_send':
                 
                 try:
@@ -65,11 +123,17 @@ class plugin_runner(object):
                 except Exception as e:
                     logger.error("Starting process failed: %s" % (str(e)))
                 
+                self.jobs.append(j)
+                j.start()
+                
+                self.add_listener('system_send', self.system_send_queue, int(j.pid))
+                
+                
             else:
                 j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.mailbox_outgoing))
-                
-            self.jobs.append(j)
-            j.start()
+                self.jobs.append(j)
+                j.start()
+            
             #sys.stdout = sys.__stdout__
             # TODO proper check is missing !
             return [1 , 'Plugin %s started.' %(j.name)]
@@ -120,6 +184,13 @@ class plugin_runner(object):
         
         return [stopped, 'Plugin %s not active - cannot stop.' % (plugin_name)]
 
+    def plugin_exists(self, plugin_name):
+        stopped = 0
+        for j in self.jobs:
+            if (j.name == plugin_name):
+                return [1, '']
+        return [0,'']
+
     #sends plugin a pause signal
     def pause_plugin(self, plugin_name):
         paused = 0
@@ -166,9 +237,20 @@ class plugin_runner(object):
         return [1 , '']
 
     #runs kill_plugin, then start_plugin if the first is successful
-    def restart_plugin(self, plugin_name):
+    def restart_plugin(self, plugin_name, force=False):
         logger.debug('Restarting plugin '+ plugin_name)
-        if (self.kill_plugin(plugin_name)):
+        
+        
+        exists = self.plugin_exists(plugin_name)
+        if exists[0]:
+            if force:
+                stopped = self.kill_plugin(plugin_name)
+            else:
+                stopped = self.stop_plugin(plugin_name)
+        else:
+            stopped = [1,'']
+        
+        if stopped[0]:
             #If stopping plugin worked, try to start it again
             if(self.start_plugin(plugin_name)):
                 return [1, 'Plugin %s restarted.' % (plugin_name)]
@@ -176,6 +258,7 @@ class plugin_runner(object):
                 return [0, 'Plugin %s stopped, but not restarted. Did you alter the plugin?' % (plugin_name)]
         
         return [0,  'Plugin %s did not terminate - cannot restart.' % (plugin_name)]
+
 
 
     #terminates all active processes

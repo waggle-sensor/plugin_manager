@@ -1,6 +1,8 @@
 #!/usr/bin/env python
-import multiprocessing, time, sys, re, os, socket, json, argparse
+import multiprocessing, time, sys, re, os, socket, json, argparse, select
 import logging, logging.handlers
+from multiprocessing import Manager, Queue
+from Queue import Empty
 
 
 loglevel=logging.DEBUG
@@ -40,6 +42,9 @@ class PluginManagerAPI:
         self.command_functions = {
             "list" : {  'function' : self.command_list_plugins_full, 
                         'description' : 'list plugins'
+            },
+            "log" : {   'function' : None,
+                        'description' : 'get message stream'
             },
             "help" : {  'function' : self.command_help, 
                         'description' : ''
@@ -88,8 +93,9 @@ class PluginManagerAPI:
         self.blacklist = self.get_list('plugins/blacklist.txt')
         self.whitelist = self.get_list('plugins/whitelist.txt')
 
-   
-    #takes a plugin name and adds or removes it from the blacklist or whitelist, as specified by caller
+    """
+    Takes a plugin name and adds or removes it from the blacklist or whitelist, as specified by caller
+    """
     def manip_list(self, plugin, listtype, manipulation):
         if (listtype == "whitelist"):
             file = open('plugins/whitelist.txt','r+')
@@ -154,7 +160,9 @@ class PluginManagerAPI:
 
     #### commands ####
 
-    #Lists available plugins, if they are active, and whether they are present on the whitelist and blacklist
+    """
+    Lists available plugins, if they are active, and whether they are present on the whitelist and blacklist
+    """
     def command_list_plugins_full(self):
         headers                                                       = ["plugin", "instance", "active", "whitelist", "blacklist"]
         system_table                                                  = []
@@ -346,8 +354,42 @@ class PluginManagerAPI:
         
         return json.dumps(result)
     
-    
-    
+    """
+    Process to send data to remote listeners.
+    """
+    def message_log_process(self, client_sock, queue):
+        
+        client_sock.setblocking(0)
+        
+        logger.debug('process for listener is running')
+        counter=0
+        while 1:
+            try:
+                msg = queue.get()
+            except Queue.Empty:
+                msg = None
+                time.sleep(1)
+            
+            if msg:
+                counter=0
+                logger.info("message for listener: %s" % (str(msg)))
+                try:
+                    client_sock.sendall(str(msg))
+                except Exception as e:
+                    logger.warning("Could not send message to listener, closing. %s" % (str(e)) )
+                    break
+            else:
+                # this will check connection every 5 seconds if no data comes in.
+                counter=counter+1
+                if counter >= 5:
+                    try:
+                        data = client_sock.recv(128)
+                    except Exception as e:
+                        logger.info("connection seems to be closed: %s" % (str(e)))
+                        break
+                    counter = 0
+        logger.info("Closing listener process: %d" % (os.getpid()))
+        sys.exit(0)
         
 
     def do_command(self, command_line):
@@ -421,6 +463,9 @@ if __name__ == '__main__':
     
 
         #list_plugins_full(None)
+        
+        
+        
 
 
         socket_file = '/tmp/plugin_manager'
@@ -437,10 +482,23 @@ if __name__ == '__main__':
         # listen for clients
         server_sock.listen(5)
     
+        read_list = [server_sock]
         
+        timeout_reading = 10
         while True:
         
             logger.debug("waiting for data")
+        
+            readable, writable, errored = select.select(read_list, [], [], timeout_reading)
+            
+            
+            
+            if len(readable) == 0:
+                logger.debug("no command after 10 seconds")
+                # this will join all children and thus remove zombies
+                multiprocessing.active_children()
+                continue
+            
         
             try:
                 client_sock, address = server_sock.accept()
@@ -454,24 +512,58 @@ if __name__ == '__main__':
                 sys.exit(1)
 
 
+            
+            
             try:
                 data = client_sock.recv(8192) #arbitrary
         
             except KeyboardInterrupt, k:
                 logger.info("KeyboardInterrupt")
                 break
-            except Exceptiomn as a:
+            except Exception as a:
                 logger.error("client_sock.recv failed: %s" % (str(e) ))
                 break    
         
         
+           
+        
             command = str(data).rstrip()
-            logger.debug("received command \"%s\"" % (command))
-            try:
-                result_json = pmAPI.do_command(command.split())
-            except Exception as e:
-                logger.error("command execution failed: %s" % (str(e)) )
-                continue
+            
+            
+            
+            if command == 'log':
+                logger.debug("received command \"log\"" )
+                myq  = Queue()
+        
+                listener_name = 'client'
+                #listener_e = pmAPI.plug.listener_exists(listener_name)
+                #if listener_e[0]:
+                #    result_json = pmAPI.create_status_message(0, 'listener already exists')
+                #else:
+                
+                logger.debug('spawning process for listener')
+                j = multiprocessing.Process(name=listener_name, target=pmAPI.message_log_process, args=(client_sock, myq))
+            
+                j.start()
+            
+                add_listener_result = pmAPI.plug.add_listener(listener_name, myq, j.pid)
+            
+                if add_listener_result[0] == 0:
+                    result_json = pmAPI.create_status_message(add_listener_result[0], add_listener_result[1])
+                    j.terminate()
+                else:
+                    logger.info("Registered listener with uuid %s" % (add_listener_result[1]))
+                    pmAPI.plug.restart_plugin('system_router')
+                    continue;
+            
+            else:
+            
+                logger.debug("received command \"%s\"" % (command))
+                try:
+                    result_json = pmAPI.do_command(command.split())
+                except Exception as e:
+                    logger.error("command execution failed: %s" % (str(e)) )
+                    continue
         
             if not 'status' in result_json:
                 logger.error("result_json has not status")

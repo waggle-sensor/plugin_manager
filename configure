@@ -28,8 +28,16 @@ cp /etc/waggle/node_id /etc/waggle/hostname
 ./scripts/install_dependencies.sh
 
 # daemons
-ln -sf /usr/lib/waggle/plugin_manager/scripts/communicator.sh /etc/init.d/communicator.sh
-update-rc.d communicator.sh defaults 
+mkdir -p /var/lof/waggle
+
+ln -sf /usr/lib/waggle/plugin_manager/supervisor/waggle_plugin_manager.conf /etc/supervisor/conf.d/waggle_plugin_manager.conf
+
+# TODO: with newer OS start using systemd
+service supervisor restart
+
+
+#ln -sf /usr/lib/waggle/plugin_manager/scripts/communicator.sh /etc/init.d/communicator.sh
+#update-rc.d communicator.sh defaults 
 
 
 

@@ -5,7 +5,7 @@ import sys, os, json, socket, time, select
 
 from tabulate import tabulate
 
-
+socket_file = '/tmp/plugin_manager'
 
 def print_table(obj):
     print "%s:" % (obj['title'])
@@ -22,9 +22,43 @@ def print_tables(results):
 def command_dummy(results):
     print json.dumps(results, sort_keys=True, indent=4, separators=(',', ': '))
     
+
+def read_streaming_api():
+    client_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    
+    try:
+        client_sock.connect(socket_file)
+    except Exception as e:
+        print "Error connecting to socket: %s" % (str(e))
+        client_sock.close()
+        return None
+    
+    try:
+        client_sock.sendall('log')
+    except Exception as e:
+         print "Error talking to socket: %s" % (str(e))
+         client_sock.close()
+         return None
+    
+        
+    print "listening for stream..."    
+    while 1:    
+        try:
+            data = client_sock.recv(2048) #TODO need better solution
+        except KeyboardInterrupt:
+            break
+        except Exception as e:
+            print "Error reading socket: %s" % (str(e))
+            break
+        print "%s" % (data)
+        if data.startswith('{"status":'):
+            break
+        
+    client_sock.close()
+
     
 def read_api(command, timeout=3): 
-    socket_file = '/tmp/plugin_manager'
+    
     
     client_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     #client_sock.setblocking(0)
@@ -71,7 +105,7 @@ def execute_command(command_line):
     
     command = command_line[0]
     try:
-        command_function = command_functions[command]
+        command_function = command_functions[command]['function']
     except KeyError:
         print "Command \"%s\" unknown." % (command)
         return
@@ -103,15 +137,15 @@ if __name__ == '__main__':
 
 
     command_functions={
-        'help': print_tables,
-        'list': print_tables,
-        'start' : command_dummy,
-        'stop' : command_dummy
+        'help' : { 'function' : print_tables},
+        'list':  { 'function' : print_tables},
+        'start': { 'function' : command_dummy},
+        'stop':  { 'function' : command_dummy}
     }
     
     
     execute_command(['help'])
-    
+    execute_command(['list'])
     
     while True:
         #execute_command(['list'])
@@ -126,7 +160,14 @@ if __name__ == '__main__':
         #print command_line
         #print command_line.split()
         
-        execute_command(command_line.split())
+        command_array = command_line.split()
+        
+            
+        if len(command_array) > 0 and command_array[0] == 'log':
+            read_streaming_api()
+            continue
+        
+        execute_command(command_array)
         
 
 
