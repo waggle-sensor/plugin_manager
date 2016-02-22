@@ -484,6 +484,7 @@ if __name__ == '__main__':
             
             
             if command == 'log':
+                logger.debug("received command \"log\"" )
                 myq  = Queue()
         
                 
@@ -492,22 +493,23 @@ if __name__ == '__main__':
                 
                 j.start()
                 
-                pmAPI.plug.add_listener('listener', myq, j.pid)
-        
-                pmAPI.plug.restart_plugin('system_router')
+                add_listener_result = pmAPI.plug.add_listener('listener', myq, j.pid)
                 
-                
-                
-                continue;
+                if add_listener_result[0] == 0:
+                    result_json = pmAPI.create_status_message(add_listener_result[0], add_listener_result[1])
+                    j.terminate()
+                else    
+                    pmAPI.plug.restart_plugin('system_router')
+                    continue;
             
+            else:
             
-            
-            logger.debug("received command \"%s\"" % (command))
-            try:
-                result_json = pmAPI.do_command(command.split())
-            except Exception as e:
-                logger.error("command execution failed: %s" % (str(e)) )
-                continue
+                logger.debug("received command \"%s\"" % (command))
+                try:
+                    result_json = pmAPI.do_command(command.split())
+                except Exception as e:
+                    logger.error("command execution failed: %s" % (str(e)) )
+                    continue
         
             if not 'status' in result_json:
                 logger.error("result_json has not status")
