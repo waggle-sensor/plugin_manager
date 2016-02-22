@@ -3,7 +3,7 @@ import time, serial, sys, datetime, pprint, logging, socket, os
 #from utilities import packetmaker
 from multiprocessing import Queue
 
-from queue import Full
+from Queue import Full
 
 
 logger = logging.getLogger(__name__)
