@@ -477,7 +477,7 @@ if __name__ == '__main__':
         # listen for clients
         server_sock.listen(5)
     
-        read_list = [server_socket]
+        read_list = [server_sock]
         
         timeout_reading = 10
         while True:
