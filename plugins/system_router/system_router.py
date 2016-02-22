@@ -23,7 +23,7 @@ class register(object):
 def check_pid(pid):        
     """ Check For the existence of a unix pid. """
     try:
-        os.kill(int(pid), 0)
+        os.kill(pid, 0)
     except OSError:
         return False
     else:
@@ -70,8 +70,10 @@ class system_router(object):
                 
                 do_send = 1
                 
-                if check_listener and 'pid' in listener:
+                if check_listener and ('pid' in listener):
                     pid = listener['pid']
+                    logger.debug("checking pid: %s" % (str(type(pid))))
+                    logger.debug("checking pid: %d" % (pid))
                     if not check_pid(pid):
                         do_send = 0
                         del self.listeners['listener_name']
