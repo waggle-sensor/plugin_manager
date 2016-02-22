@@ -88,8 +88,9 @@ class PluginManagerAPI:
         self.blacklist = self.get_list('plugins/blacklist.txt')
         self.whitelist = self.get_list('plugins/whitelist.txt')
 
-   
-    #takes a plugin name and adds or removes it from the blacklist or whitelist, as specified by caller
+    """
+    Takes a plugin name and adds or removes it from the blacklist or whitelist, as specified by caller
+    """
     def manip_list(self, plugin, listtype, manipulation):
         if (listtype == "whitelist"):
             file = open('plugins/whitelist.txt','r+')
@@ -154,7 +155,9 @@ class PluginManagerAPI:
 
     #### commands ####
 
-    #Lists available plugins, if they are active, and whether they are present on the whitelist and blacklist
+    """
+    Lists available plugins, if they are active, and whether they are present on the whitelist and blacklist
+    """
     def command_list_plugins_full(self):
         headers                                                       = ["plugin", "instance", "active", "whitelist", "blacklist"]
         system_table                                                  = []
@@ -346,19 +349,40 @@ class PluginManagerAPI:
         
         return json.dumps(result)
     
-    
+    """
+    Process to send data to remote listeners.
+    """
     def message_log_process(self, client_sock, queue):
         
-        logger.debug('process for listener is running')
-        while 1:
-            msg = queue.get()
-            logger.info("message for listener: %s" % (str(msg)))
-            try:
-                client_sock.sendall(str(msg)+"\n")
-            except Exception as e:
-                logger.warning("Could not reply to client: %s" % (str(e)) )
-                break
+        client_sock.setblocking(0)
         
+        logger.debug('process for listener is running')
+        counter=0
+        while 1:
+            try:
+                msg = queue.get()
+            except Queue.Empty:
+                msg = None
+                time.sleep(1)
+            
+            if msg:
+                counter=0
+                logger.info("message for listener: %s" % (str(msg)))
+                try:
+                    client_sock.sendall(str(msg)+"\n")
+                except Exception as e:
+                    logger.warning("Could not reply to client: %s" % (str(e)) )
+                    break
+            else:
+                # this will check connection every 5 seconds if no data comes in.
+                counter=counter+1
+                if counter >= 5:
+                    try:
+                        data = client_sock.recv(128)
+                    except Exception as e:
+                        logger.info("connection seems to be closed: %s" % (str(e)))
+                        break
+                    counter = 0
         
 
     def do_command(self, command_line):
