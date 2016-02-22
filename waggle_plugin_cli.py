@@ -50,7 +50,9 @@ def read_streaming_api():
         except Exception as e:
             print "Error reading socket: %s" % (str(e))
             break
-        print "got data: ", data
+        print "%s" % (data)
+        if data.startswith('{"status":'):
+            break
         
     client_sock.close()
 
