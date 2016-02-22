@@ -383,7 +383,7 @@ class PluginManagerAPI:
                         logger.info("connection seems to be closed: %s" % (str(e)))
                         break
                     counter = 0
-        logger.info("Closing listener process: %d" , % (os.getpid()))
+        logger.info("Closing listener process: %d" % (os.getpid()))
         
 
     def do_command(self, command_line):
