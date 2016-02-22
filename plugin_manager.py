@@ -369,7 +369,7 @@ class PluginManagerAPI:
                 counter=0
                 logger.info("message for listener: %s" % (str(msg)))
                 try:
-                    client_sock.sendall(str(msg)+"\n")
+                    client_sock.sendall(str(msg))
                 except Exception as e:
                     logger.warning("Could not send message to listener, closing. %s" % (str(e)) )
                     break
