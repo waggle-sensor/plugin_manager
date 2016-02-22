@@ -72,11 +72,13 @@ class system_router(object):
                 
                 if check_listener and ('pid' in listener):
                     pid = listener['pid']
-                    logger.debug("checking pid: %s" % (str(type(pid))))
-                    logger.debug("checking pid: %d" % (pid))
+                    
                     if not check_pid(pid):
+                        logger.info("Listener process is not running anymore, pid: %d" % (pid))
                         do_send = 0
                         del self.listeners[listener_name]
+                    else:
+                        logger.debug("Listener process is still running, pid: %d" % (pid))
                         
                 if do_send:
                     try:
