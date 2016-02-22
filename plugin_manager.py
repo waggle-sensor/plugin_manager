@@ -371,7 +371,7 @@ class PluginManagerAPI:
                 try:
                     client_sock.sendall(str(msg)+"\n")
                 except Exception as e:
-                    logger.warning("Could not reply to client: %s" % (str(e)) )
+                    logger.warning("Could not send message to listener, closing. %s" % (str(e)) )
                     break
             else:
                 # this will check connection every 5 seconds if no data comes in.
@@ -383,6 +383,7 @@ class PluginManagerAPI:
                         logger.info("connection seems to be closed: %s" % (str(e)))
                         break
                     counter = 0
+        logger.info("Closing listener process.")
         
 
     def do_command(self, command_line):
