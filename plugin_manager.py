@@ -491,7 +491,7 @@ if __name__ == '__main__':
                 listener_e = pmAPI.listener_exists(listener_name)
                 if listener_e[0]:
                     result_json = pmAPI.create_status_message(0, 'listener already exists')
-                else
+                else:
                 
                     logger.debug('spawning process for listener')
                     j = multiprocessing.Process(name=listener_name, target=pmAPI.message_log_process, args=(client_sock, myq))
