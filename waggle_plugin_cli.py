@@ -49,10 +49,10 @@ def read_streaming_api():
             break
         except Exception as e:
             print "Error reading socket: %s" % (str(e))
-            client_sock.close()
             break
         print "got data: ", data
-
+        
+    client_sock.close()
 
     
 def read_api(command, timeout=3): 
