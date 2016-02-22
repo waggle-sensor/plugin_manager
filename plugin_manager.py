@@ -477,7 +477,7 @@ if __name__ == '__main__':
         # listen for clients
         server_sock.listen(5)
     
-        
+        count = 0
         while True:
         
             logger.debug("waiting for data")
@@ -494,16 +494,27 @@ if __name__ == '__main__':
                 sys.exit(1)
 
 
+            client_sock.setblocking(0)
+            
             try:
                 data = client_sock.recv(8192) #arbitrary
         
             except KeyboardInterrupt, k:
                 logger.info("KeyboardInterrupt")
                 break
-            except Exceptiomn as a:
+            except Exception as a:
                 logger.error("client_sock.recv failed: %s" % (str(e) ))
                 break    
         
+        
+            if data:
+                count = 0
+            else:
+                count = count + 1
+                time.sleep(1)
+                # this will join all children and thus remove zombies
+                multiprocessing.active_children()
+                continue
         
             command = str(data).rstrip()
             
