@@ -81,9 +81,9 @@ class system_router(object):
                 if do_send:
                     try:
                         queue.put(msg)
-                    except Queue.Full:
-                        logger.warning("Queue %s is full, cannot push messages" % (listener_name))
+                    #except Queue.Full:
+                    #    logger.warning("Queue %s is full, cannot push messages" % (listener_name))
                     except Exception as e:
-                        logger.error("Error trying to put message into queue %s: %s" % (listener_name, str(e)))
+                        logger.error("Error trying to put message into queue %s (%s): %s" % (listener_name, str(type(e)), str(e)))
                     
                     
