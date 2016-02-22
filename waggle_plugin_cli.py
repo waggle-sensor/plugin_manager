@@ -105,7 +105,7 @@ def execute_command(command_line):
     
     command = command_line[0]
     try:
-        command_function = command_functions[command]
+        command_function = command_functions[command]['function']
     except KeyError:
         print "Command \"%s\" unknown." % (command)
         return
@@ -137,10 +137,10 @@ if __name__ == '__main__':
 
 
     command_functions={
-        'help': print_tables,
-        'list': print_tables,
-        'start' : command_dummy,
-        'stop' : command_dummy
+        'help' : { 'function' : print_tables},
+        'list':  { 'function' : print_tables},
+        'start': { 'function' : command_dummy},
+        'stop':  { 'function' : command_dummy}
     }
     
     

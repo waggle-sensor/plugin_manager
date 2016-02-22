@@ -45,10 +45,11 @@ class system_router(object):
         
         check_interval = 10
         
-        for listener_name in self.listeners:
-            logger.info("listener: %s" % (listener_name))
+        for listener_uuid in self.listeners:
+            logger.info("listener: %s" % (self.listeners[listener_uuid]['name']))
             
         last_check = time.time()
+        delete_listeners = []
         while self.man[self.name]:
             
             # TODO select.select statment to read from multiple plugin queues
@@ -62,11 +63,11 @@ class system_router(object):
                 check_listener = 1
                 last_check = current
             
-            delete_listeners = []
-            for listener_name in self.listeners:
+            
+            for listener_uuid in self.listeners:
                 
                 #logger.debug("listener: %s" % (listener_name))
-                listener = self.listeners[listener_name]
+                listener = self.listeners[listener_uuid]
                 queue = listener['queue']
                 
                 do_send = 1
@@ -75,12 +76,12 @@ class system_router(object):
                     pid = listener['pid']
                     
                     if not check_pid(pid):
-                        logger.info("Listener process is not running anymore, pid: %d" % (pid))
+                        logger.info("Listener process %s is not running anymore, pid: %d" % (listener['name'], pid))
                         do_send = 0
-                        delete_listeners.append(listener_name)
+                        delete_listeners.append(listener_uuid)
                         
                     else:
-                        logger.debug("Listener process is still running, pid: %d" % (pid))
+                        logger.debug("Listener process %s is still running, pid: %d" % (listener['name'], pid))
                         
                 if do_send:
                     try:
@@ -88,12 +89,13 @@ class system_router(object):
                     #except Queue.Full:
                     #    logger.warning("Queue %s is full, cannot push messages" % (listener_name))
                     except Exception as e:
-                        logger.error("Error trying to put message into queue %s (%s): %s" % (listener_name, str(type(e)), str(e)))
+                        logger.error("Error trying to put message into queue %s (%s): %s" % (listener['name'], str(type(e)), str(e)))
             
             # clean up
             if delete_listeners:
-                for listener_name in delete_listeners:
-                    del self.listeners[listener_name]
+                for listener_uuid in delete_listeners:
+                    del self.listeners[listener_uuid]
+                delete_listeners = []
                     
                     
                     

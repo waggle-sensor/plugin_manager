@@ -1,4 +1,4 @@
-import multiprocessing, time, sys, psutil, os, signal, logging
+import multiprocessing, time, sys, psutil, os, signal, logging, uuid
 from multiprocessing import Manager, Queue
 
 """
@@ -37,40 +37,43 @@ class plugin_runner(object):
         self.listeners = {} 
     
     
-    def listener_consolidate(self, name):
-        if not name in self.listeners:
-            return
-            
-        pid = self.listeners[name]['pid']
-        
-        if not pid:
-            return
-            
-        if not check_pid(pid):
-            del self.listeners[name]    
+    #def listener_consolidate(self, name):
+    #    if not name in self.listeners:
+    #        return
+    #        
+    #    pid = self.listeners[name]['pid']
+    #    
+    #    if not pid:
+    #        return
+    #        
+    #    if not check_pid(pid):
+    #        del self.listeners[name]    
     
-    def listener_exists(self, name):
-        self.listener_consolidate(name)
-        
-        if name in self.listeners:
-            return [1, '']
-        return [0, '']
+    #def listener_exists(self, name):
+    #    #self.listener_consolidate(name)
+    #    
+    #   if name in self.listeners:
+    #        return [1, '']
+    #    return [0, '']
         
     def add_listener(self, name, queue, pid):
         self.listener_consolidate(name)
         
-        if name in self.listeners:
-            return [0, 'listener with that name already exists']
+        listener_uuid = str(uuid.uuid4())
+        
+        if listener_uuid in self.listeners:
+            return [0, 'listener with that uuid already exists']
             
         if not pid:
             return [0, 'pid is not defined']
             
         if not type(pid) is int:
             return [0, 'pid is not int']
-            
-        self.listeners[name] = {'queue': queue, 'pid': pid} 
         
-        return [1, '']
+            
+        self.listeners[listener_uuid] = {'name': name, 'queue': queue, 'pid': pid} 
+        
+        return [1, listener_uuid]
         
 
     #Lists all available plugins and their status
