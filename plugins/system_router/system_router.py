@@ -77,7 +77,7 @@ class system_router(object):
                     if not check_pid(pid):
                         logger.info("Listener process is not running anymore, pid: %d" % (pid))
                         do_send = 0
-                        delete_listeners.push(listener_name)
+                        delete_listeners.append(listener_name)
                         
                     else:
                         logger.debug("Listener process is still running, pid: %d" % (pid))
