@@ -62,7 +62,7 @@ class system_router(object):
                 check_listener = 1
                 last_check = current
             
-            delete_listeners = 0
+            delete_listeners = []
             for listener_name in self.listeners:
                 
                 #logger.debug("listener: %s" % (listener_name))
@@ -91,7 +91,7 @@ class system_router(object):
                         logger.error("Error trying to put message into queue %s (%s): %s" % (listener_name, str(type(e)), str(e)))
             
             # clean up
-            if delete_a_listener:
+            if delete_listeners:
                 for listener_name in delete_listeners:
                     del self.listeners[listener_name]
                     
