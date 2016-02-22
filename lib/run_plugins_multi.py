@@ -57,7 +57,7 @@ class plugin_runner(object):
     #    return [0, '']
         
     def add_listener(self, name, queue, pid):
-        self.listener_consolidate(name)
+        #self.listener_consolidate(name)
         
         listener_uuid = str(uuid.uuid4())
         
