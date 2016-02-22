@@ -477,10 +477,23 @@ if __name__ == '__main__':
         # listen for clients
         server_sock.listen(5)
     
-        count = 0
+        read_list = [server_socket]
+        
+        timeout_reading = 10
         while True:
         
             logger.debug("waiting for data")
+        
+            readable, writable, errored = select.select(read_list, [], [], timeout_reading)
+            
+            
+            
+            if len(readable) == 0:
+                logger.debug("no command after 10 seconds")
+                # this will join all children and thus remove zombies
+                multiprocessing.active_children()
+                continue
+            
         
             try:
                 client_sock, address = server_sock.accept()
@@ -494,7 +507,7 @@ if __name__ == '__main__':
                 sys.exit(1)
 
 
-            client_sock.setblocking(0)
+            
             
             try:
                 data = client_sock.recv(8192) #arbitrary
@@ -507,18 +520,7 @@ if __name__ == '__main__':
                 break    
         
         
-            if data:
-                count = 0
-            else:
-                logger.debug("no command")
-                count = count + 1
-                time.sleep(1)
-                # this will join all children and thus remove zombies
-                if count >= 10:
-                    logger.debug("call active_children()")
-                    multiprocessing.active_children()
-                    count = 0
-                continue
+           
         
             command = str(data).rstrip()
             
