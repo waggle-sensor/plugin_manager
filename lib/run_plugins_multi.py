@@ -22,6 +22,11 @@ class plugin_runner(object):
         self.mailbox_outgoing = Queue()
         self.system_send_queue = self.manager.Queue()
         self.listeners = {} 
+    
+    def listener_exists(self, name):
+        if name in self.listeners:
+            return [1, '']
+        return [0, '']
         
     def add_listener(self, name, queue, pid):
         if name in self.listeners:

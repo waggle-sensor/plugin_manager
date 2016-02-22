@@ -487,20 +487,25 @@ if __name__ == '__main__':
                 logger.debug("received command \"log\"" )
                 myq  = Queue()
         
+                listener_name = 'client'
+                listener_e = pmAPI.listener_exists(listener_name)
+                if listener_e[0]:
+                    result_json = pmAPI.create_status_message(0, 'listener already exists')
+                else
                 
-                logger.debug('spawning process for listener')
-                j = multiprocessing.Process(name='listener', target=pmAPI.message_log_process, args=(client_sock, myq))
+                    logger.debug('spawning process for listener')
+                    j = multiprocessing.Process(name=listener_name, target=pmAPI.message_log_process, args=(client_sock, myq))
                 
-                j.start()
+                    j.start()
                 
-                add_listener_result = pmAPI.plug.add_listener('listener', myq, j.pid)
+                    add_listener_result = pmAPI.plug.add_listener(listener_name, myq, j.pid)
                 
-                if add_listener_result[0] == 0:
-                    result_json = pmAPI.create_status_message(add_listener_result[0], add_listener_result[1])
-                    j.terminate()
-                else:
-                    pmAPI.plug.restart_plugin('system_router')
-                    continue;
+                    if add_listener_result[0] == 0:
+                        result_json = pmAPI.create_status_message(add_listener_result[0], add_listener_result[1])
+                        j.terminate()
+                    else:
+                        pmAPI.plug.restart_plugin('system_router')
+                        continue;
             
             else:
             
