@@ -488,7 +488,7 @@ if __name__ == '__main__':
                 myq  = Queue()
         
                 listener_name = 'client'
-                listener_e = pmAPI.listener_exists(listener_name)
+                listener_e = pmAPI.plug.listener_exists(listener_name)
                 if listener_e[0]:
                     result_json = pmAPI.create_status_message(0, 'listener already exists')
                 else:
