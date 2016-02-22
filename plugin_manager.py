@@ -2,6 +2,8 @@
 import multiprocessing, time, sys, re, os, socket, json, argparse, select
 import logging, logging.handlers
 from multiprocessing import Manager, Queue
+from queue import Empty
+
 
 loglevel=logging.DEBUG
 LOG_FORMAT='%(asctime)s - %(name)s - %(levelname)s - line=%(lineno)d - %(message)s'

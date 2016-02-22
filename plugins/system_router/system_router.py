@@ -3,6 +3,7 @@ import time, serial, sys, datetime, pprint, logging, socket, os
 #from utilities import packetmaker
 from multiprocessing import Queue
 
+from queue import Full
 
 
 logger = logging.getLogger(__name__)
@@ -86,8 +87,8 @@ class system_router(object):
                 if do_send:
                     try:
                         queue.put(msg)
-                    #except Queue.Full:
-                    #    logger.warning("Queue %s is full, cannot push messages" % (listener_name))
+                    except Queue.Full:
+                        logger.warning("Queue %s is full, cannot push messages" % (listener_name))
                     except Exception as e:
                         logger.error("Error trying to put message into queue %s (%s): %s" % (listener['name'], str(type(e)), str(e)))
             
