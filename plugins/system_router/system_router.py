@@ -62,6 +62,7 @@ class system_router(object):
                 check_listener = 1
                 last_check = current
             
+            delete_listeners = 0
             for listener_name in self.listeners:
                 
                 #logger.debug("listener: %s" % (listener_name))
@@ -76,7 +77,8 @@ class system_router(object):
                     if not check_pid(pid):
                         logger.info("Listener process is not running anymore, pid: %d" % (pid))
                         do_send = 0
-                        del self.listeners[listener_name]
+                        delete_listeners.push(listener_name)
+                        
                     else:
                         logger.debug("Listener process is still running, pid: %d" % (pid))
                         
@@ -87,5 +89,11 @@ class system_router(object):
                     #    logger.warning("Queue %s is full, cannot push messages" % (listener_name))
                     except Exception as e:
                         logger.error("Error trying to put message into queue %s (%s): %s" % (listener_name, str(type(e)), str(e)))
+            
+            # clean up
+            if delete_a_listener:
+                for listener_name in delete_listeners:
+                    del self.listeners[listener_name]
+                    
                     
                     
