@@ -2,7 +2,7 @@
 import multiprocessing, time, sys, re, os, socket, json, argparse, select
 import logging, logging.handlers
 from multiprocessing import Manager, Queue
-from queue import Empty
+from Queue import Empty
 
 
 loglevel=logging.DEBUG
