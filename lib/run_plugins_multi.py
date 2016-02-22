@@ -26,6 +26,13 @@ class plugin_runner(object):
     def add_listener(self, name, queue, pid):
         if name in self.listeners:
             return [0, 'listener with that name already exists']
+            
+        if not pid:
+            return [0, 'pid is not defined']
+            
+        if not type(pid) is int:
+            return [0, 'pid is not int']
+            
         self.listeners[name] = {'queue': queue, 'pid': pid} 
         
         return [1, '']
@@ -68,6 +75,9 @@ class plugin_runner(object):
             #sys.stdout = open('/dev/null', 'w')
             if plugin_name == 'system_router':
                 j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.mailbox_outgoing, self.listeners ))
+                self.jobs.append(j)
+                j.start()
+                
             elif  plugin_name == 'system_send':
                 
                 try:
@@ -75,14 +85,17 @@ class plugin_runner(object):
                 except Exception as e:
                     logger.error("Starting process failed: %s" % (str(e)))
                 
-                self.add_listener('system_send', self.system_send_queue, j.pid)
+                self.jobs.append(j)
+                j.start()
+                
+                self.add_listener('system_send', self.system_send_queue, int(j.pid))
                 
                 
             else:
                 j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.mailbox_outgoing))
-                
-            self.jobs.append(j)
-            j.start()
+                self.jobs.append(j)
+                j.start()
+            
             #sys.stdout = sys.__stdout__
             # TODO proper check is missing !
             return [1 , 'Plugin %s started.' %(j.name)]
