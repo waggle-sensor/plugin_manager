@@ -4,7 +4,7 @@ import logging, logging.handlers
 from multiprocessing import Manager, Queue
 from Queue import Empty
 
-from lib.pidfile import PidFile
+from lib.pidfile import PidFile, AlreadyRunning
 
 
 loglevel=logging.DEBUG
@@ -577,8 +577,9 @@ if __name__ == '__main__':
 
             pmAPI.listen_to_socket()
     
-    
-    
+    except AlreadyRunning as e:
+        print str(e)
+        print "Please use supervisorctl to start and stop the Waggle Plugin Manager."
     except KeyboardInterrupt:
         print "exiting..."
     except Exception as e:

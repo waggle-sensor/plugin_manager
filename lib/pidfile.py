@@ -28,7 +28,7 @@ class PidFile(object):
         try:
             fcntl.flock(self.pidfile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         except IOError:
-            raise SystemExit("Already running according to " + self.path)
+            raise AlreadyRunning("Already running according to " + self.path)
         self.pidfile.seek(0)
         self.pidfile.truncate()
         self.pidfile.write(str(os.getpid()))
@@ -44,6 +44,10 @@ class PidFile(object):
             if err.errno != 9:
                 raise
         os.remove(self.path)
+
+
+class AlreadyRunning(Exception):
+    pass
 
 # example usage
 #import daemon
