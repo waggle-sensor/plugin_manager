@@ -45,7 +45,7 @@ class system_receive:
     
     
     
-    def receive():
+    def receive(self):
         connection_error = False
         while self.man[self.name]: #loop that keeps connecting to node controller
         
