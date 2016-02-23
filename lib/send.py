@@ -1,17 +1,15 @@
 import time, socket, sys, logging
 
-#gets the IP address for the nodecontroller
-with open('/etc/waggle/NCIP','r') as file_:
-    NCIP = file_.read().strip() 
-    
-with open('/etc/waggle/hostname','r') as file_:
-    HOSTNAME = file_.read().strip()
-
 
 logger = logging.getLogger(__name__)
 
-HOST = NCIP #sets to NodeController IP
-PORT = 9090 #port for push_server
+
+
+#gets the IP address for the nodecontroller
+with open('/etc/waggle/node_controller_host','r') as file_:
+    NC_HOST = file_.read().strip() 
+
+NC_PORT = 9090 #port for push_server
     
 def send(msg):
     
@@ -32,19 +30,19 @@ def send(msg):
     try: 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     except Exception as e: 
-        logger.error("Could not create socket to %s:%d : %s" % (HOST, PORT, str(e)))
+        logger.error("Could not create socket to %s:%d : %s" % (NC_HOST, NC_PORT, str(e)))
         raise    
         
     try: 
-        s.connect((HOST,PORT))
+        s.connect((NC_HOST,NC_PORT))
     except Exception as e: 
-        logger.error("Could not connect to %s:%d : %s" % (HOST, PORT, str(e)))
+        logger.error("Could not connect to %s:%d : %s" % (NC_HOST, NC_PORT, str(e)))
         raise
         
     try:
         s.send(msg)
     except Exception as e: 
-        logger.error("Could not send message to %s:%d : %s" % (HOST, PORT, str(e)))
+        logger.error("Could not send message to %s:%d : %s" % (NC_HOST, NC_PORT, str(e)))
         raise
    
     logger.debug("Did send message to nodecontroller.")

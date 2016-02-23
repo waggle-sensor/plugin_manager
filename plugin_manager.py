@@ -4,11 +4,13 @@ import logging, logging.handlers
 from multiprocessing import Manager, Queue
 from Queue import Empty
 
+from lib.pidfile import PidFile, AlreadyRunning
+
 
 loglevel=logging.DEBUG
 LOG_FORMAT='%(asctime)s - %(name)s - %(levelname)s - line=%(lineno)d - %(message)s'
 LOG_FILENAME="/var/log/waggle/plugin_manager.log"
-
+pid_file = "/var/run/waggle/plugin_manager.pid"
 
 formatter = logging.Formatter(LOG_FORMAT)
 handler = logging.StreamHandler(stream=sys.stdout)
@@ -37,7 +39,7 @@ from utilities import packetmaker
 class PluginManagerAPI:
     def __init__(self):
         self.plug = lib.run_plugins_multi.plugin_runner()
-        self.system_plugins={'system_send': 1 ,'system_router': 1 }
+        self.system_plugins={'system_receive': 1, 'system_send': 1 ,'system_router': 1 }
         
         self.command_functions = {
             "list" : {  'function' : self.command_list_plugins_full, 
@@ -92,11 +94,17 @@ class PluginManagerAPI:
         }
         self.blacklist = self.get_list('plugins/blacklist.txt')
         self.whitelist = self.get_list('plugins/whitelist.txt')
+        
+        logger.info('Automatically starting whitelisted plugins...')
+        self.command_start_whitelist()
+        logger.info('whitelisted plugins started.')
+        
 
-    """
-    Takes a plugin name and adds or removes it from the blacklist or whitelist, as specified by caller
-    """
+    
     def manip_list(self, plugin, listtype, manipulation):
+        """
+        Takes a plugin name and adds or removes it from the blacklist or whitelist, as specified by caller
+        """
         if (listtype == "whitelist"):
             file = open('plugins/whitelist.txt','r+')
             if (self.on_blacklist(plugin)):
@@ -160,10 +168,11 @@ class PluginManagerAPI:
 
     #### commands ####
 
-    """
-    Lists available plugins, if they are active, and whether they are present on the whitelist and blacklist
-    """
+    
     def command_list_plugins_full(self):
+        """
+        Lists available plugins, if they are active, and whether they are present on the whitelist and blacklist
+        """
         headers                                                       = ["plugin", "instance", "active", "whitelist", "blacklist"]
         system_table                                                  = []
         user_table                                                    = []
@@ -354,10 +363,11 @@ class PluginManagerAPI:
         
         return json.dumps(result)
     
-    """
-    Process to send data to remote listeners.
-    """
+    
     def message_log_process(self, client_sock, queue):
+        """
+        Process to send data to remote listeners.
+        """
         
         client_sock.setblocking(0)
         
@@ -423,51 +433,8 @@ class PluginManagerAPI:
             return results
     
     
-    
-
-
-    
-
-
-if __name__ == '__main__':
-    
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--logging', dest='enable_logging', help='write to log files instead of stdout', action='store_true')
-    args = parser.parse_args()
-    
+    def listen_to_socket(self):
         
-    if args.enable_logging:
-        # 5 times 10MB
-        sys.stdout.write('logging to '+LOG_FILENAME+'\n')
-        log_dir = os.path.dirname(LOG_FILENAME)
-        if not os.path.isdir(log_dir):
-            os.makedirs(log_dir)
-        handler = logging.handlers.RotatingFileHandler(LOG_FILENAME, maxBytes=1485760, backupCount=5)
-    
-        handler.setFormatter(formatter)
-        root_logger.handlers = []
-        root_logger.addHandler(handler)
-        
-    
-    # TODO this guest node registration is not need when the plugin_manager
-    # 
-    try:
-        pmAPI = PluginManagerAPI()
-    
-    
-    
-        logger.info('Automatically starting whitelisted plugins...')
-        pmAPI.command_start_whitelist()
-        logger.info('whitelisted plugins started.')
-        time.sleep(2)
-    
-
-        #list_plugins_full(None)
-        
-        
-        
-
-
         socket_file = '/tmp/plugin_manager'
 
         if os.path.exists(socket_file): #checking for the file
@@ -536,31 +503,31 @@ if __name__ == '__main__':
                 myq  = Queue()
         
                 listener_name = 'client'
-                #listener_e = pmAPI.plug.listener_exists(listener_name)
+                #listener_e = self.plug.listener_exists(listener_name)
                 #if listener_e[0]:
-                #    result_json = pmAPI.create_status_message(0, 'listener already exists')
+                #    result_json = self.create_status_message(0, 'listener already exists')
                 #else:
                 
                 logger.debug('spawning process for listener')
-                j = multiprocessing.Process(name=listener_name, target=pmAPI.message_log_process, args=(client_sock, myq))
+                j = multiprocessing.Process(name=listener_name, target=self.message_log_process, args=(client_sock, myq))
             
                 j.start()
             
-                add_listener_result = pmAPI.plug.add_listener(listener_name, myq, j.pid)
+                add_listener_result = self.plug.add_listener(listener_name, myq, j.pid)
             
                 if add_listener_result[0] == 0:
-                    result_json = pmAPI.create_status_message(add_listener_result[0], add_listener_result[1])
+                    result_json = self.create_status_message(add_listener_result[0], add_listener_result[1])
                     j.terminate()
                 else:
                     logger.info("Registered listener with uuid %s" % (add_listener_result[1]))
-                    pmAPI.plug.restart_plugin('system_router')
+                    self.plug.restart_plugin('system_router')
                     continue;
             
             else:
             
                 logger.debug("received command \"%s\"" % (command))
                 try:
-                    result_json = pmAPI.do_command(command.split())
+                    result_json = self.do_command(command.split())
                 except Exception as e:
                     logger.error("command execution failed: %s" % (str(e)) )
                     continue
@@ -576,11 +543,46 @@ if __name__ == '__main__':
                 continue
         
             logger.debug("got data: \"%s\"" % (str(data)))
+
+
+    
+
+
+if __name__ == '__main__':
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--logging', dest='enable_logging', help='write to log files instead of stdout', action='store_true')
+    args = parser.parse_args()
+    
         
+    if args.enable_logging:
+        # 5 times 10MB
+        sys.stdout.write('logging to '+LOG_FILENAME+'\n')
+        log_dir = os.path.dirname(LOG_FILENAME)
+        if not os.path.isdir(log_dir):
+            os.makedirs(log_dir)
+        handler = logging.handlers.RotatingFileHandler(LOG_FILENAME, maxBytes=1485760, backupCount=5)
+    
+        handler.setFormatter(formatter)
+        root_logger.handlers = []
+        root_logger.addHandler(handler)
         
+
+   
+    try:
+        with PidFile(pid_file):
+            pmAPI = PluginManagerAPI()
+
+            time.sleep(2)
+
+            pmAPI.listen_to_socket()
+    
+    except AlreadyRunning as e:
+        logger.error(str(e))
+        logger.error("Please use supervisorctl to start and stop the Waggle Plugin Manager.")
     except KeyboardInterrupt:
-        print "exiting..."
+        logger.error("exiting...")
     except Exception as e:
-        print "error: "+str(e)
+        logger.error("Error (%s): %s" % ( str(type(e)), str(e)))
     
    
