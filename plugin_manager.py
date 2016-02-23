@@ -93,10 +93,11 @@ class PluginManagerAPI:
         self.blacklist = self.get_list('plugins/blacklist.txt')
         self.whitelist = self.get_list('plugins/whitelist.txt')
 
-    """
-    Takes a plugin name and adds or removes it from the blacklist or whitelist, as specified by caller
-    """
+    
     def manip_list(self, plugin, listtype, manipulation):
+        """
+        Takes a plugin name and adds or removes it from the blacklist or whitelist, as specified by caller
+        """
         if (listtype == "whitelist"):
             file = open('plugins/whitelist.txt','r+')
             if (self.on_blacklist(plugin)):
@@ -160,10 +161,11 @@ class PluginManagerAPI:
 
     #### commands ####
 
-    """
-    Lists available plugins, if they are active, and whether they are present on the whitelist and blacklist
-    """
+    
     def command_list_plugins_full(self):
+        """
+        Lists available plugins, if they are active, and whether they are present on the whitelist and blacklist
+        """
         headers                                                       = ["plugin", "instance", "active", "whitelist", "blacklist"]
         system_table                                                  = []
         user_table                                                    = []
@@ -354,10 +356,11 @@ class PluginManagerAPI:
         
         return json.dumps(result)
     
-    """
-    Process to send data to remote listeners.
-    """
+    
     def message_log_process(self, client_sock, queue):
+        """
+        Process to send data to remote listeners.
+        """
         
         client_sock.setblocking(0)
         
