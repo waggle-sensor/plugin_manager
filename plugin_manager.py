@@ -433,7 +433,7 @@ class PluginManagerAPI:
             return results
     
     
-    def listen_to_socket():
+    def listen_to_socket(self):
         
         socket_file = '/tmp/plugin_manager'
 
