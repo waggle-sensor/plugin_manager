@@ -10,7 +10,7 @@ from lib.pidfile import PidFile
 loglevel=logging.DEBUG
 LOG_FORMAT='%(asctime)s - %(name)s - %(levelname)s - line=%(lineno)d - %(message)s'
 LOG_FILENAME="/var/log/waggle/plugin_manager.log"
-
+pid_file = "/var/run/waggle/plugin_manager.pid"
 
 formatter = logging.Formatter(LOG_FORMAT)
 handler = logging.StreamHandler(stream=sys.stdout)
@@ -570,7 +570,7 @@ if __name__ == '__main__':
 
    
     try:
-        with PidFile("/var/run/mydaemon") as pidfile:
+        with PidFile(pid_file):
             pmAPI = PluginManagerAPI()
 
             time.sleep(2)
