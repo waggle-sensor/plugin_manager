@@ -26,7 +26,7 @@ tail -f /var/log/waggle/plugin_manager.log
 ## Managing plugins
 ```
 cd /usr/lib/waggle/plugin_manager
-./waggle_plugin_cli.py
+./waggle_plugins.py
 ```
 This script can be used to list, start and stop plugins ond the command line. It can also be used to view the messages that are beeing send by the plugins to the nodecontroller.
 
