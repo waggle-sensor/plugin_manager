@@ -1,7 +1,7 @@
 
 import time, socket, sys, logging
 from multiprocessing import Process, Queue
-from msg_handler import msg_handler
+from lib.msg_handler import msg_handler
 
 
 
