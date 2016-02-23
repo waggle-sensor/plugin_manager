@@ -578,11 +578,11 @@ if __name__ == '__main__':
             pmAPI.listen_to_socket()
     
     except AlreadyRunning as e:
-        print str(e)
-        print "Please use supervisorctl to start and stop the Waggle Plugin Manager."
+        logger.error(str(e))
+        logger.error("Please use supervisorctl to start and stop the Waggle Plugin Manager.")
     except KeyboardInterrupt:
-        print "exiting..."
+        logger.error("exiting...")
     except Exception as e:
-        print "Error (%s): %s" % ( str(type(e)), str(e))
+        logger.error("Error (%s): %s" % ( str(type(e)), str(e)))
     
    
