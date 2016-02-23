@@ -5,6 +5,7 @@
 
 import fcntl
 import os
+import os.path
 
 class PidFile(object):
     """Context manager that locks a pid file.  Implemented as class
@@ -17,6 +18,12 @@ class PidFile(object):
         self.pidfile = None
 
     def __enter__(self):
+        
+        directory = os.path.dirname(self.path)
+        
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        
         self.pidfile = open(self.path, "a+")
         try:
             fcntl.flock(self.pidfile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
