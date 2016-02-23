@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class register(object):
 
-    def __init__(self, name, man):
+    def __init__(self, name, man, mailbox_outgoing):
         
         man[name] = 1
         
