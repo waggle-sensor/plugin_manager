@@ -4,7 +4,7 @@ import logging, logging.handlers
 from multiprocessing import Manager, Queue
 from Queue import Empty
 
-from lib.pidfile import PidFile, AlreadyRunning
+from waggle_protocol.utilities.pidfile import PidFile, AlreadyRunning
 
 
 loglevel=logging.DEBUG

@@ -1,22 +1,11 @@
 import time, serial, sys, datetime, pprint, logging, socket, os
-sys.path.append('../waggle_protocol/')
-from utilities import packetmaker
 from multiprocessing import Queue
 
-sys.path.append('../waggle_protocol/')
+sys.path.append('./waggle_protocol/')
 from utilities import packetmaker
-
-
-#LOG_FORMAT='%(asctime)s - %(name)s - %(levelname)s - line=%(lineno)d - %(message)s'
-#formatter = logging.Formatter(LOG_FORMAT)
-#handler = logging.StreamHandler(stream=sys.stdout)
-#handler.setFormatter(formatter)
 
 
 logger = logging.getLogger(__name__)
-#logger.handlers = []
-#logger.addHandler(handler)
-#logger.setLevel(logging.DEBUG)
 
 
 def read_file( str ):
