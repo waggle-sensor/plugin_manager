@@ -3,14 +3,6 @@ import time, serial, sys, datetime, os, random
 
 
 
-def unix_time(dt):
-    epoch = datetime.datetime.utcfromtimestamp(0)
-    delta = dt - epoch
-    return delta.total_seconds()
-
-def unix_time_millis(dt):
-    return long(unix_time(dt) * 1000.0)
-    
 
 class register(object):
     
@@ -30,12 +22,17 @@ class register(object):
             
         count = 0
         while 1:
+            
+            timestamp_utc = datetime.datetime.utcnow()
+            timestamp_date = timestamp_utc.date()
+            timestamp_epoch =  int(float(timestamp_utc.strftime("%s.%f"))* 1000)
+            
             if use_temp:
                 tempC = int(open(temperature_file).read()) / 1e3
-                sendData=['CPU temperature', int(unix_time_millis(datetime.datetime.now())), ['Temperature']  , ['i'], [tempC], ['Celsius'], ['count='+str(count)]]
+                sendData=[str(timestamp_date), 'example_sensor', '1', 'default', str(timestamp_epoch), 'CPU temperature', "meta.txt", [tempC]]
             else:
                 rint = random.randint(1, 100)
-                sendData=['RandomNumber', int(unix_time_millis(datetime.datetime.now())), ['Random']  , ['i'], [rint], ['NA'], ['count='+str(count)]]
+                sendData=[str(timestamp_date), 'example_sensor', '1', 'default', str(timestamp_epoch), 'RandomNumber', "meta.txt", [rint]]
             
             print 'Sending data: ',sendData
             
