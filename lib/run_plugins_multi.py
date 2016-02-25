@@ -81,24 +81,22 @@ class plugin_runner(object):
         print 'Plugins List:'
         for name in plugins.__all__:
             plugin = getattr(plugins, name)
-            active = 0
             #checks if listed plugin is in list of active processes
-            for j in self.jobs:
-                if (j.name == name):
-                    print 'Plugin', name, 'is active.'
-                    active = 1
-                    break
-            if (not active):
-                print 'Plugin', name, 'is inactive.'
+            j = self.get_plugin_by_name(name)
+            if j:
+                print 'Plugin', name, 'is active.'
+                continue
+            
+            print 'Plugin', name, 'is inactive.'
 
     #Tries to start a plugin with the name given by argument. Returns 1 for successful start, 0 for failure
     def start_plugin(self, plugin_name):
         #checks if plugin is in list of plugins
         if (plugin_name in plugins.__all__):
             #checks if plugin is already active
-            for j in self.jobs:
-                if (j.name == plugin_name): 
-                    return [0, 'Plugin %s is already active.' % (plugin_name) ]
+            j = self.get_plugin_by_name(plugin_name)
+            if j:
+                return [0, 'Plugin %s is already active.' % (plugin_name) ]
 
             #checks for register attribute in plugin
             plugin = getattr(plugins, plugin_name)
@@ -141,66 +139,86 @@ class plugin_runner(object):
         
         return [0, 'Plugin %s not found - cannot start.' % (plugin_name) ]
             
+    def get_plugin_by_name(self, plugin_name):
+        for j in self.jobs:
+            if (j.name == plugin_name):
+                return j
+        return None
+    
+    def update_job_list(self):
+        self.jobs[:] = [x for x in self.jobs if x.is_alive()]
+        
         
     #Tries to stop a plugin with the name given by argument. Returns 1 for successful stop, 0 for failure
     #If the terminate() call times out (SIGTERM fails to stop the process), it sends a SIGKILL to the process
     def kill_plugin(self, plugin_name):
         killed = 0
         #Tries to find plugin in list of active processes
-        for j in self.jobs:
-            if (j.name == plugin_name):
-                j.terminate()
-                j.join(5)
-                if (j.is_alive()):
-                    os.kill(self.plugin_pid(j.name), signal.SIGKILL)
-                    j.join(5)
-                    if (j.is_alive()):
-                        break
-                    logger.debug( 'Plugin', j.name, 'ended with kill signal.')
-                else: 
-                    logger.debug( 'Plugin', j.name, 'terminated.')
-                killed = 1
-                #removes plugin from list of active plugins
-                self.jobs[:] = [x for x in self.jobs if x.is_alive()]
-                return [killed, '']
+        
+        j = self.get_plugin_by_name(plugin_name)
+        
+        if not j:
+            return [0, 'plugin %s not found' % (plugin_name)]
+       
+        j.terminate()
+        j.join(5)
+        if (j.is_alive()):
+            os.kill(self.plugin_pid(j.name), signal.SIGKILL)
+            j.join(5)
+            if (j.is_alive()):
+                return [0, 'plugin %s not killed, it is still alive' % (plugin_name)]
                 
-        return [killed, 'Plugin %s not active - cannot terminate.' % (plugin_name)]
+            logger.debug( 'Plugin', j.name, 'ended with kill signal.')
+        else: 
+            logger.debug( 'Plugin', j.name, 'terminated.')
+        killed = 1
+        #removes plugin from list of active plugins
+        self.update_job_list()
+        return [killed, '']
+                
+        
         
     #sends plugin a stop signal
     def stop_plugin(self, plugin_name):
         stopped = 0
-        for j in self.jobs:
-            if (j.name == plugin_name):
-                self.man[plugin_name] = 0
-                j.join(10)
-                if (j.is_alive()):
-                    
-                    return [0, '%s has failed to stop.' % (plugin_name) ]
-                else:
-                    
-                    stopped = 1
-                    self.jobs[:] = [x for x in self.jobs if x.is_alive()]
-                    return [stopped, 'Plugin %s stopped.' % (j.name)]
         
-        return [stopped, 'Plugin %s not active - cannot stop.' % (plugin_name)]
-
+        j = self.get_plugin_by_name(plugin_name)
+        
+        if not j:
+            return [0, 'plugin %s not found' % (plugin_name)]
+            
+        # send nice termination signal
+        self.man[plugin_name] = 0
+        j.join(10)
+        if (j.is_alive()):
+            
+            return [0, '%s has failed to stop.' % (plugin_name) ]
+        
+            
+        stopped = 1
+        self.update_job_list()
+        return [stopped, 'Plugin %s stopped.' % (j.name)]
+    
+        
     def plugin_exists(self, plugin_name):
         stopped = 0
-        for j in self.jobs:
-            if (j.name == plugin_name):
-                return [1, '']
+        j = self.get_plugin_by_name(plugin_name)
+        
+        if j:
+            return [1, '']
         return [0,'']
 
     #sends plugin a pause signal
     def pause_plugin(self, plugin_name):
-        paused = 0
-        for j in self.jobs:
-            if (j.name == plugin_name):
-                self.man[plugin_name] = -1
-                paused = 1
-                return [paused, 'Pause signal sent.']
+        j = self.get_plugin_by_name(plugin_name)
+        
+        if not k:
+            return [ 0, 'Plugin %s not found.' % (plugin_name)]
+        
+        self.man[plugin_name] = -1
+        return [1, 'Pause signal sent.']
        
-        return [ paused, 'Plugin %s not active - cannot pause.' % (plugin_name)]
+        
 
     #sends plugin a run/resume signal
     def unpause_plugin(self, plugin_name):
