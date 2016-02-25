@@ -29,10 +29,10 @@ class register(object):
             
             if use_temp:
                 tempC = int(open(temperature_file).read()) / 1e3
-                sendData=[str(timestamp_date), 'example_sensor', '1', 'default', str(timestamp_epoch), 'CPU temperature', "meta.txt", [tempC]]
+                sendData=[str(timestamp_date), 'example_sensor', '1', 'default', str(timestamp_epoch), 'CPU temperature', "meta.txt", [str(tempC)]]
             else:
                 rint = random.randint(1, 100)
-                sendData=[str(timestamp_date), 'example_sensor', '1', 'default', str(timestamp_epoch), 'RandomNumber', "meta.txt", [rint]]
+                sendData=[str(timestamp_date), 'example_sensor', '1', 'default', str(timestamp_epoch), 'RandomNumber', "meta.txt", [str(rint)]]
             
             print 'Sending data: ',sendData
             
