@@ -39,7 +39,12 @@ class Connection(object):
         """Receives a list of sensor entries from the device."""
         data = self.recv_packet_data()
 
-        timestamp = datetime.datetime.now()
+        
+        
+        
+        timestamp = datetime.datetime.utcnow()
+        
+        
         entries = []
 
         offset = 0

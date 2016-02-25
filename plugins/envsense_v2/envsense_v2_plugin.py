@@ -51,12 +51,16 @@ class envsense(object):
             self.handle_message_entry(message, entry)
 
     def handle_message_entry(self, message, entry):
+        
+        timestamp_utc = message.timestamp
+        timestamp_epoch =  int(float(timestamp_utc.strftime("%s.%f"))* 1000)
+        
         self.outqueue.put([
             str(message.timestamp.date()),
             self.plugin_name,
             self.plugin_version,
             'default',
-            str(message.timestamp),
+            str(timestamp_epoch),
             entry.sensor,
             'meta.txt',
             format_entry_values(entry),
