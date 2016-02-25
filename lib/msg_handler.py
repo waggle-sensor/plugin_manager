@@ -1,7 +1,7 @@
 # msg_handler.py
 
 import os, os.path, sys
-sys.path.append('../waggle_protocol/')
+sys.path.append('./waggle_protocol/')
 from protocol.PacketHandler import *
 from send import send
 
