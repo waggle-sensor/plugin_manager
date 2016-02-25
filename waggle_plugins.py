@@ -140,7 +140,8 @@ if __name__ == '__main__':
         'help' : { 'function' : print_tables},
         'list':  { 'function' : print_tables},
         'start': { 'function' : command_dummy},
-        'stop':  { 'function' : command_dummy}
+        'stop':  { 'function' : command_dummy},
+        'kill':  { 'function' : command_dummy}
     }
     
     
