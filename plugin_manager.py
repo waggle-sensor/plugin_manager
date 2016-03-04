@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import multiprocessing, time, sys, re, os, socket, json, argparse, select
+import multiprocessing, time, sys, re, os, socket, json, argparse, select, datetime
 import logging, logging.handlers
 from multiprocessing import Manager, Queue
 from Queue import Empty
@@ -568,9 +568,17 @@ if __name__ == '__main__':
         root_logger.addHandler(handler)
         
 
+    
    
     try:
         with PidFile(pid_file):
+            
+            
+            while (datetime.datetime.now().year < 2016):
+                logger.warning("We are in the wrong year. Waiting for the correct time.")
+                time.sleep(10)
+            
+            
             pmAPI = PluginManagerAPI()
 
             time.sleep(2)
