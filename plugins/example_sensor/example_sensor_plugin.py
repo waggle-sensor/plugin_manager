@@ -3,6 +3,11 @@ import time, serial, sys, datetime, os, random
 
 
 
+epoch = datetime.datetime.utcfromtimestamp(0)
+
+def epoch_time(dt):
+    return (dt - epoch).total_seconds() * 1000.0
+    
 
 class register(object):
     
@@ -25,7 +30,7 @@ class register(object):
             
             timestamp_utc = datetime.datetime.utcnow()
             timestamp_date = timestamp_utc.date()
-            timestamp_epoch =  int(float(timestamp_utc.strftime("%s.%f"))* 1000)
+            timestamp_epoch =  epoch_time(timestamp_utc)
             
             if use_temp:
                 tempC = int(open(temperature_file).read()) / 1e3
