@@ -17,6 +17,13 @@ class register(object):
     
 
 
+epoch = datetime.datetime.utcfromtimestamp(0)
+
+def epoch_time(dt):
+    return (dt - epoch).total_seconds() * 1000.0
+
+
+
 class envsense(object):
 
     plugin_name = 'envsense'
@@ -52,8 +59,9 @@ class envsense(object):
 
     def handle_message_entry(self, message, entry):
         
-        timestamp_utc = message.timestamp
-        timestamp_epoch =  int(float(timestamp_utc.strftime("%s.%f"))* 1000)
+        
+        timestamp_epoch =  epoch_time(message.timestamp)
+        
         
         self.outqueue.put([
             str(message.timestamp.date()),
