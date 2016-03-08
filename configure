@@ -30,7 +30,7 @@ mkdir -p /var/log/waggle
 
 ln -sf /usr/lib/waggle/plugin_manager/supervisor/waggle_plugin_manager.conf /etc/supervisor/conf.d/waggle_plugin_manager.conf
 
-# TODO: with newer OS start using systemd
-/etc/init.d/supervisor restart
+set +x
+echo "Please execute: /etc/init.d/supervisor restart"
 
 
