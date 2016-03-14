@@ -28,6 +28,10 @@ fi
 # daemons
 mkdir -p /var/log/waggle
 
+# just in case:
+mkdir -p /etc/supervisor/conf.d/
+
+
 ln -sf /usr/lib/waggle/plugin_manager/supervisor/waggle_plugin_manager.conf /etc/supervisor/conf.d/waggle_plugin_manager.conf
 
 set +x
