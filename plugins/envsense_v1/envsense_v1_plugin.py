@@ -61,7 +61,7 @@ def process_data(output2sensor, readData):
 
     
     
-    return [str(timestamp_date), 'env_sense', '1', 'default', str(timestamp_epoch), sensor_name, "meta.txt", sensorsData[1:-1]]
+    return [str(timestamp_date), 'env_sense', '1', 'default', '%d' % (timestamp_epoch), sensor_name, "meta.txt", sensorsData[1:-1]]
     
                     
 
