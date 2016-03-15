@@ -68,7 +68,7 @@ class envsense(object):
             self.plugin_name,
             self.plugin_version,
             'default',
-            str(timestamp_epoch),
+            '%d' % (timestamp_epoch),
             entry.sensor,
             'meta.txt',
             format_entry_values(entry),
