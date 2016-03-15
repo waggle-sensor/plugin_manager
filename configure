@@ -10,7 +10,7 @@ if [ ! -e /etc/waggle/node_controller_host ] ; then
 fi
 
 if [ ! -e /etc/waggle/node_id ] ; then
- CRT_ND_SCR="/usr/lib/waggle/waggle_image/scripts/create_node_id.sh"
+ CRT_ND_SCR="/usr/lib/waggle/waggle_image/create_node_id.sh"
  if [ ! -e ${CRT_ND_SCR} ] ; then
    echo "node_id is missing and create_node_id.sh script was not found."
    echo "Please execute:"
@@ -21,6 +21,8 @@ if [ ! -e /etc/waggle/node_id ] ; then
  source ${CRT_ND_SCR}
 fi
 
+
+ln -sf /usr/lib/waggle/plugin_manager/waggle_plugins.py /usr/bin/waggle_plugins.py
 
 #change this to offline install
 ./scripts/install_dependencies.sh
