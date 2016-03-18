@@ -41,6 +41,6 @@ rm -f /etc/supervisor/conf.d/waggle_plugin_manager.conf
 ln -s /usr/lib/waggle/plugin_manager/upstart/waggle_plugin_manager.conf /etc/init/waggle_plugin_manager.conf
 
 set +x
-echo "Please execute: /etc/init.d/supervisor restart"
+echo "done"
 
 
