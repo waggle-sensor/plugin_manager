@@ -22,7 +22,7 @@ if [ ! -e /etc/waggle/node_id ] ; then
 fi
 
 
-ln -sf /usr/lib/waggle/plugin_manager/waggle_plugins.py /usr/bin/waggle_plugins.py
+ln -sf /usr/lib/waggle/plugin_manager/waggle-plugins.py /usr/bin/waggle-plugins
 
 #change this to offline install
 ./scripts/install_dependencies.sh
