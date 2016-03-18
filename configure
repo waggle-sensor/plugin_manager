@@ -38,7 +38,7 @@ mkdir -p /etc/supervisor/conf.d/
 #ln -sf /usr/lib/waggle/plugin_manager/supervisor/waggle_plugin_manager.conf /etc/supervisor/conf.d/waggle_plugin_manager.conf
 rm -f /etc/supervisor/conf.d/waggle_plugin_manager.conf
 
-ln -s /usr/lib/waggle/plugin_manager/upstart/waggle_plugin_manager.conf /etc/init/waggle_plugin_manager.conf
+cp /usr/lib/waggle/plugin_manager/upstart/waggle_plugin_manager.conf /etc/init/
 
 set +x
 echo "done"
