@@ -552,6 +552,7 @@ if __name__ == '__main__':
     
     parser = argparse.ArgumentParser()
     parser.add_argument('--logging', dest='enable_logging', help='write to log files instead of stdout', action='store_true')
+    parser.add_argument('--force', dest='force', help='kill other processes and start', action='store_true')
     args = parser.parse_args()
     
         
@@ -571,7 +572,7 @@ if __name__ == '__main__':
     
    
     try:
-        with PidFile(pid_file):
+        with PidFile(pid_file, force=args.force, name=os.path.basename(__file__)):
             
             
             while (datetime.datetime.now().year < 2016):
