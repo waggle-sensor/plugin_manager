@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 import sys, os, json, socket, time, select
-
-
 from tabulate import tabulate
 
 socket_file = '/tmp/plugin_manager'
