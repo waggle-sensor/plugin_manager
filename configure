@@ -33,8 +33,12 @@ mkdir -p /var/log/waggle
 # just in case:
 mkdir -p /etc/supervisor/conf.d/
 
+#upstart
 
-ln -sf /usr/lib/waggle/plugin_manager/supervisor/waggle_plugin_manager.conf /etc/supervisor/conf.d/waggle_plugin_manager.conf
+#ln -sf /usr/lib/waggle/plugin_manager/supervisor/waggle_plugin_manager.conf /etc/supervisor/conf.d/waggle_plugin_manager.conf
+rm -f /etc/supervisor/conf.d/waggle_plugin_manager.conf
+
+ln -s /usr/lib/waggle/plugin_manager/upstart/waggle_plugin_manager.conf /etc/init/waggle_plugin_manager.conf
 
 set +x
 echo "Please execute: /etc/init.d/supervisor restart"
