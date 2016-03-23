@@ -36,7 +36,7 @@ class envsense(object):
         
 
     def run(self):
-        with coresense.create_connection('/dev/ttyACM0') as conn:
+        with coresense.create_connection('/dev/waggle_coresense') as conn:
             self.running = True
             while self.running:
                 
