@@ -49,7 +49,7 @@ class envsense(object):
                         try:
                             msg = conn.recv()
                         except Exception as e:
-                            logger.error("Error of type %s: %s" % (str(type(e)), str(e)))
+                            logger.error("(Inner loop) Error of type %s: %s" % (str(type(e)), str(e)))
                             msg = None
                             time.sleep(1)
                             break
@@ -57,7 +57,7 @@ class envsense(object):
                         if msg:    
                             self.handle_message(msg)
             except Exception as e:
-                logger.error("Error of type %s: %s" % (str(type(e)), str(e)))
+                logger.error("(Outer loop) Error of type %s: %s" % (str(type(e)), str(e)))
             
             time.sleep(10)
 
