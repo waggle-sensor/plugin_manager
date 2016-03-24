@@ -38,9 +38,10 @@ class envsense(object):
     def run(self):
         self.running = True
         while self.running:
-        
-            with coresense.create_connection('/dev/waggle_coresense') as conn:
-                
+            device = '/dev/waggle_coresense'
+            logger.debug("try to connect to device "+device)
+            
+            with coresense.create_connection(device) as conn:
                 while self.running:
                 
                     try:
@@ -53,6 +54,7 @@ class envsense(object):
                     
                     if msg:    
                         self.handle_message(msg)
+                time.sleep(10)
 
     def stop(self):
         self.running = False
