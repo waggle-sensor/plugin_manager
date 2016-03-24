@@ -29,11 +29,17 @@ class Connection(object):
     """Provides a socket-like interface to a coresense device."""
 
     def __init__(self, device):
-        self.serial = Serial(device)
+        self.serial = Serial(device, timeout=120)
 
     def close(self):
         """Closes the connection to the device."""
         self.serial.close()
+
+    def read(count):
+        result = self.serial.read(count)
+        if len(result) < count:
+            raise serial.SerialException("Did read less than expected, maybe timeout problem.")
+        return result
 
     def recv(self):
         """Receives a list of sensor entries from the device."""
@@ -71,15 +77,15 @@ class Connection(object):
 
             
             # align stream to (possible) start of packet
-            while ord(self.serial.read(1)) != START_BYTE:
+            while ord(self.read(1)) != START_BYTE:
                 pass
 
-            header = self.serial.read(2)
+            header = self.read(2)
             length = ord(header[1])
 
-            data = self.serial.read(length)
+            data = self.read(length)
 
-            footer = self.serial.read(2)
+            footer = self.read(2)
                 
         
             crc = ord(footer[0])

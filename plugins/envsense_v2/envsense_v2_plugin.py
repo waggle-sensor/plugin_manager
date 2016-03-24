@@ -36,18 +36,23 @@ class envsense(object):
         
 
     def run(self):
-        with coresense.create_connection('/dev/waggle_coresense') as conn:
-            self.running = True
-            while self.running:
+        self.running = True
+        while self.running:
+        
+            with coresense.create_connection('/dev/waggle_coresense') as conn:
                 
-                try:
-                    msg = conn.recv()
-                except Exception as e:
-                    logger.error("Error of type %s: %s" % (str(type(e)), str(e)))
-                    msg = None
+                while self.running:
+                
+                    try:
+                        msg = conn.recv()
+                    except Exception as e:
+                        logger.error("Error of type %s: %s" % (str(type(e)), str(e)))
+                        msg = None
+                        time.sleep(1)
+                        break
                     
-                if msg:    
-                    self.handle_message(msg)
+                    if msg:    
+                        self.handle_message(msg)
 
     def stop(self):
         self.running = False
