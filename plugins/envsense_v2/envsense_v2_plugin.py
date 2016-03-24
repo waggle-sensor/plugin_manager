@@ -41,20 +41,24 @@ class envsense(object):
             device = '/dev/waggle_coresense'
             logger.debug("try to connect to device "+device)
             
-            with coresense.create_connection(device) as conn:
-                while self.running:
+            try:
+                with coresense.create_connection(device) as conn:
+                    while self.running:
                 
-                    try:
-                        msg = conn.recv()
-                    except Exception as e:
-                        logger.error("Error of type %s: %s" % (str(type(e)), str(e)))
-                        msg = None
-                        time.sleep(1)
-                        break
+                        try:
+                            msg = conn.recv()
+                        except Exception as e:
+                            logger.error("Error of type %s: %s" % (str(type(e)), str(e)))
+                            msg = None
+                            time.sleep(1)
+                            break
                     
-                    if msg:    
-                        self.handle_message(msg)
-                time.sleep(10)
+                        if msg:    
+                            self.handle_message(msg)
+            except Exception as e:
+                logger.error("Error of type %s: %s" % (str(type(e)), str(e)))
+            
+            time.sleep(10)
 
     def stop(self):
         self.running = False
