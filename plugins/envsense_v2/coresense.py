@@ -35,7 +35,7 @@ class Connection(object):
         """Closes the connection to the device."""
         self.serial.close()
 
-    def read(count):
+    def read(self, count):
         result = self.serial.read(count)
         if len(result) < count:
             raise serial.SerialException("Did read less than expected, maybe timeout problem.")
