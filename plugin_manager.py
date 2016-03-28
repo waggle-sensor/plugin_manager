@@ -149,7 +149,6 @@ class PluginManagerAPI:
         mylist = self.read_file(file)
         mylist = re.split('\n', mylist)
         mylist = filter(None, mylist)
-        mylist = filter(not startswith(), mylist)
         mylist = [ x for x in mylist if not x.startswith("#") ]
         return mylist
 
