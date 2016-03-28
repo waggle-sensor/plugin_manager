@@ -36,9 +36,11 @@ class Connection(object):
         self.serial.close()
 
     def read(self, count):
+        start_time = datetime.datetime.now()
         result = self.serial.read(count)
+        total_time = datetime.datetime.now() - start_time
         if len(result) < count:
-            raise SerialException("Did read less than expected (expected %d, got only %d), maybe timeout problem." % (count, len(result)))
+            raise SerialException("Did read less than expected (expected %d, got only %d), maybe timeout problem. seconds: %s" % (count, len(result), str(total_time)))
         return result
 
     def recv(self):
