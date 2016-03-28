@@ -4,7 +4,7 @@ from multiprocessing import Queue
 sys.path.append('./waggle_protocol/')
 from utilities import packetmaker
 
-
+logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 
