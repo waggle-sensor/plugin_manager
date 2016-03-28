@@ -36,6 +36,8 @@ class system_send(object):
         self.HOST = read_file('/etc/waggle/node_controller_host')
         self.PORT = 9090 #port for push_server
         
+        logger.debug("Using %s:%d" % (self.HOST , self.PORT))
+        
         packet = packetmaker.make_GN_reg(1)
     
         while 1:
