@@ -16,7 +16,7 @@ object provided by this module (or with the contextmanager create_connection).
 This will connect to the coresense device, receive a decoded message and then
 print each of the sensor entries received.
 """
-from serial import Serial
+from serial import Serial, SerialException
 from contextlib import contextmanager
 import datetime
 
@@ -38,7 +38,7 @@ class Connection(object):
     def read(self, count):
         result = self.serial.read(count)
         if len(result) < count:
-            raise serial.SerialException("Did read less than expected, maybe timeout problem.")
+            raise SerialException("Did read less than expected, maybe timeout problem.")
         return result
 
     def recv(self):
