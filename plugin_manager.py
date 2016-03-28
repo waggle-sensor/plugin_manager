@@ -108,11 +108,11 @@ class PluginManagerAPI:
         if (listtype == "whitelist"):
             file = open('plugins/whitelist.txt','r+')
             if (self.on_blacklist(plugin)):
-                print 'Error: Plugin',plugin,'on blacklist. Cannot be on both lists.'
+                logger.error('Error: Plugin %s on blacklist. Cannot be on both lists.' % (plugin))
         elif (listtype == "blacklist"):
             file = open('plugins/blacklist.txt','r+')
             if (on_whitelist(plugin)):
-                print 'Error: Plugin',plugin,'on whitelist. Cannot be on both lists.'
+                logger.error( 'Error: Plugin %s on whitelist. Cannot be on both lists.' % (plugin))
         li = file.read()
         li = re.split('\n', li)
         if (manipulation == "rm"):
@@ -287,8 +287,9 @@ class PluginManagerAPI:
         for plugin in plugins.__all__:
             if (not (plugin in blacklist)):
                 start, msg = self.plug.start_plugin(plugin)
+                logger.info("Starting whitelisted plugin %s" % (plugin))
                 if not start:
-                    print 'Failed to start plugin', plugin
+                    logger.error( 'Failed to start plugin %s ' % (plugin))
                     fail = fail + 1
         if (fail == 0):
             return self.create_status_message(1, "Started all non-blacklisted plugins.")
@@ -315,7 +316,7 @@ class PluginManagerAPI:
         for name in whitelist:
             start = self.plug.start_plugin(name)
             if (not start) and (not name == ""):
-                print 'Failed to start plugin', name
+                logger.error('Failed to start plugin %s' % (name))
                 fail = fail + 1
         if (fail == 0):
            
@@ -409,7 +410,7 @@ class PluginManagerAPI:
         try:
             command_function                                          = self.command_functions[command]['function']
         except KeyError:
-            print "Command %s unknown." % (command)
+            loggr.debug("Command %s unknown." % (command))
             return '{"error":"command %s is unknown"}' % (command)
             sys.exit(1)
     
