@@ -149,6 +149,8 @@ class PluginManagerAPI:
         mylist = self.read_file(file)
         mylist = re.split('\n', mylist)
         mylist = filter(None, mylist)
+        mylist = filter(not startswith(), mylist)
+        mylist = [ x for x in mylist if not x.startswith("#") ]
         return mylist
 
     def get_blacklist(self):
@@ -319,6 +321,8 @@ class PluginManagerAPI:
             if (not start) and (not name == ""):
                 logger.error('Failed to start plugin %s' % (name))
                 fail = fail + 1
+            else:
+                logger.debug('Started plugin %s' % (name))
         if (fail == 0):
            
             return self.create_status_message(1, "Started all %d whitelisted plugins." % (len(whitelist)))
