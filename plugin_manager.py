@@ -287,7 +287,7 @@ class PluginManagerAPI:
         for plugin in plugins.__all__:
             if (not (plugin in blacklist)):
                 start, msg = self.plug.start_plugin(plugin)
-                logger.info("Starting whitelisted plugin %s" % (plugin))
+                logger.info("Starting plugin %s" % (plugin))
                 if not start:
                     logger.error( 'Failed to start plugin %s ' % (plugin))
                     fail = fail + 1
@@ -314,6 +314,7 @@ class PluginManagerAPI:
         whitelist = self.get_whitelist()
         fail = 0
         for name in whitelist:
+            logger.info("Starting plugin %s" % (name))
             start = self.plug.start_plugin(name)
             if (not start) and (not name == ""):
                 logger.error('Failed to start plugin %s' % (name))
