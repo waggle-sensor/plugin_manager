@@ -38,7 +38,7 @@ class Connection(object):
     def read(self, count):
         result = self.serial.read(count)
         if len(result) < count:
-            raise SerialException("Did read less than expected, maybe timeout problem.")
+            raise SerialException("Did read less than expected (expected %d, got only %d), maybe timeout problem." % (count, len(result)))
         return result
 
     def recv(self):
