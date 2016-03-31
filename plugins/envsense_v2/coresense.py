@@ -21,15 +21,18 @@ from contextlib import contextmanager
 import datetime
 
 
-START_BYTE = 0xAA
+START_BYTE = b'\xaa'
 END_BYTE = 0x55
+HEADER_SIZE = 3
+FOOTER_SIZE = 2
 
 
 class Connection(object):
     """Provides a socket-like interface to a coresense device."""
 
     def __init__(self, device):
-        self.serial = Serial(device, timeout=120)
+        self.serial = Serial(device, timeout=180)
+        self.data = bytearray()
 
     def close(self):
         """Closes the connection to the device."""
@@ -45,12 +48,8 @@ class Connection(object):
         """Receives a list of sensor entries from the device."""
         data = self.recv_packet_data()
 
-        
-        
-        
         timestamp = datetime.datetime.utcnow()
-        
-        
+
         entries = []
 
         offset = 0
@@ -73,34 +72,39 @@ class Connection(object):
 
     def recv_packet_data(self):
         """Receives raw packet data from the device."""
-        for attempt in range(10):
+        failures = 0
 
-            
-            # align stream to (possible) start of packet
-            while ord(self.read(1)) != START_BYTE:
-                pass
+        while True:
+            # get more data from device
+            self.data.extend(self.serial.read(256))
 
-            header = self.read(2)
-            length = ord(header[1])
+            # either align to possible packet or drop non-existent frame
+            try:
+                del self.data[:self.data.index(START_BYTE)]
+            except ValueError:
+                del self.data[:]
 
-            data = self.read(length)
+            # check if we have an entire, valid packet and then send it
+            if len(self.data) >= HEADER_SIZE:
+                length = self.data[2]
+                if len(self.data) >= HEADER_SIZE + length + FOOTER_SIZE:
+                    crc = self.data[HEADER_SIZE + length + 0]
+                    end = self.data[HEADER_SIZE + length + 1]
+                    body = bytes(self.data)[HEADER_SIZE:HEADER_SIZE + length]
 
-            footer = self.read(2)
-                
-        
-            crc = ord(footer[0])
-            end = ord(footer[1])
+                    self.data[0] = 0  # clear frame byte to allow other packets
 
-            if end == END_BYTE and crc8(data) == crc:
-                return data
-                
-                
-        else:
-            raise NoPacketError(attempt)
+                    if end == END_BYTE and crc == crc8(body):
+                        return body
+
+                    failures += 1
+
+                    if failures >= 10:
+                        raise NoPacketError(failures)
 
 
 @contextmanager
-def create_connection(device, version='2'):
+def create_connection(device):
     """Yields a managed coresense connection."""
     conn = Connection(device)
     try:
