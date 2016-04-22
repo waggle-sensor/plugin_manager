@@ -38,7 +38,9 @@ mkdir -p /etc/supervisor/conf.d/
 #ln -sf /usr/lib/waggle/plugin_manager/supervisor/waggle_plugin_manager.conf /etc/supervisor/conf.d/waggle_plugin_manager.conf
 rm -f /etc/supervisor/conf.d/waggle_plugin_manager.conf
 
-cp /usr/lib/waggle/plugin_manager/upstart/waggle_plugin_manager.conf /etc/init/
+# copy upstart scripts
+cp ${waggle_dir}/upstart/waggle-* /etc/init/
+rm -f ${waggle_dir}/upstart/waggle_*
 
 set +x
 echo "done"
