@@ -21,38 +21,35 @@ from contextlib import contextmanager
 import datetime
 
 
-START_BYTE = 0xAA
+START_BYTE = b'\xaa'
 END_BYTE = 0x55
+HEADER_SIZE = 3
+FOOTER_SIZE = 2
 
 
 class Connection(object):
     """Provides a socket-like interface to a coresense device."""
 
     def __init__(self, device):
-        self.serial = Serial(device, timeout=120)
+        self.serial = Serial(device, timeout=180)
+        self.data = bytearray()
 
     def close(self):
         """Closes the connection to the device."""
         self.serial.close()
 
     def read(self, count):
-        start_time = datetime.datetime.now()
         result = self.serial.read(count)
-        total_time = datetime.datetime.now() - start_time
         if len(result) < count:
-            raise SerialException("Did read less than expected (expected %d, got only %d), maybe timeout problem. seconds: %s" % (count, len(result), str(total_time)))
+            raise SerialException("Did read less than expected (expected %d, got only %d), maybe timeout problem." % (count, len(result)))
         return result
 
     def recv(self):
         """Receives a list of sensor entries from the device."""
         data = self.recv_packet_data()
 
-        
-        
-        
         timestamp = datetime.datetime.utcnow()
-        
-        
+
         entries = []
 
         offset = 0
@@ -75,34 +72,39 @@ class Connection(object):
 
     def recv_packet_data(self):
         """Receives raw packet data from the device."""
-        for attempt in range(10):
+        failures = 0
 
-            
-            # align stream to (possible) start of packet
-            while ord(self.read(1)) != START_BYTE:
-                pass
+        while True:
+            # get more data from device
+            self.data.extend(self.serial.read(256))
 
-            header = self.read(2)
-            length = ord(header[1])
+            # either align to possible packet or drop non-existent frame
+            try:
+                del self.data[:self.data.index(START_BYTE)]
+            except ValueError:
+                del self.data[:]
 
-            data = self.read(length)
+            # check if we have an entire, valid packet and then send it
+            if len(self.data) >= HEADER_SIZE:
+                length = self.data[2]
+                if len(self.data) >= HEADER_SIZE + length + FOOTER_SIZE:
+                    crc = self.data[HEADER_SIZE + length + 0]
+                    end = self.data[HEADER_SIZE + length + 1]
+                    body = bytes(self.data)[HEADER_SIZE:HEADER_SIZE + length]
 
-            footer = self.read(2)
-                
-        
-            crc = ord(footer[0])
-            end = ord(footer[1])
+                    self.data[0] = 0  # clear frame byte to allow other packets
 
-            if end == END_BYTE and crc8(data) == crc:
-                return data
-                
-                
-        else:
-            raise NoPacketError(attempt)
+                    if end == END_BYTE and crc == crc8(body):
+                        return body
+
+                    failures += 1
+
+                    if failures >= 10:
+                        raise NoPacketError(failures)
 
 
 @contextmanager
-def create_connection(device, version='2'):
+def create_connection(device):
     """Yields a managed coresense connection."""
     conn = Connection(device)
     try:
@@ -164,34 +166,27 @@ def crc8(data, crc=0):
     return crc
 
 
-def format1(input):
+def uint16(input):
     'unsigned 16-bit integer'
     byte1 = ord(input[0])
     byte2 = ord(input[1])
     value = (byte1 << 8) | byte2
     return value
 
-format1.length = 2
+uint16.length = 2
 
 
-def format2(input):
+def int16(input):
     'signed 16-bit integer'
     byte1 = ord(input[0])
     byte2 = ord(input[1])
     value = ((byte1 & 0x7F) << 8) | byte2
     return value if byte1 & 0x80 == 0 else -value
 
-format2.length = 2
+int16.length = 2
 
 
-def format3(input):
-    'hex string'
-    return str(hex(ord(input)))[2:]  # explain [2:]?
-
-format3.length = 6
-
-
-def format4(input):
+def uint24(input):
     'unsigned 24-bit integer'
     byte1 = ord(input[0])
     byte2 = ord(input[1])
@@ -199,10 +194,10 @@ def format4(input):
     value = (byte1 << 16) | (byte2 << 8) | (byte3)
     return value
 
-format4.length = 3
+uint24.length = 3
 
 
-def format5(input):
+def int24(input):
     'signed 24-bit integer'
     byte1 = ord(input[0])
     byte2 = ord(input[1])
@@ -210,12 +205,10 @@ def format5(input):
     value = ((byte1 & 0x7F) << 16) | (byte2 << 8) | (byte3)
     return value if byte1 & 0x80 == 0 else -value
 
-format5.length = 3
+int24.length = 3
 
 
-def format6(input):
-    'floating point 1'
-    # F6 - float input, +-{0-127}.{0-99} - 1S|7Bit_Int 0|7Bit_Frac{0-99}
+def ufloat(input):
     byte1 = ord(input[0])
     byte2 = ord(input[1])
     # have to be careful here, we do not want three decimal placed here.
@@ -224,24 +217,10 @@ def format6(input):
         value = value * -1
     return value
 
-format6.length = 2
+ufloat.length = 2
 
 
-def format7(input):
-    'unsigned 8-bit integer[4]'
-    # F7 - byte input[4], {0-0xffffffff} - Byte1 Byte2 Byte3 Byte4
-    byte1 = ord(input[0])
-    byte2 = ord(input[1])
-    byte3 = ord(input[0])
-    byte4 = ord(input[1])
-    return [byte1, byte2, byte3, byte4]
-
-format7.length = 4
-
-
-def format8(input):
-    'floating point 2'
-    # F8 - float input, +-{0-31}.{0-999} - 1S|5Bit_Int|2MSBit_Frac 8LSBits_Frac
+def lfloat(input):
     byte1 = ord(input[0])
     byte2 = ord(input[1])
     value = ((byte1 & 0x7c) >> 2) + ((((byte1 & 0x03) << 8) | byte2) * 0.001)
@@ -249,75 +228,79 @@ def format8(input):
         value = value * -1
     return value
 
-format8.length = 2
+lfloat.length = 2
 
 
-def string3(input):
-    'string of format3'
-    return ''.join([str(format3(byte)) for byte in input])
+def macaddr(input):
+    return ''.join(map(lambda b: '{:02X}'.format(ord(b)), input))
+    # return ''.join([str(format3(byte)) for byte in input])
 
-string3.length = -1
-
-
-def string6(input):
-    'string of format6'
-    return ''.join([str(format6(byte)) for byte in input])
-
-string6.length = -1
+macaddr.length = 6
 
 
-def sensor17(input):
-    'temperature array sensor'
-    return string6(input[::2])
+def uint8array(input):
+    'unsigned 8-bit integer[4]'
+    # F7 - byte input[4], {0-0xffffffff} - Byte1 Byte2 Byte3 Byte4
+    byte1 = ord(input[0])
+    byte2 = ord(input[1])
+    byte3 = ord(input[2])
+    byte4 = ord(input[3])
+    return [byte1, byte2, byte3, byte4]
 
-sensor17.length = -1
+uint8array.length = 4
+
+
+# def sensor17(input):
+#     return string6(input[::2])
+#
+# sensor17.length = -1
 
 
 sensor_table = {
-    0x00: ('Board MAC', [('MAC Address', string3)]),
-    0x01: ('TMP112', [('Temperature', format6)]),
-    0x02: ('HTU21D', [('Temperature', format6),
-                      ('Humidity', format6)]),
-    0x03: ('GP2Y1010AU0F', [('Dust', format5)]),
-    0x04: ('BMP180', [('Temperature', format6),
-                      ('Atm Pressure', format5)]),
-    0x05: ('PR103J2', [('Temperature', format1)]),
-    0x06: ('TSL250RD', [('Light', format1)]),
-    0x07: ('MMA8452Q', [('Accel X', format6),
-                        ('Accel Y', format6),
-                        ('Accel Z', format6),
-                        ('RMS', format6)]),
-    0x08: ('SPV1840LR5H-B', [('Sound Pressure', format1)]),
-    0x09: ('TSYS01', [('Temperature', format6)]),
-    0x0A: ('HMC5883L', [('B Field X', format8),
-                        ('B Field Y', format8),
-                        ('B Field Z', format8)]),
-    0x0B: ('HIH6130', [('Temperature', format6),
-                       ('Humidity', format6)]),
-    0x0C: ('APDS-9006-020', [('Light', format1)]),
-    0x0D: ('TSL260RD', [('Light', format1)]),
-    0x0E: ('TSL250RD', [('Light', format1)]),
-    0x0F: ('MLX75305', [('Light', format1)]),
-    0x10: ('ML8511', [('Light', format1)]),
-    0x11: ('D6T', [('Temperatures', sensor17)]),
-    0x12: ('MLX90614', [('Temperature', format6)]),
-    0x13: ('TMP421', [('Temperature', format6)]),
-    0x14: ('SPV1840LR5H-B', [('Sound Pressure', format1)]),
-    0x15: ('Total reducing gases', [('Concentration', format5)]),
-    0x16: ('Ethanol (C2H5-OH)', [('Concentration', format5)]),
-    0x17: ('Nitrogen Di-oxide (NO2)', [('Concentration', format5)]),
-    0x18: ('Ozone (03)', [('Concentration', format5)]),
-    0x19: ('Hydrogen Sulphide (H2S)', [('Concentration', format5)]),
-    0x1A: ('Total Oxidizing gases', [('Concentration', format5)]),
-    0x1B: ('Carbon Monoxide (C0)', [('Concentration', format5)]),
-    0x1C: ('Sulfur Dioxide (SO2)', [('Concentration', format5)]),
-    0x1D: ('SHT25', [('Temperature', format2),
-                     ('Humidity', format2)]),
-    0x1E: ('LPS25H', [('???', format2),
-                      ('???', format4)]),
-    0x1F: ('Si1145', [('???', format1)]),
-    0x20: ('Intel MAC', [('MAC Address', string3)]),
-    0xFE: ('Sensor Health', [('Status', format7)]),
+    0x00: ('Board MAC', [('MAC Address', macaddr)]),
+    0x01: ('TMP112', [('Temperature', ufloat)]),
+    0x02: ('HTU21D', [('Temperature', ufloat),
+                      ('Humidity', ufloat)]),
+    0x03: ('GP2Y1010AU0F', [('Dust', int24)]),
+    0x04: ('BMP180', [('Temperature', ufloat),
+                      ('Atm Pressure', int24)]),
+    0x05: ('PR103J2', [('Temperature', uint16)]),
+    0x06: ('TSL250RD', [('Light', uint16)]),
+    0x07: ('MMA8452Q', [('Accel X', ufloat),
+                        ('Accel Y', ufloat),
+                        ('Accel Z', ufloat),
+                        ('RMS', ufloat)]),
+    0x08: ('SPV1840LR5H-B', [('Sound Pressure', uint16)]),
+    0x09: ('TSYS01', [('Temperature', ufloat)]),
+    0x0A: ('HMC5883L', [('B Field X', lfloat),
+                        ('B Field Y', lfloat),
+                        ('B Field Z', lfloat)]),
+    0x0B: ('HIH6130', [('Temperature', ufloat),
+                       ('Humidity', ufloat)]),
+    0x0C: ('APDS-9006-020', [('Light', uint16)]),
+    0x0D: ('TSL260RD', [('Light', uint16)]),
+    0x0E: ('TSL250RD', [('Light', uint16)]),
+    0x0F: ('MLX75305', [('Light', uint16)]),
+    0x10: ('ML8511', [('Light', uint16)]),
+    # 0x11: ('D6T', [('Temperatures', sensor17)]),
+    0x12: ('MLX90614', [('Temperature', ufloat)]),
+    0x13: ('TMP421', [('Temperature', ufloat)]),
+    0x14: ('SPV1840LR5H-B', [('Sound Pressure', uint16)]),
+    0x15: ('Total reducing gases', [('Concentration', int24)]),
+    0x16: ('Ethanol (C2H5-OH)', [('Concentration', int24)]),
+    0x17: ('Nitrogen Di-oxide (NO2)', [('Concentration', int24)]),
+    0x18: ('Ozone (03)', [('Concentration', int24)]),
+    0x19: ('Hydrogen Sulphide (H2S)', [('Concentration', int24)]),
+    0x1A: ('Total Oxidizing gases', [('Concentration', int24)]),
+    0x1B: ('Carbon Monoxide (C0)', [('Concentration', int24)]),
+    0x1C: ('Sulfur Dioxide (SO2)', [('Concentration', int24)]),
+    0x1D: ('SHT25', [('Temperature', int16),
+                     ('Humidity', int16)]),
+    0x1E: ('LPS25H', [('???', int16),
+                      ('???', uint24)]),
+    0x1F: ('Si1145', [('???', uint16)]),
+    0x20: ('Intel MAC', [('MAC Address', macaddr)]),
+    0xFE: ('Sensor Health', [('Status', uint8array)]),
 }
 
 
@@ -334,12 +317,8 @@ def sensor_format_slices(formats):
     start = 0
 
     for name, fmt in formats:
-        if fmt.length < 0:
-            yield name, fmt, start, None
-            break
-        else:
-            yield name, fmt, start, start + fmt.length
-            start += fmt.length
+        yield name, fmt, start, start + fmt.length
+        start += fmt.length
 
 
 def unpack_sensor_data(sensor_format, sensor_data):
