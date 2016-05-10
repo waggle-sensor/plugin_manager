@@ -4,6 +4,8 @@ set -x
 set -e
 
 
+
+
 # set node controller IP for "internal" network
 if [ ! -e /etc/waggle/node_controller_host ] ; then
   echo "10.31.81.10" > /etc/waggle/node_controller_host
@@ -39,8 +41,8 @@ mkdir -p /etc/supervisor/conf.d/
 rm -f /etc/supervisor/conf.d/waggle_plugin_manager.conf
 
 # copy upstart scripts
-cp ${waggle_dir}/upstart/waggle-* /etc/init/
-rm -f ${waggle_dir}/upstart/waggle_*
+cp ./upstart/waggle-* /etc/init/
+rm -f ./upstart/waggle_*
 
 set +x
 echo "done"
