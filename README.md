@@ -37,29 +37,8 @@ The following details of the embedded scripts are generated from source codes of
 
 ** It only appears in HTML file, not markdown file.
 
-<!-- EXTERNAL LINK TO CODE
-"html/guestNode/GN_registration.html"
--->
+<!-- EXTERNAL LINK TO CODE "lib/msg_handler.py" -->
 
-<!-- EXTERNAL LINK TO CODE
-"html/guestNode/handshake.html"
--->
+<!-- EXTERNAL LINK TO CODE "plugin_manager.py" -->
 
-<!-- EXTERNAL LINK TO CODE
-"html/guestNode/msg_handler.html"
--->
-
-<!-- EXTERNAL LINK TO CODE
-"html/guestNode/data_packet.html"
--->
-
-<!-- EXTERNAL LINK TO CODE
-"html/guestNode/ping.html"
--->
-
-<!-- EXTERNAL LINK TO CODE
-"html/guestNode/time.html"
--->
-
-
-
+<!-- EXTERNAL LINK TO CODE "waggle-plugins.py" -->
