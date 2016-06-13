@@ -33,12 +33,8 @@ This script can be used to list, start and stop plugins and the command line. It
 
 ## Script details
 
-The following details of the embedded scripts are generated from source codes of the scripts. To see, create html docs in waggle/web by commanding 'make docs'.
+* [Message handler](/lib/msg_handler.py)
 
-** It only appears in HTML file, not markdown file.
+* [Plugin manager](plugin_manager.py)
 
-<!-- EXTERNAL LINK TO CODE "lib/msg_handler.py" -->
-
-<!-- EXTERNAL LINK TO CODE "plugin_manager.py" -->
-
-<!-- EXTERNAL LINK TO CODE "waggle-plugins.py" -->
+* [Waggle plugins](waggle-plugins.py)
