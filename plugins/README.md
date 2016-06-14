@@ -10,6 +10,4 @@ The __init__.py file within the plugin folder turns the directory into a module,
 The run_plugins_multi.py script only tries to invoke the "register" object in each of the plugins in the __all__ list variable in sequence, but can be changed to perform different functions instead or in addition to this. It will run all of the called plugins as a separate process, and can start or stop plugins individually or all at once.
 
 Following is a code example of Python plugin.
-** It appears in only HTML file, not markdown file.
-
-<!-- EXTERNAL LINK TO CODE "example_sensor/example_sensor_plugin.py" -->
+* [Example plugin](example_sensor/example_sensor_plugin.py)
