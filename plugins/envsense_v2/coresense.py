@@ -299,7 +299,7 @@ sensor_table = {
     0x1E: ('LPS25H', [('Temperature', int16),
                       ('Pressure', uint24)]),
     0x1F: ('Si1145', [('Raw UV', uint16),
-                      ('Raw VL'. uint16),
+                      ('Raw VL', uint16),
                       ('Raw IR', uint16)]),
     0x20: ('Intel MAC', [('MAC Address', macaddr)]),
     0x21:('CO ADC Temp', [('ADC Temperature', int16)]),
@@ -315,7 +315,7 @@ sensor_table = {
                    ('Orientation Y', int16),
                    ('Orientation Z', int16),
                    ('Orientation Index', uint24)]),
-    0xFE: ('Sensor Health', [('Status', uint8array)]),
+    0xFE: ('Sensor Health', [('Status', uint8array)])
 }
 
 
@@ -343,7 +343,7 @@ def unpack_sensor_data(sensor_format, sensor_data):
 
 def parse_sensor(identifier, sensor_data):
     if identifier not in sensor_table:
-        raise UnknownSensorError(sensor_id=identifier)
+        raise UnknownSensorError(identifier)
 
     entry_sensor, sensor_format = sensor_table[identifier]
     entry_values = unpack_sensor_data(sensor_format, sensor_data)
