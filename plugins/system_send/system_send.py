@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import time, serial, sys, datetime, pprint, logging, socket, os
 from multiprocessing import Queue
 
@@ -35,7 +37,12 @@ class system_send(object):
         self.socket = None
         self.HOST = read_file('/etc/waggle/node_controller_host')
         self.PORT = 9090 #port for push_server
-        
+        try:
+            context = zmq.Context()
+            self.socket = context.socket(zmq.REQ)
+        except zmq.error.ZMQError as e:
+            logger.debug("zmq.error.ZMQError: (%s) %s" % (str(type(e)), str(e)))
+            msg = None
         logger.debug("Using %s:%d" % (self.HOST , self.PORT))
         
         packet = packetmaker.make_GN_reg(1)
@@ -54,25 +61,32 @@ class system_send(object):
     def send(self, msg):
         if self.socket:
             self.socket.close()
-            
-        
-        try: 
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        except Exception as e: 
-            logger.error("Could not create socket to %s:%d : %s" % (self.HOST, self.PORT, str(e)))
-            raise
-
-        try: 
-            self.socket.connect((self.HOST,self.PORT))
-        except Exception as e: 
-            logger.error("Could not connect to %s:%d : %s" % (self.HOST, self.PORT, str(e)))
-            raise
 
         try:
+            self.socket = context.socket(zmq.REQ)
+            self.socket.connect ("tcp://%s:%s" % (self.HOST, self.PORT))
             self.socket.send(msg)
-        except Exception as e: 
-            logger.error("Could not send message to %s:%d : %s" % (self.HOST, self.PORT, str(e)))
+        except:
+            logger.error("Could not send message to %s:%d: %s" % (self.HOST, self.PORT, str(e)))
             raise
+
+        # try: 
+        #     self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # except Exception as e: 
+        #     logger.error("Could not create socket to %s:%d : %s" % (self.HOST, self.PORT, str(e)))
+        #     raise
+
+        # try: 
+        #     self.socket.connect((self.HOST,self.PORT))
+        # except Exception as e: 
+        #     logger.error("Could not connect to %s:%d : %s" % (self.HOST, self.PORT, str(e)))
+        #     raise
+
+        # try:
+        #     self.socket.send(msg)
+        # except Exception as e: 
+        #     logger.error("Could not send message to %s:%d : %s" % (self.HOST, self.PORT, str(e)))
+        #     raise
             
 
     def read_mailbox(self, name, man):

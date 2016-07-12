@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 #Program to detect appearance of preset colors in an image
 import cv2
 import numpy as np

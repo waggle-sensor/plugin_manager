@@ -1,9 +1,10 @@
+#!/usr/bin/env python3
 # msg_handler.py
 
 import os, os.path, sys
 sys.path.append('./waggle_protocol/')
 from protocol.PacketHandler import *
-from send import send
+from .send import send
 
 def msg_handler(msg):
     """
@@ -19,7 +20,7 @@ def msg_handler(msg):
         #unpacks the header
         header = get_header(msg)
     except: 
-        print 'Message is corrupt.'
+        print('Message is corrupt.')
         raise
         
     #get the major header type
@@ -53,7 +54,7 @@ def msg_handler(msg):
             #unpack the message
             ping = unpack(msg)
             #print out the body of the message
-            print 'Node received: ', ping[1]
+            print('Node received: ', ping[1])
     #time
     elif major == 't':
         #time request
@@ -72,7 +73,7 @@ def msg_handler(msg):
             #unpack the message
             time = unpack(msg)
             #print out the body of the message
-            print 'Node received time: ', time[1]
+            print('Node received time: ', time[1])
     #sensor data
     elif major == 's':
         #TODO do stuff here 
@@ -84,11 +85,11 @@ def msg_handler(msg):
         #unpack the message
         reg = unpack(msg)
         #print out the body of the message
-        print 'GN received: ', reg[1]
+        print('GN received: ', reg[1])
     
     #message type unrecognized 
     else: 
-        print 'Message major type, ' , major, ' unrecognized.'
+        print('Message major type, ' , major, ' unrecognized.')
                 
                 
                 

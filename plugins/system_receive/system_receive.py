@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 import time, socket, sys, logging
 from multiprocessing import Process, Queue

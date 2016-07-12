@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 #####################
 #This code is taken from https://github.com/samwyse/sspp/blob/master/__init__.py
 #####################

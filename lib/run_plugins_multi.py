@@ -78,16 +78,16 @@ class plugin_runner(object):
 
     #Lists all available plugins and their status
     def list_plugins(self):
-        print 'Plugins List:'
+        print('Plugins List:')
         for name in plugins.__all__:
             plugin = getattr(plugins, name)
             #checks if listed plugin is in list of active processes
             j = self.get_plugin_by_name(name)
             if j:
-                print 'Plugin', name, 'is active.'
+                print('Plugin', name, 'is active.')
                 continue
             
-            print 'Plugin', name, 'is inactive.'
+            print('Plugin', name, 'is inactive.')
 
     #Tries to start a plugin with the name given by argument. Returns 1 for successful start, 0 for failure
     def start_plugin(self, plugin_name):
@@ -294,7 +294,7 @@ class plugin_runner(object):
         if (fail == 0):
             return [1, 'All active processes killed.']
         else:
-            print [0, 'Attempted to kill all active processes with %d failures.' % (fail)]
+            print([0, 'Attempted to kill all active processes with %d failures.' % (fail)])
 
     #sends all active plugins a stop signal
     def stop_all(self):
@@ -348,7 +348,7 @@ class plugin_runner(object):
         
     #Starts all processes (ignores if the process is already active)
     def start_all(self):
-        print 'Starting all processes...'
+        print('Starting all processes...')
         start = 1
         fail = 0
         for plugin_name in plugins.__all__:

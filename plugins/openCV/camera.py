@@ -1,5 +1,7 @@
+#!/usr/bin/env python3
+
 #Program to perform background subtraction and motion detection
-from __future__ import print_function
+
 from imutils.object_detection import non_max_suppression
 from imutils import paths
 import numpy as np
@@ -98,7 +100,7 @@ def hog():
 #Main
 if __name__ == '__main__':
     print(" -------------------------------- \n|OpenCV Object Detection/Tracking|\n -------------------------------- \n")
-    arg = input("Select detection method:\n[1] Background Subtraction\n[2] Motion detection\n[3] Histogram of Oriented Gradients\n[0] Exit Program\n>")
+    arg = eval(input("Select detection method:\n[1] Background Subtraction\n[2] Motion detection\n[3] Histogram of Oriented Gradients\n[0] Exit Program\n>"))
     cap = cv2.VideoCapture(1)# uncomment for webcam
     time.sleep(2)
     if cap.isOpened() == False:

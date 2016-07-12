@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import time, serial, sys, datetime, os, random
 
 
@@ -39,7 +39,7 @@ class register(object):
                 rint = random.randint(1, 100)
                 sendData=[str(timestamp_date), 'example_sensor', '1', 'default', '%d' % (timestamp_epoch), 'RandomNumber', "meta.txt", [str(rint)]]
             
-            print 'Sending data: ',sendData
+            print('Sending data: ',sendData)
             
             mailbox_outgoing.put(sendData)
             #send a packet every 10 seconds

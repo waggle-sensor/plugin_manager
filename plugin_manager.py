@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-import multiprocessing, time, sys, re, os, socket, json, argparse, select, datetime
+#!/usr/bin/env python3
+import multiprocessing, time, sys, re, os, socket, json, argparse, select, datetime, zmq, subprocess
 import logging, logging.handlers
 from multiprocessing import Manager, Queue
 from Queue import Empty
@@ -489,7 +489,7 @@ class PluginManagerAPI:
             try:
                 data = client_sock.recv(8192) #arbitrary
         
-            except KeyboardInterrupt, k:
+            except KeyboardInterrupt:
                 logger.info("KeyboardInterrupt")
                 break
             except Exception as a:
@@ -548,7 +548,36 @@ class PluginManagerAPI:
                 continue
         
             logger.debug("got data: \"%s\"" % (str(data)))
+            
+def read_file( str ):
+    if not os.path.isfile(str) :
+        return ""
+    with open(str,'r') as file_:
+        return file_.read().strip()
+    return ""
 
+def get_time():
+    HOST = read_file('/etc/waggle/node_controller_host')
+    PORT = 9090
+    msg = None
+    socket = None
+    try:
+        context = zmq.Context()
+        socket = context.socket(zmq.REQ)
+        socket.connect ("tcp://%s:%s" % (HOST, PORT))
+        socket.send("time")
+        msg = socket.recv()
+    except zmq.error.ZMQError as e:
+        logger.debug("zmq.error.ZMQError: (%s) %s" % (str(type(e)), str(e)))
+        msg = None
+    socket.close()
+
+    if not msg:
+        logger.info("got time: %s from NC" % (msg))
+        try:
+            subprocess.call(["date", "-s %s" % (msg)])
+        except Exception as e:
+            logger.debug("setting time using date failed: %s" % (str(e)))
 
     
 
@@ -582,6 +611,8 @@ if __name__ == '__main__':
             
             while (datetime.datetime.now().year < 2016):
                 logger.warning("We are in the wrong year. Waiting for the correct time.")
+                # Try to get time from NC
+                get_time()
                 time.sleep(10)
             
             

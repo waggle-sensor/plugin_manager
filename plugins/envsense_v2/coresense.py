@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 This module provides an interface to the Waggle coresense device. The Waggle
 coresense devices show up as USB serial devices. For example, the device may
@@ -232,7 +234,7 @@ lfloat.length = 2
 
 
 def macaddr(input):
-    return ''.join(map(lambda b: '{:02X}'.format(ord(b)), input))
+    return ''.join(['{:02X}'.format(ord(b)) for b in input])
     # return ''.join([str(format3(byte)) for byte in input])
 
 macaddr.length = 6

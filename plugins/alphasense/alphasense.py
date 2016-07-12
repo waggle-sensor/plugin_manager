@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 '''
 Alphasense reader using the USB-ISS interface. The only real dependency
 is on the set_spi_mode and transfer_data functions. This could easily be
@@ -156,7 +158,7 @@ class Alphasense(object):
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print('Usage: {} device-name'.format(sys.argv[0]))
+        print(('Usage: {} device-name'.format(sys.argv[0])))
         sys.exit(1)
 
     alphasense = Alphasense(sys.argv[1])
@@ -165,8 +167,8 @@ if __name__ == '__main__':
     alphasense.power_on()
     sleep(1)
 
-    print(repr(alphasense.get_firmware_version()))
-    print(repr(alphasense.get_config_data()))
+    print((repr(alphasense.get_firmware_version())))
+    print((repr(alphasense.get_config_data())))
 
     try:
         while True:
@@ -175,15 +177,15 @@ if __name__ == '__main__':
             data = decode17(rawdata)
 
             for size, count in zip(alphasense.bin_sizes, data['bins']):
-                print('{: 3.4f} {:>6}'.format(size, count))
+                print(('{: 3.4f} {:>6}'.format(size, count)))
             print()
 
             for pm in ['pm1', 'pm2.5', 'pm10']:
-                print('{} {}'.format(pm, data[pm]))
+                print(('{} {}'.format(pm, data[pm])))
             print()
 
             print(data)
-            print(repr(rawdata))
+            print((repr(rawdata)))
 
             sleep(10)
     finally:

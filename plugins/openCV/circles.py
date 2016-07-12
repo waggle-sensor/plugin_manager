@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 #Program to detect preset shapes in an image
 import cv2
 import numpy as np

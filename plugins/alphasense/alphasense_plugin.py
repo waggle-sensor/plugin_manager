@@ -1,9 +1,11 @@
+#!/usr/bin/env python3
+
 # -*- coding: utf-8 -*-
 import logging
 import datetime
 import time
 from base64 import b64encode
-from alphasense import Alphasense
+from .alphasense import Alphasense
 
 
 logger = logging.getLogger(__name__)

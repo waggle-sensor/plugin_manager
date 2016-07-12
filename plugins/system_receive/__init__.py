@@ -1,1 +1,1 @@
-from system_receive import register
+from .system_receive import register

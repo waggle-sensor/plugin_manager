@@ -1,9 +1,11 @@
+#!/usr/bin/env python3
+
 import time, serial, sys, datetime, pprint, logging, socket, os
 #sys.path.append('../waggle_protocol/')
 #from utilities import packetmaker
 from multiprocessing import Queue
 
-from Queue import Full
+from queue import Full
 
 
 logger = logging.getLogger(__name__)

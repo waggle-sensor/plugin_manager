@@ -1,1 +1,1 @@
-from alphasense_plugin import register
+from .alphasense_plugin import register

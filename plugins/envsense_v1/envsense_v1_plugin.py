@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import time, serial, sys, datetime, pprint, logging
 sys.path.append('waggle_protocol/')
 from utilities import packetmaker
@@ -317,7 +319,7 @@ def sensor_read(name, man, mailbox_outgoing):
                             
                    
                         
-    except KeyboardInterrupt, k:
+    except KeyboardInterrupt as k:
         try:
              wxsensor.close()
         except: 

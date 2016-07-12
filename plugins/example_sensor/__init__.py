@@ -1,1 +1,1 @@
-from example_sensor_plugin import *
+from .example_sensor_plugin import *

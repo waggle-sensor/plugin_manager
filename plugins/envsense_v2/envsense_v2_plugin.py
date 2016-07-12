@@ -1,6 +1,8 @@
+#!/usr/bin/env python3
+
 # -*- coding: utf-8 -*-
 import logging
-import coresense
+from . import coresense
 import datetime
 import time
 
