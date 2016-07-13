@@ -84,9 +84,24 @@ def decode17(data):
     return values
 
 
+def unpack_structs(structs, data):
+    results = {}
+
+    offset = 0
+
+    for key, fmt in structs:
+        values = struct.unpack_from(fmt, data, offset)
+        if len(values) == 1:
+            results[key] = values[0]
+        else:
+            results[key] = values
+        offset += struct.calcsize(fmt)
+
+    return results
+
+
 class Alphasense(object):
 
-    bin_sizes = lininterp(0.38, 17.0, 16)
     bin_units = {
         'bins': 'particle / second',
         'mtof': 'second',
@@ -98,6 +113,30 @@ class Alphasense(object):
         'pressure': 'pascal',
     }
 
+    histogram_data_struct = [
+        ('bins', '<16H'),
+        ('mtof', '<4B'),
+        ('sample flow rate', '<f'),
+        ('weather', '<f'),
+        ('sampling period', '<I'),
+        ('checksum', '<H'),
+        ('pm1', '<f'),
+        ('pm2.5', '<f'),
+        ('pm10', '<f'),
+    ]
+
+    config_data_structs = [
+        ('bin boundaries', '<16H'),
+        ('bin particle volume', '<16f'),
+        ('bin particle density', '<16f'),
+        ('bin particle weighting', '<16f'),
+        ('gain scaling coefficient', '<f'),
+        ('sample flow rate', '<f'),
+        ('laser dac', '<B'),
+        ('fan dac', '<B'),
+        ('tof to sfr factor', '<B'),
+    ]
+
     def __init__(self, port):
         self.serial = Serial(port)
         iss_set_spi_mode(self.serial, 0x92, 500000)
@@ -106,7 +145,7 @@ class Alphasense(object):
         self.serial.close()
 
     def transfer(self, data):
-        sleep(0.004)
+        sleep(0.005)
         return iss_spi_transfer_data(self.serial, data)
 
     def power_on(self, fan=True, laser=True):
@@ -119,11 +158,11 @@ class Alphasense(object):
 
     def power_off(self, fan=True, laser=True):
         if fan and laser:
-            self.transfer_data([0x03, 0x01])
+            self.transfer([0x03, 0x01])
         elif fan:
-            self.transfer_data([0x03, 0x05])
+            self.transfer([0x03, 0x05])
         elif laser:
-            self.transfer_data([0x03, 0x03])
+            self.transfer([0x03, 0x03])
 
     def set_laser_power(self, power):
         self.transfer([0x42, 0x01, power])
@@ -136,10 +175,14 @@ class Alphasense(object):
         sleep(0.1)
         return bytearray(self.transfer([0x3F])[0] for i in range(60))
 
-    def get_config_data(self):
+    def get_config_data_raw(self):
         self.transfer([0x3C])
         sleep(0.1)
         return bytearray(self.transfer([0x3C])[0] for i in range(256))
+
+    def get_config_data(self):
+        config_data = self.get_config_data_raw()
+        return unpack_structs(self.config_data_structs, config_data)
 
     def ping(self):
         response = self.transfer([0xCF])
@@ -153,20 +196,18 @@ class Alphasense(object):
     def get_histogram(self):
         return decode17(self.get_histogram_binary())
 
-
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         print('Usage: {} device-name'.format(sys.argv[0]))
         sys.exit(1)
 
     alphasense = Alphasense(sys.argv[1])
-    sleep(1)
+    sleep(3)
 
     alphasense.power_on()
-    sleep(1)
+    sleep(3)
 
-    print(repr(alphasense.get_firmware_version()))
-    print(repr(alphasense.get_config_data()))
+    config = alphasense.get_config_data()
 
     try:
         while True:
@@ -174,16 +215,17 @@ if __name__ == '__main__':
 
             data = decode17(rawdata)
 
-            for size, count in zip(alphasense.bin_sizes, data['bins']):
+            if data['error']:
+                alphasense.close()
+                raise RuntimeError('Alphasense histogram error.')
+
+            for size, count in zip(config['bin particle volume'], data['bins']):
                 print('{: 3.4f} {:>6}'.format(size, count))
             print()
 
             for pm in ['pm1', 'pm2.5', 'pm10']:
                 print('{} {}'.format(pm, data[pm]))
             print()
-
-            print(data)
-            print(repr(rawdata))
 
             sleep(10)
     finally:
