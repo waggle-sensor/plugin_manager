@@ -151,7 +151,7 @@ if __name__ == '__main__':
         
         command_line = None
         try:
-            command_line = eval(input('\nEnter your command: '))
+            command_line = input('\nEnter your command: ')
         except KeyboardInterrupt:
             print("leaving...")
             sys.exit(0)
