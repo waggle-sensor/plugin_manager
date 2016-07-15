@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import time, serial, sys, datetime, pprint, logging, socket, os
+import time, serial, sys, datetime, pprint, logging, socket, os, zmq
 from multiprocessing import Queue
 
 sys.path.append('./waggle_protocol/')
@@ -65,8 +65,8 @@ class system_send(object):
         try:
             self.socket = context.socket(zmq.REQ)
             self.socket.connect ("tcp://%s:%s" % (self.HOST, self.PORT))
-            self.socket.send(msg)
-        except:
+            self.socket.send(msg.encode('iso-8859-15'))
+        except Exception as e:
             logger.error("Could not send message to %s:%d: %s" % (self.HOST, self.PORT, str(e)))
             raise
 
