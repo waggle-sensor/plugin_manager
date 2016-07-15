@@ -15,4 +15,5 @@ pip3 install crcmod
 pip3 install pyserial
 pip3 install tabulate
 pip3 install pyzmq
+pip3 install psutil
 
