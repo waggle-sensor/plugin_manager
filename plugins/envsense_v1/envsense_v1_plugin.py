@@ -13,7 +13,7 @@ logger.setLevel(logging.DEBUG)
 
 class register(object):
     def __init__(self, name, man, mailbox_outgoing):
-    	man[name] = 1
+        man[name] = 1
         sensor_read(name, man, mailbox_outgoing)
 
 
