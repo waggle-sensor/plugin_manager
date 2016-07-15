@@ -32,7 +32,7 @@ def read_streaming_api():
         return None
     
     try:
-        client_sock.sendall('log')
+        client_sock.sendall('log'.encode('iso-8859-15'))
     except Exception as e:
          print(("Error talking to socket: %s" % (str(e))))
          client_sock.close()
@@ -42,7 +42,7 @@ def read_streaming_api():
     print("listening for stream...")    
     while 1:    
         try:
-            data = client_sock.recv(2048) #TODO need better solution
+            data = client_sock.recv(2048).decode('iso-8859-15') #TODO need better solution
         except KeyboardInterrupt:
             break
         except Exception as e:
@@ -70,7 +70,7 @@ def read_api(command, timeout=3):
         return None
         
     try:
-        client_sock.sendall(command)
+        client_sock.sendall(command.encode('iso-8859-15'))
     except Exception as e:
          print(("Error talking to socket: %s" % (str(e))))
          client_sock.close()
@@ -78,7 +78,7 @@ def read_api(command, timeout=3):
 
     #ready = select.select([mysocket], [], [], timeout_in_seconds)
     try:
-        data = client_sock.recv(2048) #TODO need better solution
+        data = client_sock.recv(2048).decode('iso-8859-15') #TODO need better solution
     except Exception as e:
         print(("Error reading socket: %s" % (str(e))))
         client_sock.close()

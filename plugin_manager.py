@@ -487,7 +487,7 @@ class PluginManagerAPI:
             
             
             try:
-                data = client_sock.recv(8192) #arbitrary
+                data = client_sock.recv(8192).decode('iso-8859-15') #arbitrary
         
             except KeyboardInterrupt:
                 logger.info("KeyboardInterrupt")
@@ -542,7 +542,7 @@ class PluginManagerAPI:
                 continue
         
             try:
-                client_sock.sendall(result_json+"\n")
+                client_sock.sendall(result_json+"\n".encode('iso-8859-15'))
             except Exception as e:
                 logger.warning("Could not reply to client: %s" % (str(e)) )
                 continue
