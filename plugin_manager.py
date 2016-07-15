@@ -2,7 +2,7 @@
 import multiprocessing, time, sys, re, os, socket, json, argparse, select, datetime, zmq, subprocess
 import logging, logging.handlers
 from multiprocessing import Manager, Queue
-from Queue import Empty
+from queue import Empty
 
 from waggle_protocol.utilities.pidfile import PidFile, AlreadyRunning
 
@@ -148,7 +148,7 @@ class PluginManagerAPI:
     def get_list(self, file):
         mylist = self.read_file(file)
         mylist = re.split('\n', mylist)
-        mylist = filter(None, mylist)
+        mylist = [_f for _f in mylist if _f]
         mylist = [ x for x in mylist if not x.startswith("#") ]
         return mylist
 
