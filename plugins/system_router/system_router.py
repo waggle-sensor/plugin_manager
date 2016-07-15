@@ -12,10 +12,10 @@ logger = logging.getLogger(__name__)
 
 class register(object):
     def __init__(self, name, man, plugin_mailbox, listeners):
-    	man[name] = 1
-        
+        man[name] = 1
+
         sr = system_router(name, man, plugin_mailbox, listeners)
-        
+
         try:
             sr.route()
         except KeyboardInterrupt:

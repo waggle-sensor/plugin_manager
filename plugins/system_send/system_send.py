@@ -20,10 +20,10 @@ def read_file( str ):
 
 class register(object):
     def __init__(self, name, man, mailbox_outgoing):
-    	man[name] = 1
-        
+        man[name] = 1
+
         ss = system_send(mailbox_outgoing)
-        
+
         try:
             ss.read_mailbox(name, man)
         except KeyboardInterrupt:

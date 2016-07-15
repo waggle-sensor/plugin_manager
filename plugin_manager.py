@@ -542,7 +542,7 @@ class PluginManagerAPI:
                 continue
         
             try:
-                client_sock.sendall(result_json+"\n".encode('iso-8859-15'))
+                client_sock.sendall(result_json.encode('iso-8859-15')+"\n".encode('iso-8859-15'))
             except Exception as e:
                 logger.warning("Could not reply to client: %s" % (str(e)) )
                 continue
