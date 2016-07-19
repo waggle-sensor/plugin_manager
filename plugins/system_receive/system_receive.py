@@ -69,7 +69,7 @@ class system_receive:
         
             # Contact node controller to 
             try:
-                s.send(self.NODE_ID.encode('iso-8859-15'))
+                s.send(self.NODE_ID.encode('iso-8859-1'))
             except Exception as e: 
                  #waits for pull request to go through #TODO might be unneccessary 
                 logger.error('Unable to send initial request: %s' % (str(e)))
@@ -79,7 +79,7 @@ class system_receive:
             time.sleep(1)
             # 
             try:
-                msg = s.recv(4028).decode('iso-8859-15') #arbitrary. Can put in a config file
+                msg = s.recv(4028) #arbitrary. Can put in a config file
             except Exception as e: 
                 logger.error('Error receiving message from node controller: %s' % (str(e)))
                 connection_error = True

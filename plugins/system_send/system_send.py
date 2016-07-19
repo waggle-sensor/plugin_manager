@@ -66,7 +66,7 @@ class system_send(object):
             context = zmq.Context()
             self.socket = context.socket(zmq.REQ)
             self.socket.connect ("tcp://%s:%s" % (self.HOST, self.PORT))
-            self.socket.send(msg.encode('iso-8859-15'))
+            self.socket.send(msg)
             self.socket.close()
         except Exception as e:
             logger.error("Could not send message to %s:%d: %s" % (self.HOST, self.PORT, str(e)))
