@@ -175,12 +175,12 @@ class Alphasense(object):
     def get_firmware_version(self):
         self.transfer([0x3F])
         sleep(0.1)
-        return bytearray(self.transfer([0x3F])[0] for i in range(60))
+        return bytes(bytearray(self.transfer([0x3F])[0] for i in range(60)))
 
     def get_config_data_raw(self):
         self.transfer([0x3C])
         sleep(0.1)
-        return bytearray(self.transfer([0x3C])[0] for i in range(256))
+        return bytes(bytearray(self.transfer([0x3C])[0] for i in range(256)))
 
     def get_config_data(self):
         config_data = self.get_config_data_raw()
@@ -193,7 +193,7 @@ class Alphasense(object):
     def get_histogram_raw(self):
         self.transfer([0x30])
         sleep(0.1)
-        return bytearray(self.transfer([0x30])[0] for i in range(62))
+        return bytes(bytearray(self.transfer([0x30])[0] for i in range(62)))
 
     def get_histogram(self):
         return decode17(self.get_histogram_binary())

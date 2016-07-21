@@ -53,8 +53,8 @@ class AlphasensePlugin(object):
                     firmware_version = alphasense.get_firmware_version()
                     config_data = alphasense.get_config_data()
                     message = [
-                        'firmware:' + firmware_version,
-                        'config:' + b64encode(config_data),
+                        'firmware:' + firmware_version.decode('iso-8859-1'),
+                        'config:' + str(config_data),
                     ]
 
                     self.send_message('config', message)
