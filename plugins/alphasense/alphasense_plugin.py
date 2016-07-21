@@ -53,8 +53,8 @@ class AlphasensePlugin(object):
                     firmware_version = alphasense.get_firmware_version()
                     config_data = alphasense.get_config_data()
                     message = [
-                        'firmware:' + firmware_version.decode('iso-8859-1'),
-                        'config:' + str(config_data),
+                        'firmware:'.encode('iso-8859-1') + firmware_version,
+                        'config:'.encode('iso-8859-1') + str(config_data).encode('iso-8859-1'),
                     ]
 
                     self.send_message('config', message)
@@ -63,7 +63,7 @@ class AlphasensePlugin(object):
 
                     for _ in range(100):
                         histogram_data = alphasense.get_histogram_raw()
-                        self.send_message('data', ['data:' + b64encode(histogram_data)])
+                        self.send_message('data', ['data:'.encode('iso-8859-1') + b64encode(histogram_data)])
                         logger.info('data sent')
                         time.sleep(10)
             finally:
