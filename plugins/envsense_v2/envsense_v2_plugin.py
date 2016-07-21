@@ -78,13 +78,13 @@ class envsense(object):
         
         
         self.outqueue.put([
-            str(message.timestamp.date()),
-            self.plugin_name,
-            self.plugin_version,
-            'default',
+            str(message.timestamp.date()).encode('iso-8859-1'),
+            self.plugin_name.encode('iso-8859-1'),
+            self.plugin_version.encode('iso-8859-1'),
+            'default'.encode('iso-8859-1'),
             '%d' % (timestamp_epoch),
-            entry.sensor,
-            'meta.txt',
+            entry.sensor.encode('iso-8859-1'),
+            'meta.txt'.encode('iso-8859-1'),
             format_entry_values(entry),
         ])
 

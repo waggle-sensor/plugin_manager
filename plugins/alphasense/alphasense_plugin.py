@@ -78,13 +78,13 @@ class AlphasensePlugin(object):
         timestamp_epoch = int(float(timestamp_utc.strftime("%s.%f"))) * 1000
 
         message_data = [
-            str(timestamp_date),
-            'alphasense',
-            '1',
-            'default',
+            str(timestamp_date).encode('iso-8859-1'),
+            'alphasense'.encode('iso-8859-1'),
+            '1'.encode('iso-8859-1'),
+            'default'.encode('iso-8859-1'),
             '%d' % timestamp_epoch,
-            ident,
-            'base64',
+            ident.encode('iso-8859-1'),
+            'base64'.encode('iso-8859-1'),
             data,
         ]
 
