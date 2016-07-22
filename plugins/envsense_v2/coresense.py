@@ -57,9 +57,9 @@ class Connection(object):
         offset = 0
 
         while offset < len(data):
-            identifier = ord(data[offset])
+            identifier = data[offset]
 
-            header = ord(data[offset + 1])
+            header = data[offset + 1]
             length = header & 0x7F
             valid = header & 0x80 != 0
 
@@ -159,7 +159,7 @@ class UnknownSensorError(Exception):
 
 def crc8(data, crc=0):
     for i in range(len(data)):
-        crc ^= ord(data[i])
+        crc ^= data[i]
         for j in range(8):
             if crc & 1 != 0:
                 crc = (crc >> 1) ^ 0x8C
@@ -170,8 +170,8 @@ def crc8(data, crc=0):
 
 def uint16(input):
     'unsigned 16-bit integer'
-    byte1 = ord(input[0])
-    byte2 = ord(input[1])
+    byte1 = input[0]
+    byte2 = input[1]
     value = (byte1 << 8) | byte2
     return value
 
@@ -180,8 +180,8 @@ uint16.length = 2
 
 def int16(input):
     'signed 16-bit integer'
-    byte1 = ord(input[0])
-    byte2 = ord(input[1])
+    byte1 = input[0]
+    byte2 = input[1]
     value = ((byte1 & 0x7F) << 8) | byte2
     return value if byte1 & 0x80 == 0 else -value
 
@@ -190,9 +190,9 @@ int16.length = 2
 
 def uint24(input):
     'unsigned 24-bit integer'
-    byte1 = ord(input[0])
-    byte2 = ord(input[1])
-    byte3 = ord(input[2])
+    byte1 = input[0]
+    byte2 = input[1]
+    byte3 = input[2]
     value = (byte1 << 16) | (byte2 << 8) | (byte3)
     return value
 
@@ -201,9 +201,9 @@ uint24.length = 3
 
 def int24(input):
     'signed 24-bit integer'
-    byte1 = ord(input[0])
-    byte2 = ord(input[1])
-    byte3 = ord(input[2])
+    byte1 = input[0]
+    byte2 = input[1]
+    byte3 = input[2]
     value = ((byte1 & 0x7F) << 16) | (byte2 << 8) | (byte3)
     return value if byte1 & 0x80 == 0 else -value
 
@@ -211,8 +211,8 @@ int24.length = 3
 
 
 def ufloat(input):
-    byte1 = ord(input[0])
-    byte2 = ord(input[1])
+    byte1 = input[0]
+    byte2 = input[1]
     # have to be careful here, we do not want three decimal placed here.
     value = (byte1 & 0x7F) + (((byte2 & 0x7F) % 100) * 0.01)
     if (byte1 & 0x80) == 0x80:
@@ -223,8 +223,8 @@ ufloat.length = 2
 
 
 def lfloat(input):
-    byte1 = ord(input[0])
-    byte2 = ord(input[1])
+    byte1 = input[0]
+    byte2 = input[1]
     value = ((byte1 & 0x7c) >> 2) + ((((byte1 & 0x03) << 8) | byte2) * 0.001)
     if byte1 & 0x80 != 0:
         value = value * -1
@@ -234,7 +234,7 @@ lfloat.length = 2
 
 
 def macaddr(input):
-    return ''.join(['{:02X}'.format(ord(b)) for b in input])
+    return ''.join(['{:02X}'.format(b) for b in input])
     # return ''.join([str(format3(byte)) for byte in input])
 
 macaddr.length = 6
@@ -243,10 +243,10 @@ macaddr.length = 6
 def uint8array(input):
     'unsigned 8-bit integer[4]'
     # F7 - byte input[4], {0-0xffffffff} - Byte1 Byte2 Byte3 Byte4
-    byte1 = ord(input[0])
-    byte2 = ord(input[1])
-    byte3 = ord(input[2])
-    byte4 = ord(input[3])
+    byte1 = input[0]
+    byte2 = input[1]
+    byte3 = input[2]
+    byte4 = input[3]
     return [byte1, byte2, byte3, byte4]
 
 uint8array.length = 4
@@ -352,3 +352,9 @@ def parse_sensor(identifier, sensor_data):
     entry_names = [name for name, _ in sensor_format]
 
     return MessageEntry(entry_sensor, list(zip(entry_names, entry_values)))
+
+if __name__ == "__main__":
+    with create_connection('/dev/ttyACM0') as conn:
+        message = conn.recv()
+        for entry in message.entries:
+            print(entry)
