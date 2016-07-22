@@ -22,7 +22,7 @@ from serial import Serial, SerialException
 from contextlib import contextmanager
 import datetime
 
-from RTlist import getRT
+from .RTlist import getRT
 
 
 START_BYTE = b'\xaa'

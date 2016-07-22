@@ -1,7 +1,5 @@
 
-import numpy as np
-
-points = np.array([(-55.00	,963849.00),
+points = [(-55.00	,963849.00),
                    (-54.95	,960288.78),
                    (-54.90	,956743.02),
                    (-54.85	,953211.63),
@@ -2722,11 +2720,11 @@ points = np.array([(-55.00	,963849.00),
                    (79.85	,1261.64),
                    (79.90	,1259.60),
                    (79.95	,1257.55),
-                   (80.00	,1255.51)])
+                   (80.00	,1255.51)]
 
 # get x and y vectors
-x = points[:,0]
-y = points[:,1]
+x = [item[0] for item in points]
+y = [item[1] for item in points]
 
 def getRT(PR103J2_val):
 	resistance = 47000 * (1023.00/PR103J2_val - 1)  # R_t

@@ -99,4 +99,4 @@ class envsense(object):
 
 
 def format_entry_values(entry):
-    return ['{}:{}'.format(key, value) for key, value in entry.values]
+    return ['{}:{}'.format(key, value).encode('iso-8859-1') for key, value in entry.values]
