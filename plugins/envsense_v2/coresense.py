@@ -359,7 +359,7 @@ sensor_table = {
     0x03: ('HIH4030', [('Humidity', HIH4030_humidity)]),
     0x04: ('BMP180', [('Temperature', ufloat),
                       ('Atm Pressure', int24)]),
-    0x05: ('PR103J2', [('Temperature', uint16)]),
+    0x05: ('PR103J2', [('Temperature', PR103J2_temperature)]),
     0x06: ('TSL250RD', [('Light', TSL250RD_VL_analogRead)]),
     0x07: ('MMA8452Q', [('Accel X', ufloat),
                         ('Accel Y', ufloat),
