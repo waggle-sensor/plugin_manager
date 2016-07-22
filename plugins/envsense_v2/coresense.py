@@ -22,6 +22,8 @@ from serial import Serial, SerialException
 from contextlib import contextmanager
 import datetime
 
+from RTlist import getRT
+
 
 START_BYTE = b'\xaa'
 END_BYTE = 0x55
@@ -251,6 +253,96 @@ def uint8array(input):
 
 uint8array.length = 4
 
+def HIH4030_humidity(input):
+    byte1 = input[0]
+    byte2 = input[1]
+    value = (byte1 << 8) | byte2
+
+    HIH4030_voltage = (value * 5.00) / 1023.00
+    HIH4030_Humidity = (HIH4030_voltage - 0.85) * 100.00 / 3.00 # PUT DARK LEVEL VOLTAGE 0.85 FOR NOW
+    return HIH4030_Humidity
+
+HIH4030_humidity.length = 2
+
+def PR103J2_temperature(input):
+    byte1 = input[0]
+    byte2 = input[1]
+    value = (byte1 << 8) | byte2
+
+    temperature_PR = getRT(value)
+    return temperature_PR
+
+PR103J2_temperature.length = 2
+
+def HMC5883L_mag_field(input):
+    byte1 = input[0]
+    byte2 = input[1]
+    value = ((byte1 & 0x7c) >> 2) + ((((byte1 & 0x03) << 8) | byte2) * 0.001)
+    if byte1 & 0x80 != 0:
+        value = value * -1
+
+    value = value * 10
+    return value
+
+HMC5883L_mag_field.length = 2
+
+def TSL250RD_VL_analogRead(input):
+    byte1 = input[0]
+    byte2 = input[1]
+    value = (byte1 << 8) | byte2
+
+    voltage = (value * 5.00) / 1023.00
+    irradiance = (voltage - 0.09) / 0.064
+    return irradiance
+
+TSL250RD_VL_analogRead.length = 2
+
+def TSL250RD_VL(input):
+    byte1 = input[0]
+    byte2 = input[1]
+    value = (byte1 << 8) | byte2
+
+    voltage = ((value / 32768.00) * 2.048 * 5.00) / 2.00
+    irradiance = (voltage - 0.09) / 0.064
+    return irradiance
+
+TSL250RD_VL.length = 2
+
+def TSL260RD_IR(input):
+    byte1 = input[0]
+    byte2 = input[1]
+    value = (byte1 << 8) | byte2
+
+    voltage = ((value / 32768.00) * 2.048 * 5.00) / 2.00
+    irradiance = (voltage - 0.01) / 0.058
+    return irradiance
+
+TSL260RD_IR.length = 2
+
+def APDS_AL(input):
+    byte1 = input[0]
+    byte2 = input[1]
+    value = (byte1 << 8) | byte2
+
+    voltage = ((value / 32768.00) * 2.048 * 5.00) / 2.00
+    irradiance = (voltage - 0.002) / 0.147
+    return irradiance
+
+APDS_AL.length = 2
+
+def MLX75305(input):
+    byte1 = input[0]
+    byte2 = input[1]
+    value = (byte1 << 8) | byte2
+
+    voltage = ((value / 32768.00) * 2.048 * 5.00) / 2.00
+    irradiance = (voltage - 0.002) / 0.147
+    return irradiance
+
+MLX75305.length = 2
+    
+
+
 
 # def sensor17(input):
 #     return string6(input[::2])
@@ -264,25 +356,25 @@ sensor_table = {
     0x02: ('HTU21D', [('Temperature', ufloat),
                       ('Humidity', ufloat)]),
     #0x03: ('GP2Y1010AU0F', [('Dust', int24)]),
-    0x03: ('HIH4030', [('Humidity', uint16)]),
+    0x03: ('HIH4030', [('Humidity', HIH4030_humidity)]),
     0x04: ('BMP180', [('Temperature', ufloat),
                       ('Atm Pressure', int24)]),
     0x05: ('PR103J2', [('Temperature', uint16)]),
-    0x06: ('TSL250RD', [('Light', uint16)]),
+    0x06: ('TSL250RD', [('Light', TSL250RD_VL_analogRead)]),
     0x07: ('MMA8452Q', [('Accel X', ufloat),
                         ('Accel Y', ufloat),
                         ('Accel Z', ufloat),
                         ('RMS', ufloat)]),
     0x08: ('SPV1840LR5H-B', [('Sound Pressure', uint16)]),
     0x09: ('TSYS01', [('Temperature', ufloat)]),
-    0x0A: ('HMC5883L', [('B Field X', lfloat),
-                        ('B Field Y', lfloat),
-                        ('B Field Z', lfloat)]),
+    0x0A: ('HMC5883L', [('B Field X', HMC5883L_mag_field),
+                        ('B Field Y', HMC5883L_mag_field),
+                        ('B Field Z', HMC5883L_mag_field)]),
     0x0B: ('HIH6130', [('Temperature', ufloat),
                        ('Humidity', ufloat)]),
-    0x0C: ('APDS-9006-020', [('Light', uint16)]),
-    0x0D: ('TSL260RD', [('Light', uint16)]),
-    0x0E: ('TSL250RD', [('Light', uint16)]),
+    0x0C: ('APDS-9006-020', [('Light', APDS_AL)]),
+    0x0D: ('TSL260RD', [('Light', TSL260RD_IR)]),
+    0x0E: ('TSL250RD', [('Light', TSL250RD_VL)]),
     0x0F: ('MLX75305', [('Light', uint16)]),
     0x10: ('ML8511', [('Light', uint16)]),
     # 0x11: ('D6T', [('Temperatures', sensor17)]),
