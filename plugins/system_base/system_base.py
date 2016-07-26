@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, psutil, subprocess, datetime, time
+import os, psutil, subprocess, datetime, time, logging
 from collections import namedtuple
 
 """
@@ -18,8 +18,10 @@ class register(object):
 		base = base_plugin(name, man, mailbox_outgoing)
 		base.run()
 
+epoch = datetime.datetime.utcfromtimestamp(0)
+
 def epoch_time(dt):
-    return (dt - epoch).total_seconds() * 1000.0
+	return (dt - epoch).total_seconds() * 1000.0
 
 def get_host_name():
 	"""
@@ -43,23 +45,34 @@ def get_boot_info(history_count):
 		ret = "error on getting boot messages: %s" % (str(e))
 	return ret
 
-def disk_usage(path):
-    """Return disk usage statistics about the given path.
+def get_shutdown_info(history_count):
+	"""
+		Returns history of reboot and shutdown.
+	"""
+	ret = ""
+	try:
+		ret = subprocess.getoutput(["last -x shutdown | head -n %d" % (history_count)])
+	except Exception as e:
+		ret = "error on getting shutdown messages: %s" % (str(e))
+	return ret
 
-    Returned valus is a named tuple with attributes 'total', 'used' and
-    'free', which are the amount of total, used and free space, in bytes.
-    """
-    total = used = free = 0
-    ret = ""
-    try:
-	    st = os.statvfs(path)
-	    free = st.f_bavail * st.f_frsize
-	    total = st.f_blocks * st.f_frsize
-	    used = (st.f_blocks - st.f_bfree) * st.f_frsize
-	    ret = "(total=%d, used=%d, free=%d)" % (total, used, free)
+def disk_usage(path):
+	"""Return disk usage statistics about the given path.
+
+	Returned valus is a named tuple with attributes 'total', 'used' and
+	'free', which are the amount of total, used and free space, in bytes.
+	"""
+	total = used = free = 0
+	ret = ""
+	try:
+		st = os.statvfs(path)
+		free = st.f_bavail * st.f_frsize
+		total = st.f_blocks * st.f_frsize
+		used = (st.f_blocks - st.f_bfree) * st.f_frsize
+		ret = "(total=%d, used=%d, free=%d)" % (total, used, free)
 	except Exception as e:
 		pass
-    return ret
+	return ret
 
 def get_current_cpu_temp():
 	temperature_file = '/sys/class/thermal/thermal_zone0/temp'
@@ -133,21 +146,22 @@ class base_plugin(object):
 		data['disk'] = disk_usage("/")
 		data['host name'] = get_host_name()
 		data['reboots'] = get_boot_info(3)
+		data['shutdowns'] = get_shutdown_info(3)
 		data['temperature'] = get_current_cpu_temp()
 
-		return ['{}:{}'.format(keys, a[keys]).encode('iso-8859-1') for keys in data]
+		return ['{}:{}'.format(keys, data[keys]).encode('iso-8859-1') for keys in data]
 
 	def collect_service_info(self):
 		data = {}
 		data['whitelist'] = get_white_list()
 		data['services'] = get_service_list()
 
-		return ['{}:{}'.format(keys, a[keys]).encode('iso-8859-1') for keys in data]
+		return ['{}:{}'.format(keys, data[keys]).encode('iso-8859-1') for keys in data]
 
 	def collect_plugin_info(self):
 		data = {}
 
-		return ['{}:{}'.format(keys, a[keys]).encode('iso-8859-1') for keys in data]
+		return ['{}:{}'.format(keys, data[keys]).encode('iso-8859-1') for keys in data]
 
 	def run(self):
 		# Wait a minute for other services preparing to run
@@ -158,7 +172,7 @@ class base_plugin(object):
 			if self.tmp == True:
 				self.tmp = False
 				
-				self.send('system info', collect_system_info())
+				self.send('system info', self.collect_system_info())
 
-				self.send('service info', collect_service_info())
+				self.send('service info', self.collect_service_info())
 			time.sleep(5)
