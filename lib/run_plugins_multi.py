@@ -370,14 +370,14 @@ class plugin_runner(object):
 
     #Using PID of plugin, returns memory% and CPU% of that process.
     def plugin_info(self, plugin_name):
-        pid = self.plugin_pid(message)
+        pid = self.plugin_pid(plugin_name)
         if (pid == 0):
             return [0 , '']
        
            
         p = psutil.Process(pid)
         message = "Memory Percent: %s\tCPU Percent: %s\tPID: %s"  % (str(p.memory_percent()), str(p.cpu_percent(interval=1.0)), str(pid) )
-        logger.debug(message, message)
+        logger.debug(message)
         return [1, message]
         
 

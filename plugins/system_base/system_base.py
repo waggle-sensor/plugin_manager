@@ -85,17 +85,17 @@ def get_current_cpu_temp():
 
 def get_white_list():
 	whitelist_file = '/usr/lib/waggle/plugin_manager/plugins/whitelist.txt'
-	list = ""
+	list = []
 	if os.path.isfile(whitelist_file):
 		try:
 			with open(whitelist_file, 'r') as f:
 				for line in f:
 					if line.strip():
-						list = list + "/" + line
+						list.append(line)
 		except Exception as e:
-			list = "file read error: %s" % (str(e))
+			list = "error: %s" % (str(e))
 	else:
-		list = "does not exist"
+		list = "error: does not exist"
 
 	return list
 
@@ -122,7 +122,6 @@ class base_plugin(object):
 		self.name = name
 		self.man = man
 		self.outqueue = mailbox_outgoing
-		self.tmp = True
 
 	def get_boot_info(self):
 		ret = ""
@@ -141,12 +140,63 @@ class base_plugin(object):
 			msg
 			])
 
+	def send_command(self, command, timeout=3):
+		socket_file = '/tmp/plugin_manager'
+		client_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+		#client_sock.setblocking(0)
+
+		client_sock.settimeout(timeout)
+		try:
+			client_sock.connect(socket_file)
+		except Exception as e:
+			print(("Error connecting to socket: %s" % (str(e))))
+			client_sock.close()
+			return None
+
+		try:
+			client_sock.sendall(command.encode('iso-8859-15'))
+		except Exception as e:
+			print(("Error talking to socket: %s" % (str(e))))
+			client_sock.close()
+			return None   
+
+		#ready = select.select([mysocket], [], [], timeout_in_seconds)
+		try:
+			data = client_sock.recv(2048).decode('iso-8859-15') #TODO need better solution
+		except Exception as e:
+			print(("Error reading socket: %s" % (str(e))))
+			client_sock.close()
+			return None
+
+		client_sock.close()
+
+		try:
+			results = json.loads(data.rstrip())
+		except Exception as e:
+			return {'status' : 'error', 'message':'Could not parse JSON: '+str(e)}
+
+		return results
+
+	def get_autostart_dict(self):
+		autostart_file = '/usr/lib/waggle/plugin_manager/plugins/autostartlist.txt'
+		dict = {}
+
+		if os.path.isfile(autostart_file):
+			try:
+				with open(autostartlist, 'r') as file:
+					for line in file:
+						entity = line.split(':')
+						dict[entity[0]] = entity[1].strip()
+			except Exception as e:
+				pass
+		return dict
+
 	def collect_system_info(self):
 		data = {}
 		data['disk'] = disk_usage("/")
 		data['host name'] = get_host_name()
 		data['reboots'] = get_boot_info(3)
-		data['shutdowns'] = get_shutdown_info(3)
+		data['shutdowns'] = get_shutdown_info(4)
 		data['temperature'] = get_current_cpu_temp()
 
 		return ['{}:{}'.format(keys, data[keys]).encode('iso-8859-1') for keys in data]
@@ -164,15 +214,54 @@ class base_plugin(object):
 		return ['{}:{}'.format(keys, data[keys]).encode('iso-8859-1') for keys in data]
 
 	def run(self):
-		# Wait a minute for other services preparing to run
+		# Wait 40 seconds for other services preparing to run
 		# TODO: need to know when all system/services are green so this report can send right information of the current system status.
-		time.sleep(60)
+		time.sleep(40)
+		data = self.collect_system_info()
+		self.send('system info', data)
+		data = self.collect_service_info()
+		self.send('service info', data)
+		
+		# Get whitelist
+		whitelist = data['whitelist']
+		if 'error:' in whitelist:
+			whitelist = []
 
+		# Get auto start plugin list
+		autoplugins = self.get_autostart_dict()
+		delete_plugins = []
 		while self.man[self.name]:
-			if self.tmp == True:
-				self.tmp = False
-				
-				self.send('system info', self.collect_system_info())
 
-				self.send('service info', self.collect_service_info())
-			time.sleep(5)
+			# Check if predefined serial port is recognizable (sensor attached)
+			for device in autoplugins:
+				plugin = autoplugins[device]
+				# Check if the device is attached or not, based on device_rules in waggle_image
+				if os.path.islink(device) or os.path.isfile(device):
+					if plugin in whitelist:
+						continue
+					elif plugin == '':
+						continue
+					else:
+						# Check if plugin alive
+						cmd = "info %s" % (plugin)
+						ret = self.send_command(cmd.split())
+						if ret['status'] == 'success':
+							continue
+						else:
+							# Start the plugin
+							logger.debug("Try to start %s" % (plugin))
+							cmd = "start %s" % (plugin)
+							ret = self.sendcommand(cmd.split())
+							if ret['status'] == 'success':
+								logger.debug("%s is up and running" % (plugin))
+								delete_plugins.append(device)
+							else:
+								logger.debug("%s failed to start" % (plugin))
+
+			if delete_plugins:
+				for device in delete_plugins:
+					del autoplugins[device]
+				delete_plugins = []
+
+
+			time.sleep(3)
