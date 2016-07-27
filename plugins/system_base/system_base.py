@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, psutil, subprocess, datetime, time, logging
+import os, psutil, subprocess, datetime, time, logging, socket
 from collections import namedtuple
 
 """
@@ -177,17 +177,18 @@ class base_plugin(object):
 
 		return results
 
-	def get_autostart_dict(self):
+	def get_autostart_dict(self, base_path):
 		autostart_file = '/usr/lib/waggle/plugin_manager/plugins/autostartlist.txt'
 		dict = {}
 
 		if os.path.isfile(autostart_file):
 			try:
-				with open(autostartlist, 'r') as file:
+				with open(autostart_file, 'r') as file:
 					for line in file:
 						entity = line.split(':')
-						dict[entity[0]] = entity[1].strip()
+						dict[base_path + entity[0]] = entity[1].strip()
 			except Exception as e:
+				logger.debug("Failed to retreive autostart plugin list")
 				pass
 		return dict
 
@@ -223,12 +224,12 @@ class base_plugin(object):
 		self.send('service info', data)
 		
 		# Get whitelist
-		whitelist = data['whitelist']
+		whitelist = get_white_list()
 		if 'error:' in whitelist:
 			whitelist = []
 
 		# Get auto start plugin list
-		autoplugins = self.get_autostart_dict()
+		autoplugins = self.get_autostart_dict("/dev/")
 		delete_plugins = []
 		while self.man[self.name]:
 
@@ -244,15 +245,15 @@ class base_plugin(object):
 					else:
 						# Check if plugin alive
 						cmd = "info %s" % (plugin)
-						ret = self.send_command(cmd.split())
-						if ret['status'] == 'success':
+						ret = self.send_command(cmd)
+						if 'status' in ret and ret['status'] == 'success':
 							continue
 						else:
 							# Start the plugin
 							logger.debug("Try to start %s" % (plugin))
 							cmd = "start %s" % (plugin)
-							ret = self.sendcommand(cmd.split())
-							if ret['status'] == 'success':
+							ret = self.sendcommand(cmd)
+							if 'status' in ret and ret['status'] == 'success':
 								logger.debug("%s is up and running" % (plugin))
 								delete_plugins.append(device)
 							else:
