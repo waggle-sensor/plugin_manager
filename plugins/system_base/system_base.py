@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
-import os, psutil, subprocess, datetime, time, logging, socket
+import os, psutil, subprocess, datetime, time, logging, socket, json
 from collections import namedtuple
+import pyinotify
+from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 
 """
 	This plugin is to monitor and report systematic information and activities vary from temperature, disk space, and system information to status of plugins.
@@ -11,6 +13,10 @@ from collections import namedtuple
 #TODO: when exceptions happen it could send an error code corresponding to the error, not sending the heavy error message, to reduce payload of the message. 
 
 logger = logging.getLogger(__name__)
+
+wm = WatchManager()
+mask = pyinotify.IN_DELETE | pyinotify.IN_CREATE  # watched events
+autoplugins = {}
 
 class register(object):
 	def __init__(self, name, man, mailbox_outgoing):
@@ -115,6 +121,42 @@ def get_service_list():
 		ret = "error on getting waggle-service list: %s" % (str(e))
 	return ret
 
+def initialize_plugin():
+	if plugin in whitelist:
+		continue
+	elif plugin == '':
+		continue
+	else:
+		# Check if plugin alive
+		cmd = "info %s" % (plugin)
+		ret = self.send_command(cmd)
+		if 'status' in ret and ret['status'] == 'success':
+			continue
+		else:
+			# Start the plugin
+			logger.debug("Try to start %s" % (plugin))
+			cmd = "start %s" % (plugin)
+			ret = self.send_command(cmd)
+			if 'status' in ret and ret['status'] == 'success':
+				logger.debug("%s is up and running" % (plugin))
+				delete_plugins.append(device)
+			else:
+				logger.debug("%s failed to start" % (plugin))
+
+class PTmp(ProcessEvent):
+	def process_IN_IGNORED (self, event):
+		pass
+
+	def process_IN_CREATE(self, event):
+		global autoplugins
+		logger.debug("%s detected" % (event.name))
+		# for device in autoplugins:
+		# 	if device == event.name:
+
+	def process_IN_DELETE(self, event):
+		global autoplugins
+		logger.debug("%s rejected" % (event.name))
+
 class base_plugin(object):
 	plugin_name = 'base plugin'
 	plugin_version = "1"
@@ -215,6 +257,7 @@ class base_plugin(object):
 		return ['{}:{}'.format(keys, data[keys]).encode('iso-8859-1') for keys in data]
 
 	def run(self):
+		global autoplugins
 		# Wait 40 seconds for other services preparing to run
 		# TODO: need to know when all system/services are green so this report can send right information of the current system status.
 		time.sleep(40)
@@ -231,38 +274,47 @@ class base_plugin(object):
 		# Get auto start plugin list
 		autoplugins = self.get_autostart_dict("/dev/")
 		delete_plugins = []
+
+		notifier = Notifier(wm, PTmp())
+		wdd = wm.add_watch(path, mask, rec=True)
 		while self.man[self.name]:
 
 			# Check if predefined serial port is recognizable (sensor attached)
-			for device in autoplugins:
-				plugin = autoplugins[device]
-				# Check if the device is attached or not, based on device_rules in waggle_image
-				if os.path.islink(device) or os.path.isfile(device):
-					if plugin in whitelist:
-						continue
-					elif plugin == '':
-						continue
-					else:
-						# Check if plugin alive
-						cmd = "info %s" % (plugin)
-						ret = self.send_command(cmd)
-						if 'status' in ret and ret['status'] == 'success':
-							continue
-						else:
-							# Start the plugin
-							logger.debug("Try to start %s" % (plugin))
-							cmd = "start %s" % (plugin)
-							ret = self.sendcommand(cmd)
-							if 'status' in ret and ret['status'] == 'success':
-								logger.debug("%s is up and running" % (plugin))
-								delete_plugins.append(device)
-							else:
-								logger.debug("%s failed to start" % (plugin))
+			try:
+				notifier.process_events()
+				if notifier.check_events():
+					notifier.read_events()
+			except Exception as e:
+				notifier.stop()
+			# for device in autoplugins:
+			# 	plugin = autoplugins[device]
+			# 	# Check if the device is attached or not, based on device_rules in waggle_image
+			# 	if os.path.islink(device) or os.path.isfile(device):
+			# 		if plugin in whitelist:
+			# 			continue
+			# 		elif plugin == '':
+			# 			continue
+			# 		else:
+			# 			# Check if plugin alive
+			# 			cmd = "info %s" % (plugin)
+			# 			ret = self.send_command(cmd)
+			# 			if 'status' in ret and ret['status'] == 'success':
+			# 				continue
+			# 			else:
+			# 				# Start the plugin
+			# 				logger.debug("Try to start %s" % (plugin))
+			# 				cmd = "start %s" % (plugin)
+			# 				ret = self.send_command(cmd)
+			# 				if 'status' in ret and ret['status'] == 'success':
+			# 					logger.debug("%s is up and running" % (plugin))
+			# 					delete_plugins.append(device)
+			# 				else:
+			# 					logger.debug("%s failed to start" % (plugin))
 
-			if delete_plugins:
-				for device in delete_plugins:
-					del autoplugins[device]
-				delete_plugins = []
+			# if delete_plugins:
+			# 	for device in delete_plugins:
+			# 		del autoplugins[device]
+			# 	delete_plugins = []
 
 
 			time.sleep(3)

@@ -49,7 +49,7 @@ class AlphasensePlugin(object):
             logger.info('alphasense on')
 
             try:
-                while True:
+                while self.running:
                     firmware_version = alphasense.get_firmware_version()
                     config_data = alphasense.get_config_data()
                     message = [

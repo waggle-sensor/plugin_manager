@@ -168,15 +168,13 @@ class plugin_runner(object):
             if (j.is_alive()):
                 return [0, 'plugin %s not killed, it is still alive' % (plugin_name)]
                 
-            logger.debug( 'Plugin', j.name, 'ended with kill signal.')
+            logger.debug( 'Plugin' + j.name + 'ended with kill signal.')
         else: 
-            logger.debug( 'Plugin', j.name, 'terminated.')
+            logger.debug( 'Plugin' + j.name + 'terminated.')
         killed = 1
         #removes plugin from list of active plugins
         self.update_job_list()
         return [killed, '']
-                
-        
         
     #sends plugin a stop signal
     def stop_plugin(self, plugin_name):
@@ -365,7 +363,7 @@ class plugin_runner(object):
         for j in self.jobs:
             if (j.name == plugin_name):
                 return j.pid
-        return [0, 'Plugin %s not running, there is no PID.' % (plugin_name)]
+        return 0
         
 
     #Using PID of plugin, returns memory% and CPU% of that process.
