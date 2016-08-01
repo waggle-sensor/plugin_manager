@@ -7,7 +7,7 @@ This plugin monitors system information and activities such as boot and shutdown
 Here are the information the plugin monitors and reports...
 
 * Disk usage (total, used, and free in byte)
-* Host name (node_id and either '`'SD' or 'eMMC')
+* Host name (node_id and either 'SD' or 'eMMC')
 * Reboot log (last three reboot history)
 * Shutdown log (last four shutdown history)
 * CPU temperature (in degree Celsius)
