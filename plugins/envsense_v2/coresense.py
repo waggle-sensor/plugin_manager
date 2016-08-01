@@ -18,7 +18,7 @@ print each of the sensor entries received.
 """
 from serial import Serial, SerialException
 from contextlib import contextmanager
-import datetime
+import time
 
 
 START_BYTE = b'\xaa'
@@ -48,7 +48,7 @@ class Connection(object):
         """Receives a list of sensor entries from the device."""
         data = self.recv_packet_data()
 
-        timestamp = datetime.datetime.utcnow()
+        timestamp = int(time.time())
 
         entries = []
 
@@ -76,7 +76,8 @@ class Connection(object):
 
         while True:
             # get more data from device
-            self.data.extend(self.serial.read(256))
+            if self.serial.inWaiting() > 0:
+                self.data.extend(self.serial.read(self.serial.inWaiting()))
 
             # either align to possible packet or drop non-existent frame
             try:

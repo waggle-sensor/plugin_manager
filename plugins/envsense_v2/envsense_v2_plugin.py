@@ -71,12 +71,12 @@ class envsense(object):
 
     def handle_message_entry(self, message, entry):
         
-        
-        timestamp_epoch =  epoch_time(message.timestamp)
+        timestamp_date  = datetime.date.fromtimestamp(message.timestamp)
+        timestamp_epoch = message.timestamp * 1000
         
         
         self.outqueue.put([
-            str(message.timestamp.date()),
+            str(timestamp_date),
             self.plugin_name,
             self.plugin_version,
             'default',
