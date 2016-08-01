@@ -325,23 +325,46 @@ def APDS_AL(input):
     value = (byte1 << 8) | byte2
 
     voltage = ((value / 32768.00) * 2.048 * 5.00) / 2.00
-    irradiance = (voltage - 0.002) / 0.147
+    irradiance = (voltage / 0.005 - 0.000156) * 2.5
     return irradiance
 
 APDS_AL.length = 2
 
-def MLX75305(input):
+def MLX75305_AL(input):
     byte1 = input[0]
     byte2 = input[1]
     value = (byte1 << 8) | byte2
 
     voltage = ((value / 32768.00) * 2.048 * 5.00) / 2.00
-    irradiance = (voltage - 0.002) / 0.147
+    irradiance = (voltage - 0.0996) / 0.007
     return irradiance
 
 MLX75305.length = 2
     
 
+def ML8511_UV(input):
+    byte1 = input[0]
+    byte2 = input[1]
+    value = (byte1 << 8) | byte2
+
+    voltage = ((value / 32768.00) * 2.048 * 5.00) / 2.00
+    irradiance = (voltage - 1.489) / 12.49 # initial value of voltage when 10 uW/cm^2 irradiates
+    return irradiance
+
+MLX75305.length = 2
+
+def ChemADC_temp(input):
+    byte1 = input[0]
+    byte2 = input[1]
+    value = ((byte1 & 0x7F) << 8) | byte2
+
+    if byte1 & 0x80 != 0
+        value = -value
+
+    ADC_temp = value / 100.00
+    return ADC_temp
+
+ChemADC_temp.length = 2
 
 
 # def sensor17(input):
@@ -367,6 +390,7 @@ sensor_table = {
                         ('RMS', ufloat)]),
     0x08: ('SPV1840LR5H-B', [('Sound Pressure', uint16)]),
     0x09: ('TSYS01', [('Temperature', ufloat)]),
+
     0x0A: ('HMC5883L', [('B Field X', HMC5883L_mag_field),
                         ('B Field Y', HMC5883L_mag_field),
                         ('B Field Z', HMC5883L_mag_field)]),
@@ -375,12 +399,13 @@ sensor_table = {
     0x0C: ('APDS-9006-020', [('Light', APDS_AL)]),
     0x0D: ('TSL260RD', [('Light', TSL260RD_IR)]),
     0x0E: ('TSL250RD', [('Light', TSL250RD_VL)]),
-    0x0F: ('MLX75305', [('Light', uint16)]),
-    0x10: ('ML8511', [('Light', uint16)]),
+    0x0F: ('MLX75305', [('Light', MLX75305_AL]),
+    0x10: ('ML8511', [('Light', ML8511_UV)]),
     # 0x11: ('D6T', [('Temperatures', sensor17)]),
-    0x12: ('MLX90614', [('Temperature', ufloat)]),
+    # 0x12: ('MLX90614', [('Temperature', ufloat)]),
     0x13: ('TMP421', [('Temperature', ufloat)]),
-    0x14: ('SPV1840LR5H-B', [('Sound Pressure', uint16)]),
+    # 0x14: ('SPV1840LR5H-B', [('Sound Pressure', uint16)]),
+
     0x15: ('Total reducing gases', [('Concentration', int24)]),
     0x16: ('Ethanol (C2H5-OH)', [('Concentration', int24)]),
     0x17: ('Nitrogen Di-oxide (NO2)', [('Concentration', int24)]),
@@ -397,11 +422,11 @@ sensor_table = {
                       ('Raw VL', uint16),
                       ('Raw IR', uint16)]),
     0x20: ('Intel MAC', [('MAC Address', macaddr)]),
-    0x21:('CO ADC Temp', [('ADC Temperature', int16)]),
-    0x22:('IAQ/IRR Temp', [('ADC Temperature', int16)]),
-    0x23:('O3/NO2 Temp', [('ADC Temperature', int16)]),
-    0x24:('SO2/H2S Temp', [('ADC Temperature', int16)]),
-    0x25:('CO LMP Temp', [('ADC Temperature', int16)]),
+    0x21:('CO ADC Temp', [('ADC Temperature', ChemADC_temp)]),
+    0x22:('IAQ/IRR Temp', [('ADC Temperature', ChemADC_temp)]),
+    0x23:('O3/NO2 Temp', [('ADC Temperature', ChemADC_temp)]),
+    0x24:('SO2/H2S Temp', [('ADC Temperature', ChemADC_temp)]),
+    0x25:('CO LMP Temp', [('ADC Temperature', ChemADC_temp)]),
     0x26:('Accelerometer', [('Accel X', int16),
                             ('Accel Y', int16),
                             ('Accel Z', int16),
