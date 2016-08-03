@@ -5,6 +5,26 @@ from collections import namedtuple
 import pyinotify
 from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 
+#********** SH_TEST_STRAT
+# Get info using zeromq from wagman_publihser.py
+import sys, zmp
+import operator
+
+gn_hb = 0
+cs_hb = 0
+nc_hb = 0
+
+wagman_info = {}
+
+# Socket to talk to server
+context = zmq.Context()
+socket = context.socket(zmq.SUB)
+
+socket.connect ('ipc:///tmp/zeromq_wagman-pub')
+# socket.setsockopt_string(zmq.SUBSCRIBE, sys.argv[1])
+socket.setsockopt(zmq.SUBSCRIBE, ''.encode('latin-1'))
+#********** SH_TEST_END
+
 """
 	This plugin is to monitor and report systematic information and activities vary from temperature, disk space, and system information to status of plugins.
 	This plugin also detects USB devices to launch corresponding plugin.
@@ -256,6 +276,62 @@ class base_plugin(object):
 
 		return ['{}:{}'.format(keys, data[keys]).encode('iso-8859-1') for keys in data]
 
+
+	#********** SH_TEST_START
+	def collect_wagman_info(self):
+		global nc_hb, gn_hb, cs_hb
+		global wagman_info
+		message = socket.recv_string()
+		prefix, _, content = message.partition(':')
+		prefix, _, content = (content.strip()).partition(' ')
+
+		#********************************************#******************************************#
+		# prefix									 # content									#
+		#********************************************#******************************************#
+		# id (wagman id)							 #											#
+		# date (wagman system date)					 #											#
+		# cu (consumming current in each power tab)  #											#
+		# th (temperature difference between checks) #											#
+		# fails (# of fail to turn on)				 #											#
+		# enabled (tab status)						 #											#
+		# media (boot media)						 #	SD / EMMC								#
+		# gn (guest node)							 #	hbeat / 								#
+		# nc (nodecontroller)						 #	hbeat / start / fault timeout / killing	#
+		# cs (coresense)							 #	hbeat / start							#
+		#********************************************#******************************************#
+
+        if prefix == "nc":
+                if content == "heartbeat":
+                        nc_hb = nc_hb + 1
+
+        elif prefix == "gn":
+                if content == "heartbeat":
+                        gn_hb = gn_hb + 1
+
+        elif prefix == "cs":
+                if content == "heartbeat":
+                        cs_hb = cs_hb + 1
+
+        else:
+                wagman_info[prefix] = content
+
+                if prefix == "media":
+                        wagman_info['hbeat_nc'] = str(nc_hb) + "/6"
+                        wagman_info['hbeat_gn'] = str(gn_hb) + "/6"
+                        wagman_info['hbeat_cs'] = str(cs_hb) + "/6"
+
+                        nc_hb = 0
+                        gn_hb = 0
+                        cs_hb = 0
+
+                        sorted_wagman_info = sorted(wagman_info.items(), key=operator.itemgetter(0))
+
+                        # return sorted_wagman_info
+                        return wagman_info # dictionary
+	#********** SH_TEST_END
+
+
+
 	def run(self):
 		global autoplugins
 		# Wait 40 seconds for other services preparing to run
@@ -266,6 +342,15 @@ class base_plugin(object):
 		data = self.collect_service_info()
 		self.send('service info', data)
 		
+
+		#********** SH_TEST_STRAT
+		# Get wagman info
+		data = self.collect_wagman_info()
+		self.send('wagman info', data)
+		#********** SH_TEST_END
+
+
+
 		# Get whitelist
 		whitelist = get_white_list()
 		if 'error:' in whitelist:
