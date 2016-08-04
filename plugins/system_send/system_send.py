@@ -5,6 +5,7 @@ from multiprocessing import Queue
 
 sys.path.append('./waggle_protocol/')
 from utilities import packetmaker
+from protocol import PacketHandler
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -99,8 +100,12 @@ class system_send(object):
             
             msg = self.mailbox_outgoing.get() # a blocking call.
            
-         
-            packet = packetmaker.make_data_packet(msg)
+            # Pass all the arguments collected from JSON type msg
+            packet = packetmaker.make_packet(msg)
+            if "error" in packet:
+                logger.debug("(System_send)error while packetizing %s" % (packet["error"]))
+                continue
+
             for pack in packet:
                 while 1:
                     try:
@@ -114,5 +119,3 @@ class system_send(object):
                         continue
                     break
             logger.debug("Did send message to nodecontroller.")
-                
-                

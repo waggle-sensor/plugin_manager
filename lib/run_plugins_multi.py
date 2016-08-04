@@ -34,6 +34,7 @@ class plugin_runner(object):
         
         self.mailbox_outgoing = Queue()
         self.system_send_queue = self.manager.Queue()
+        self.system_receive_queue = self.manager.Queue()
         self.listeners = {} 
     
     
@@ -56,7 +57,7 @@ class plugin_runner(object):
     #        return [1, '']
     #    return [0, '']
         
-    def add_listener(self, name, queue, pid):
+    def add_listener(self, name, in_queue, out_queue, pid):
         #self.listener_consolidate(name)
         
         listener_uuid = str(uuid.uuid4())
@@ -71,7 +72,7 @@ class plugin_runner(object):
             return [0, 'pid is not int']
         
             
-        self.listeners[listener_uuid] = {'name': name, 'queue': queue, 'pid': pid} 
+        self.listeners[listener_uuid] = {'name': name, 'incoming_queue': in_queue, 'outgoing_queue': out_queue, 'pid': pid}
         
         return [1, listener_uuid]
         
@@ -110,7 +111,7 @@ class plugin_runner(object):
             #Starts plugin as a process named the same as plugin name
             #sys.stdout = open('/dev/null', 'w')
             if plugin_name == 'system_router':
-                j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.mailbox_outgoing, self.listeners ))
+                j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.system_send_queue, self.system_receive_queue, self.listeners ))
                 self.jobs.append(j)
                 j.start()
                 
@@ -124,14 +125,19 @@ class plugin_runner(object):
                 self.jobs.append(j)
                 j.start()
                 
-                self.add_listener('system_send', self.system_send_queue, int(j.pid))
-                
-                
+                #self.add_listener('system_send', self.system_send_queue, int(j.pid))
+            elif  plugin_name == 'system_receive':
+                try:
+                    j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.system_receive_queue))
+                except Exception as e:
+                    logger.error("Starting process failed: %s" % (str(e)))
+                self.jobs.append(j)
+                j.start()
             else:
                 j = multiprocessing.Process(name=plugin_name, target=register_plugin, args=(plugin_name,self.man, self.mailbox_outgoing))
                 self.jobs.append(j)
                 j.start()
-            
+                self.add_listener(plugin_name, Queue(), Queue(), int(j.pid))
             #sys.stdout = sys.__stdout__
             # TODO proper check is missing !
             return [1 , 'Plugin %s started.' %(j.name)]
