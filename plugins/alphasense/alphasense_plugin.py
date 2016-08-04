@@ -51,7 +51,7 @@ class AlphasensePlugin(object):
             try:
                 while True:
                     firmware_version = alphasense.get_firmware_version()
-                    config_data = alphasense.get_config_data()
+                    config_data = alphasense.get_config_data_raw()
                     message = [
                         'firmware:'.encode('iso-8859-1') + firmware_version,
                         'config:'.encode('iso-8859-1') + str(config_data).encode('iso-8859-1'),
