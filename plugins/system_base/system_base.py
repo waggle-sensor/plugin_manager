@@ -305,52 +305,52 @@ class base_plugin(object):
 		# cs (coresense)							 #	hbeat / start							#
 		#********************************************#******************************************#
 
-        if prefix == "nc":
-            if content == "heartbeat":
-                nc_hb = nc_hb + 1
-            else:
-            	nc_info = 'nc_info' + str(nc_cn)
-            	wagman_info[nc_info] = content
-            	nc_cn = nc_cn + 1
+		if prefix == "nc":
+			if content == "heartbeat":
+				nc_hb = nc_hb + 1
+			else:
+				nc_info = 'nc_info' + str(nc_cn)
+				wagman_info[nc_info] = content
+				nc_cn = nc_cn + 1
 
 
-        elif prefix == "gn":
-            if content == "heartbeat":
-                gn_hb = gn_hb + 1
-            else:
-            	gn_info = 'gn_info' + str(gn_cn)
-            	wagman_info[gn_info] = content
-            	gn_cn = gn_cn + 1
+		elif prefix == "gn":
+			if content == "heartbeat":
+				gn_hb = gn_hb + 1
+			else:
+				gn_info = 'gn_info' + str(gn_cn)
+				wagman_info[gn_info] = content
+				gn_cn = gn_cn + 1
 
-        elif prefix == "cs":
-            if content == "heartbeat":
-                cs_hb = cs_hb + 1
-            else:
-            	cs_info = 'cs_info' + str(cs_cn)
-            	wagman_info[cs_info] = content
-            	cs_cn = cs_cn + 1
+		elif prefix == "cs":
+			if content == "heartbeat":
+				cs_hb = cs_hb + 1
+			else:
+				cs_info = 'cs_info' + str(cs_cn)
+				wagman_info[cs_info] = content
+				cs_cn = cs_cn + 1
 
-        else:
-            wagman_info[prefix] = content
+		else:
+			wagman_info[prefix] = content
 
-            if prefix == "media":
-                wagman_info['hbeat_nc'] = str(nc_hb) + "/6"
-                wagman_info['hbeat_gn'] = str(gn_hb) + "/6"
-                wagman_info['hbeat_cs'] = str(cs_hb) + "/6"
+			if prefix == "media":
+				wagman_info['hbeat_nc'] = str(nc_hb) + "/6"
+				wagman_info['hbeat_gn'] = str(gn_hb) + "/6"
+				wagman_info['hbeat_cs'] = str(cs_hb) + "/6"
 
-                nc_hb = 0
-                gn_hb = 0
-                cs_hb = 0
+				nc_hb = 0
+				gn_hb = 0
+				cs_hb = 0
 
 				nc_cn = 0
 				gn_cn = 0
 				cs_cn = 0                
 
-                sorted_wagman_info = sorted(wagman_info.items(), key=operator.itemgetter(0))
+				sorted_wagman_info = sorted(wagman_info.items(), key=operator.itemgetter(0))
 
-                # return sorted_wagman_info # list
-                return wagman_info # dictionary
-	#********** SH_TEST_END
+				# return sorted_wagman_info # list
+				return wagman_info # dictionary
+		#********** SH_TEST_END
 
 
 

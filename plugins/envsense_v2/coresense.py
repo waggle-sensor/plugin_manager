@@ -339,7 +339,7 @@ def MLX75305_AL(input):
     irradiance = (voltage - 0.0996) / 0.007
     return irradiance
 
-MLX75305.length = 2
+MLX75305_AL.length = 2
     
 
 def ML8511_UV(input):
@@ -348,10 +348,20 @@ def ML8511_UV(input):
     value = (byte1 << 8) | byte2
 
     voltage = ((value / 32768.00) * 2.048 * 5.00) / 2.00
-    irradiance = (voltage - 1.489) / 12.49 # initial value of voltage when 10 uW/cm^2 irradiates
-    return irradiance
+    UV_index = (voltage - 1.489) / 1.4996 # initial value of voltage difference between when 1 mW/m^2 irradiates and dark condition
 
-MLX75305.length = 2
+    if 2.5 <= UV_index <= 3.0:
+        UV_index = UV_index - 0.3
+    elif 3.0 <= UV_index <= 4.0:
+        UV_index = UV_index - 0.6
+    elif 4.0 <= UV_index <= 4.2:
+        UV_index = UV_index - 0.4
+    elif 4.5 < UV_index:
+        UV_index = UV_index + 0.25
+
+    return UV_index
+
+ML8511_UV.length = 2
 
 def ChemADC_temp(input):
     byte1 = input[0]
