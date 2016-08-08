@@ -369,7 +369,7 @@ def ChemADC_temp(input):
     byte2 = input[1]
     value = ((byte1 & 0x7F) << 8) | byte2
 
-    if byte1 & 0x80 != 0
+    if byte1 & 0x80 != 0:
         value = -value
 
     ADC_temp = value / 100.00
@@ -410,7 +410,7 @@ sensor_table = {
     0x0C: ('APDS-9006-020', [('Light', APDS_AL)]),
     0x0D: ('TSL260RD', [('Light', TSL260RD_IR)]),
     0x0E: ('TSL250RD', [('Light', TSL250RD_VL)]),
-    0x0F: ('MLX75305', [('Light', MLX75305_AL]),
+    0x0F: ('MLX75305', [('Light', MLX75305_AL)]),
     0x10: ('ML8511', [('Light', ML8511_UV)]),
     # 0x11: ('D6T', [('Temperatures', sensor17)]),
     # 0x12: ('MLX90614', [('Temperature', ufloat)]),
