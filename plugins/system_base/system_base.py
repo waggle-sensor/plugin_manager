@@ -7,7 +7,7 @@ from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 
 #********** SH_TEST_STRAT
 # Get info using zeromq from wagman_publihser.py
-import sys, zmp
+import sys, zmq
 import operator
 
 nc_hb = 0
