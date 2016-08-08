@@ -10,25 +10,6 @@ from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 import sys, zmq
 import operator
 
-nc_hb = 0
-gn_hb = 0
-cs_hb = 0
-
-nc_cn = 0
-gn_cn = 0
-cs_cn = 0
-
-wagman_info = {}
-
-# Socket to talk to server
-context = zmq.Context()
-socket = context.socket(zmq.SUB)
-
-socket.connect ('ipc:///tmp/zeromq_wagman-pub')
-# socket.setsockopt_string(zmq.SUBSCRIBE, sys.argv[1])
-socket.setsockopt(zmq.SUBSCRIBE, ''.encode('latin-1'))
-#********** SH_TEST_END
-
 """
 	This plugin is to monitor and report systematic information and activities vary from temperature, disk space, and system information to status of plugins.
 	This plugin also detects USB devices to launch corresponding plugin.
@@ -189,6 +170,21 @@ class base_plugin(object):
 		self.man = man
 		self.outqueue = mailbox_outgoing
 
+		self.nc_hb = 0
+		self.gn_hb = 0
+		self.cs_hb = 0
+
+		self.wagman_info = {}
+
+		# Socket to talk to server
+		context = zmq.Context()
+		self.socket = context.socket(zmq.SUB)
+		self.socket.setsockopt(zmq.RCVTIMEO, 3000)
+		self.socket.setsockopt(zmq.SUBSCRIBE, ''.encode('latin-1'))
+		self.socket.connect ('ipc:///tmp/zeromq_wagman-pub')
+		# socket.setsockopt_string(zmq.SUBSCRIBE, sys.argv[1])
+		#********** SH_TEST_END
+
 	def get_boot_info(self):
 		ret = ""
 
@@ -282,11 +278,18 @@ class base_plugin(object):
 
 
 	#********** SH_TEST_START
-	def collect_wagman_info(self):
-		global nc_hb, gn_hb, cs_hb
-		global nc_cn, gn_cn, cs_cn 
-		global wagman_info
-		message = socket.recv_string()
+	def get_wagman_info(self):
+		message = ""
+		try:
+			message = self.socket.recv_string()
+		except zmq.error.Again as e:
+			pass
+		except Exception as e:
+			raise
+
+		if not message:
+			return None
+
 		prefix, _, content = message.partition(':')
 		prefix, _, content = (content.strip()).partition(' ')
 
@@ -307,52 +310,49 @@ class base_plugin(object):
 
 		if prefix == "nc":
 			if content == "heartbeat":
-				nc_hb = nc_hb + 1
+				self.nc_hb += 1
 			else:
-				nc_info = 'nc_info' + str(nc_cn)
-				wagman_info[nc_info] = content
-				nc_cn = nc_cn + 1
-
+				if not 'nc_info' in self.wagman_info:
+					self.wagman_info['nc_info'] = content
+				else:
+					self.wagman_info['nc_info'] += content
 
 		elif prefix == "gn":
 			if content == "heartbeat":
-				gn_hb = gn_hb + 1
+				self.gn_hb += 1
 			else:
-				gn_info = 'gn_info' + str(gn_cn)
-				wagman_info[gn_info] = content
-				gn_cn = gn_cn + 1
+				if not 'gn_info' in self.wagman_info:
+					self.wagman_info['gn_info'] = content
+				else:
+					self.wagman_info['gn_info'] += content
 
 		elif prefix == "cs":
 			if content == "heartbeat":
-				cs_hb = cs_hb + 1
+				self.cs_hb += 1
 			else:
-				cs_info = 'cs_info' + str(cs_cn)
-				wagman_info[cs_info] = content
-				cs_cn = cs_cn + 1
+				if not 'cs_info' in self.wagman_info:
+					self.wagman_info['cs_info'] = content
+				else:
+					self.wagman_info['cs_info'] += content
 
 		else:
-			wagman_info[prefix] = content
+			self.wagman_info[prefix] = content
 
 			if prefix == "media":
-				wagman_info['hbeat_nc'] = str(nc_hb) + "/6"
-				wagman_info['hbeat_gn'] = str(gn_hb) + "/6"
-				wagman_info['hbeat_cs'] = str(cs_hb) + "/6"
+				self.wagman_info['hbeat_nc'] = str(nc_hb) + "/6"
+				self.wagman_info['hbeat_gn'] = str(gn_hb) + "/6"
+				self.wagman_info['hbeat_cs'] = str(cs_hb) + "/6"
 
-				nc_hb = 0
-				gn_hb = 0
-				cs_hb = 0
+				self.nc_hb = 0
+				self.gn_hb = 0
+				self.cs_hb = 0
 
-				nc_cn = 0
-				gn_cn = 0
-				cs_cn = 0                
-
-				sorted_wagman_info = sorted(wagman_info.items(), key=operator.itemgetter(0))
-
+				ret = wagman_info
+				self.wagman_info = {}
 				# return sorted_wagman_info # list
-				return wagman_info # dictionary
+				return ret # dictionary
+		return None
 		#********** SH_TEST_END
-
-
 
 	def run(self):
 		global autoplugins
@@ -364,15 +364,6 @@ class base_plugin(object):
 		data = self.collect_service_info()
 		self.send('service info', data)
 		
-
-		#********** SH_TEST_STRAT
-		# Get wagman info
-		data = self.collect_wagman_info()
-		self.send('wagman info', data)
-		#********** SH_TEST_END
-
-
-
 		# Get whitelist
 		whitelist = get_white_list()
 		if 'error:' in whitelist:
@@ -423,5 +414,10 @@ class base_plugin(object):
 					del autoplugins[device]
 				delete_plugins = []
 
+			# Check the current status of Wagman and report
+			ret = self.get_wagman_info()
+			if ret:
+				data = ['{}:{}'.format(keys, ret[keys]).encode('iso-8859-1') for keys in ret]
+				self.send('wagman_info', data)
 
 			time.sleep(3)

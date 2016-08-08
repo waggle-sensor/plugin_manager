@@ -106,9 +106,11 @@ class system_send(object):
             msg['msg_mi_type'] = 'd'
            
             # Pass all the arguments collected from JSON type msg
-            packet = packetmaker.make_packet(msg)
-            if "error" in packet:
-                logger.debug("(System_send)error while packetizing %s" % (packet["error"]))
+            packet = ""
+            try:
+                packet = packetmaker.make_packet(msg)
+            except Exception as e:
+                logger.error("could not make packet %s" % (str(e)))
                 continue
 
             for pack in packet:
