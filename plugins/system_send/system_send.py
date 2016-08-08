@@ -98,7 +98,12 @@ class system_send(object):
         while man[name]:
          
             
-            msg = self.mailbox_outgoing.get() # a blocking call.
+            data = self.mailbox_outgoing.get() # a blocking call.
+
+            msg = {}
+            msg['data'] = data
+            msg['msg_mj_type'] = 's'
+            msg['msg_mi_type'] = 'd'
            
             # Pass all the arguments collected from JSON type msg
             packet = packetmaker.make_packet(msg)
