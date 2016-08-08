@@ -339,15 +339,15 @@ class base_plugin(object):
 			self.wagman_info[prefix] = content
 
 			if prefix == "media":
-				self.wagman_info['hbeat_nc'] = str(nc_hb) + "/6"
-				self.wagman_info['hbeat_gn'] = str(gn_hb) + "/6"
-				self.wagman_info['hbeat_cs'] = str(cs_hb) + "/6"
+				self.wagman_info['hbeat_nc'] = str(self.nc_hb) + "/6"
+				self.wagman_info['hbeat_gn'] = str(self.gn_hb) + "/6"
+				self.wagman_info['hbeat_cs'] = str(self.cs_hb) + "/6"
 
 				self.nc_hb = 0
 				self.gn_hb = 0
 				self.cs_hb = 0
 
-				ret = wagman_info
+				ret = self.wagman_info
 				self.wagman_info = {}
 				# return sorted_wagman_info # list
 				return ret # dictionary
@@ -420,4 +420,4 @@ class base_plugin(object):
 				data = ['{}:{}'.format(keys, ret[keys]).encode('iso-8859-1') for keys in ret]
 				self.send('wagman_info', data)
 
-			time.sleep(3)
+			#time.sleep(3)
