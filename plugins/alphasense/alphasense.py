@@ -58,7 +58,7 @@ def lininterp(a, b, n):
 
 
 def decode17(data):
-    bincounts = struct.unpack_from('<16B', data, offset=0)
+    bincounts = struct.unpack_from('<16H', data, offset=0)
     checksum = struct.unpack_from('<H', data, offset=48)[0]
     mtof = [x / 3 for x in struct.unpack_from('<4B', data, offset=32)]
     sample_flow_rate = struct.unpack_from('<I', data, offset=36)[0]
