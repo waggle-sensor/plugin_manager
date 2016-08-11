@@ -92,13 +92,17 @@ class system_receive:
                 time.sleep(1)
 
             logger.debug("incoming message: %s" % (msg))
+            if msg == 'False'.encode('iso-8859-1'):
+                time.sleep(1)
+                continue
+
             header = None
             optional_header = None
             data = None
             try:
                 #unpacks the message
                 (header, optional_header, data) = unpack(msg)
-            except: 
+            except Exception as e: 
                 logger.error('(System receive):Error unpacking the message %s with error %s' % (msg, str(e)))
                 raise
             json_msg = {}
