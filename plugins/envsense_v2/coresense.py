@@ -364,7 +364,7 @@ def ML8511_UV(input):
 
 ML8511_UV.length = 2
 
-def ChemADC_temp(input):
+def divide_by_100(input):
     byte1 = input[0]
     byte2 = input[1]
     value = ((byte1 & 0x7F) << 8) | byte2
@@ -375,13 +375,13 @@ def ChemADC_temp(input):
     ADC_temp = value / 100.00
     return ADC_temp
 
-ChemADC_temp.length = 2
+divide_by_100.length = 2
 
 
-# def sensor17(input):
-#     return string6(input[::2])
-#
-# sensor17.length = -1
+def sensor17(input):
+    return string6(input[::2])
+
+sensor17.length = -1
 
 
 sensor_table = {
@@ -389,17 +389,17 @@ sensor_table = {
     0x01: ('TMP112', [('Temperature', ufloat)]),
     0x02: ('HTU21D', [('Temperature', ufloat),
                       ('Humidity', ufloat)]),
-    #0x03: ('GP2Y1010AU0F', [('Dust', int24)]),
-    0x03: ('HIH4030', [('Humidity', HIH4030_humidity)]),
+    0x03: ('GP2Y1010AU0F', [('Dust', int24)]),                 # NOT IN ANY
+    0x03: ('HIH4030', [('Humidity', HIH4030_humidity)]),       # NOT IN V2
     0x04: ('BMP180', [('Temperature', ufloat),
-                      ('Atm Pressure', int24)]),
+                      ('Pressure', int24)]),
     0x05: ('PR103J2', [('Temperature', PR103J2_temperature)]),
     0x06: ('TSL250RD', [('Light', TSL250RD_VL_analogRead)]),
     0x07: ('MMA8452Q', [('Accel X', ufloat),
                         ('Accel Y', ufloat),
                         ('Accel Z', ufloat),
                         ('RMS', ufloat)]),
-    0x08: ('SPV1840LR5H-B', [('Sound Pressure', uint16)]),
+    0x08: ('SPV1840LR5H-B', [('Sound level', uint16)]),
     0x09: ('TSYS01', [('Temperature', ufloat)]),
 
     0x0A: ('HMC5883L', [('B Field X', HMC5883L_mag_field),
@@ -407,45 +407,45 @@ sensor_table = {
                         ('B Field Z', HMC5883L_mag_field)]),
     0x0B: ('HIH6130', [('Temperature', ufloat),
                        ('Humidity', ufloat)]),
-    0x0C: ('APDS-9006-020', [('Light', APDS_AL)]),
+    0x0C: ('APDS-9006-020', [('Light_LUX', APDS_AL)]),
     0x0D: ('TSL260RD', [('Light', TSL260RD_IR)]),
     0x0E: ('TSL250RD', [('Light', TSL250RD_VL)]),
     0x0F: ('MLX75305', [('Light', MLX75305_AL]),
-    0x10: ('ML8511', [('Light', ML8511_UV)]),
-    # 0x11: ('D6T', [('Temperatures', sensor17)]),
-    # 0x12: ('MLX90614', [('Temperature', ufloat)]),
+    0x10: ('ML8511', [('UV_index', ML8511_UV)]),
+    0x11: ('D6T', [('Temperatures', sensor17)]),               # NOT IN ANY
+    0x12: ('MLX90614', [('Temperature', ufloat)]),             # NOT IN ANY
     0x13: ('TMP421', [('Temperature', ufloat)]),
-    # 0x14: ('SPV1840LR5H-B', [('Sound Pressure', uint16)]),
+    0x14: ('SPV1840LR5H-B', [('Sound Pressure', uint16)]),     # NOT IN V3
 
     0x15: ('Total reducing gases', [('Concentration', int24)]),
-    0x16: ('Ethanol (C2H5-OH)', [('Concentration', int24)]),
+    0x16: ('Ethanol (C2H5-OH)', [('Concentration', int24)]),   # NOT IN ANY
     0x17: ('Nitrogen Di-oxide (NO2)', [('Concentration', int24)]),
     0x18: ('Ozone (03)', [('Concentration', int24)]),
     0x19: ('Hydrogen Sulphide (H2S)', [('Concentration', int24)]),
     0x1A: ('Total Oxidizing gases', [('Concentration', int24)]),
     0x1B: ('Carbon Monoxide (C0)', [('Concentration', int24)]),
     0x1C: ('Sulfur Dioxide (SO2)', [('Concentration', int24)]),
-    0x1D: ('SHT25', [('Temperature', int16),
-                     ('Humidity', uint16)]),
-    0x1E: ('LPS25H', [('Temperature', int16),
+    0x1D: ('SHT25', [('Temperature', divide_by_100),
+                     ('Humidity', divide_by_100)]),
+    0x1E: ('LPS25H', [('Temperature', divide_by_100),
                       ('Pressure', uint24)]),
-    0x1F: ('Si1145', [('Raw UV', uint16),
-                      ('Raw VL', uint16),
-                      ('Raw IR', uint16)]),
+    0x1F: ('Si1145', [('Light', uint16),
+                      ('Light', uint16),
+                      ('Light', uint16)]),
     0x20: ('Intel MAC', [('MAC Address', macaddr)]),
-    0x21:('CO ADC Temp', [('ADC Temperature', ChemADC_temp)]),
-    0x22:('IAQ/IRR Temp', [('ADC Temperature', ChemADC_temp)]),
-    0x23:('O3/NO2 Temp', [('ADC Temperature', ChemADC_temp)]),
-    0x24:('SO2/H2S Temp', [('ADC Temperature', ChemADC_temp)]),
-    0x25:('CO LMP Temp', [('ADC Temperature', ChemADC_temp)]),
-    0x26:('Accelerometer', [('Accel X', int16),
-                            ('Accel Y', int16),
-                            ('Accel Z', int16),
-                            ('Vib Index', uint24)]),
-    0x27:('Gyro', [('Orientation X', int16),
-                   ('Orientation Y', int16),
-                   ('Orientation Z', int16),
-                   ('Orientation Index', uint24)]),
+    0x21: ('CO ADC Temp', [('ADC Temperature', divide_by_100)]),
+    0x22: ('IAQ/IRR Temp', [('ADC Temperature', divide_by_100)]),
+    0x23: ('O3/NO2 Temp', [('ADC Temperature', divide_by_100)]),
+    0x24: ('SO2/H2S Temp', [('ADC Temperature', divide_by_100)]),
+    0x25: ('CO LMP Temp', [('ADC Temperature', divide_by_100)]),
+    0x26: ('Accelerometer', [('Accel X', int16),
+                             ('Accel Y', int16),
+                             ('Accel Z', int16),
+                             ('Vib Index', uint24)]),
+    0x27: ('Gyro', [('Orientation X', int16),
+                    ('Orientation Y', int16),
+                    ('Orientation Z', int16),
+                    ('Orientation Index', uint24)]),
     0xFE: ('Sensor Health', [('Status', uint8array)])
 }
 
