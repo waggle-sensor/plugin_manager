@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # -*- coding: utf-8 -*-
-import logging
+import logging, os
 import time
 from base64 import b64encode
 from .alphasense import Alphasense
@@ -31,6 +31,10 @@ class AlphasensePlugin(object):
         self.running = True
 
         while self.running:
+            if not os.path.exists('/dev/alphasense'):
+                logger.info('alphasense does not exist')
+                time.sleep(3)
+                continue
             alphasense = Alphasense('/dev/alphasense')
             time.sleep(1)
             logger.info('alphasense init')
