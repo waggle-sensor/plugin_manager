@@ -377,6 +377,29 @@ def divide_by_100(input):
 
 divide_by_100.length = 2
 
+def SPV_air(input):
+    byte1 = input[0]
+    byte2 = input[1]
+    value = (byte1 << 8) | byte2
+
+    V_0 = value * 5.00 / 1023.00         # raw voltage of TSL
+    V_I = (V_0 - 1.75) / 453.33 - 1.75   # raw voltage of SPV
+    ############################################################################ Right till here
+    voltage_level = -numpy.log10(-V_I / 3.3) * 20.00 # sound lever in dB
+    return voltage_level
+
+SPV_air.length = 2
+
+def SPV_light(input):
+    byte1 = input[0]
+    byte2 = input[1]
+    value = (byte1 << 8) | byte2
+    
+    raw_out = value / 32768.0000 * 2.048
+    voltage = raw_out * 5.00 / 2.00
+    voltage_level = -numpy.log10(voltage/3.3) * 20.00
+
+SPV_light.length = 2
 
 def sensor17(input):
     return string6(input[::2])
@@ -399,7 +422,7 @@ sensor_table = {
                         ('Accel Y', ufloat),
                         ('Accel Z', ufloat),
                         ('RMS', ufloat)]),
-    0x08: ('SPV1840LR5H-B', [('Sound level', uint16)]),
+    0x08: ('SPV1840LR5H-B', [('Sound level', SPV_air)]),
     0x09: ('TSYS01', [('Temperature', ufloat)]),
 
     0x0A: ('HMC5883L', [('B Field X', HMC5883L_mag_field),
@@ -415,7 +438,7 @@ sensor_table = {
     0x11: ('D6T', [('Temperatures', sensor17)]),               # NOT IN ANY
     0x12: ('MLX90614', [('Temperature', ufloat)]),             # NOT IN ANY
     0x13: ('TMP421', [('Temperature', ufloat)]),
-    0x14: ('SPV1840LR5H-B', [('Sound Pressure', uint16)]),     # NOT IN V3
+    0x14: ('SPV1840LR5H-B', [('Sound level', SPV_light)]),     # NOT IN V3
 
     0x15: ('Total reducing gases', [('Concentration', int24)]),
     0x16: ('Ethanol (C2H5-OH)', [('Concentration', int24)]),   # NOT IN ANY
