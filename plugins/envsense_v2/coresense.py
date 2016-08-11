@@ -436,7 +436,7 @@ sensor_table = {
     0x0C: ('APDS-9006-020', [('Light_LUX', APDS_AL)]),
     0x0D: ('TSL260RD', [('Light', TSL260RD_IR)]),
     0x0E: ('TSL250RD', [('Light', TSL250RD_VL)]),
-    0x0F: ('MLX75305', [('Light', MLX75305_AL]),
+    0x0F: ('MLX75305', [('Light', MLX75305_AL)]),
     0x10: ('ML8511', [('UV_index', ML8511_UV)]),
     0x11: ('D6T', [('Temperatures', sensor17)]),               # NOT IN ANY
     0x12: ('MLX90614', [('Temperature', ufloat)]),             # NOT IN ANY
