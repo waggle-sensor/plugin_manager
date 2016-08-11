@@ -106,6 +106,8 @@ class Connection(object):
 
                     if failures >= 10:
                         raise NoPacketError(failures)
+            # prevent consuming huge CPU recource
+            time.sleep(0.2)
 
 
 @contextmanager

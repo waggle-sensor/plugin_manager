@@ -2,7 +2,6 @@
 
 # -*- coding: utf-8 -*-
 import logging
-import datetime
 import time
 from base64 import b64encode
 from .alphasense import Alphasense
@@ -17,14 +16,6 @@ class register(object):
     def __init__(self, name, man, mailbox_outgoing):
         plugin = AlphasensePlugin(name, man, mailbox_outgoing)
         plugin.run()
-
-
-epoch = datetime.datetime.utcfromtimestamp(0)
-
-
-def epoch_time(dt):
-    return (dt - epoch).total_seconds() * 1000.0
-
 
 class AlphasensePlugin(object):
 
@@ -73,16 +64,16 @@ class AlphasensePlugin(object):
         self.running = False
 
     def send_message(self, ident, data):
-        timestamp_utc = datetime.datetime.utcnow()
-        timestamp_date = timestamp_utc.date()
-        timestamp_epoch = int(float(timestamp_utc.strftime("%s.%f"))) * 1000
+        timestamp_utc = int(time.time())
+        timestamp_date  = time.strftime('%Y-%m-%d', time.gmtime(timestamp_utc))
+        timestamp_epoch = timestamp_utc * 1000
 
         message_data = [
             str(timestamp_date).encode('iso-8859-1'),
             'alphasense'.encode('iso-8859-1'),
             '1'.encode('iso-8859-1'),
             'default'.encode('iso-8859-1'),
-            '%d' % timestamp_epoch,
+            '%d' % (timestamp_epoch),
             ident.encode('iso-8859-1'),
             'base64'.encode('iso-8859-1'),
             data,
