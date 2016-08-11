@@ -19,7 +19,7 @@ class register(object):
         while man[name] == 1:
             
             timestamp_utc = int(time.time())
-            timestamp_date  = time.strftime('%Y-%m-%d', time.gmtime(message.timestamp))
+            timestamp_date  = time.strftime('%Y-%m-%d', time.gmtime(timestamp_utc))
             timestamp_epoch = timestamp_utc * 1000
             
             if use_temp:
