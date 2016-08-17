@@ -49,7 +49,7 @@ class AlphasensePlugin(object):
             try:
                 while True:
                     firmware_version = alphasense.get_firmware_version()
-                    config_data = alphasense.get_config_data()
+                    config_data = alphasense.get_config_data_raw()
                     message = [
                         'firmware:' + firmware_version,
                         'config:' + b64encode(config_data),

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 import coresense
-import datetime
 import time
 
 logger = logging.getLogger(__name__)
@@ -15,15 +14,6 @@ class register(object):
         env = envsense(name, man, mailbox_outgoing)
         
         env.run()
-    
-
-
-epoch = datetime.datetime.utcfromtimestamp(0)
-
-def epoch_time(dt):
-    return (dt - epoch).total_seconds() * 1000.0
-
-
 
 class envsense(object):
 
@@ -71,12 +61,12 @@ class envsense(object):
 
     def handle_message_entry(self, message, entry):
         
-        
-        timestamp_epoch =  epoch_time(message.timestamp)
+        timestamp_date  = time.strftime('%Y-%m-%d', time.gmtime(message.timestamp))
+        timestamp_epoch = message.timestamp * 1000
         
         
         self.outqueue.put([
-            str(message.timestamp.date()),
+            str(timestamp_date),
             self.plugin_name,
             self.plugin_version,
             'default',
