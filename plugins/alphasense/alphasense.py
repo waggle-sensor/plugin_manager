@@ -25,7 +25,7 @@ from pprint import pprint
 def iss_spi_divisor(sck):
     divisor = (6000000 / sck) - 1
 
-    if not divisor.is_integer():
+    if int(divisor) != divisor:
         raise ValueError('Nonintegral SCK divisor.')
 
     return int(divisor)
