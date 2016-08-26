@@ -20,6 +20,11 @@ from time import sleep
 import struct
 import sys
 from pprint import pprint
+import logging
+
+
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def iss_spi_divisor(sck):
@@ -47,7 +52,7 @@ def iss_set_spi_mode(serial, mode, freq):
 
 def iss_spi_transfer_data(serial, data):
     serial.write(bytearray([0x61] + data))
-    response = serial.read(1 + len(data))
+    response = bytearray(serial.read(1 + len(data)))
     if response[0] == 0:
         raise RuntimeError('USB-ISS: Transmission Error')
     return response
