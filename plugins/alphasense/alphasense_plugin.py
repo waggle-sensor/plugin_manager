@@ -39,8 +39,15 @@ class AlphasensePlugin(object):
             time.sleep(1)
             logger.info('alphasense init')
 
+            alphasense.set_fan_power(255)
+            time.sleep(1)
+
+            alphasense.set_laser_power(190)
+            time.sleep(1)
+
             alphasense.power_on()
             time.sleep(1)
+
             logger.info('alphasense on')
 
             try:

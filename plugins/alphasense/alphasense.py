@@ -21,6 +21,12 @@ from serial import Serial
 from time import sleep
 import struct
 import sys
+from pprint import pprint
+import logging
+
+
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def iss_spi_divisor(sck):
@@ -48,34 +54,33 @@ def iss_set_spi_mode(serial, mode, freq):
 
 def iss_spi_transfer_data(serial, data):
     serial.write(bytearray([0x61] + data))
-    response = serial.read(1 + len(data))
+    response = bytearray(serial.read(1 + len(data)))
     if response[0] == 0:
         raise RuntimeError('USB-ISS: Transmission Error')
-    return response[1:]
-
-
-def lininterp(a, b, n):
-    assert isinstance(n, int) and n > 1
-    return tuple(a + i * (b - a) / (n - 1) for i in range(n))
+    return response
 
 
 def decode17(data):
     bincounts = struct.unpack_from('<16H', data, offset=0)
-    checksum = struct.unpack_from('<H', data, offset=48)[0]
     mtof = [x / 3 for x in struct.unpack_from('<4B', data, offset=32)]
-    sample_flow_rate = struct.unpack_from('<I', data, offset=36)[0]
-    pmvalues = struct.unpack_from('<fff', data, offset=50)
+    sample_flow_rate = struct.unpack_from('<f', data, offset=36)[0]
     pressure = struct.unpack_from('<I', data, offset=40)[0]
     temperature = pressure / 10.0
+    sampling_period = struct.unpack_from('<f', data, offset=44)[0]
+    checksum = struct.unpack_from('<H', data, offset=48)[0]
+    pmvalues = struct.unpack_from('<3f', data, offset=50)
+
+    assert pmvalues[0] <= pmvalues[1] <= pmvalues[2]
 
     values = {
         'bins': bincounts,
         'mtof': mtof,
         'sample flow rate': sample_flow_rate,
+        'sampling period': sampling_period,
         'pm1': pmvalues[0],
         'pm2.5': pmvalues[1],
         'pm10': pmvalues[2],
-        'error': sum(bincounts) & 0xFF != checksum,
+        'error': sum(bincounts) & 0xFFFF != checksum,
     }
 
     if temperature > 200:
@@ -120,7 +125,7 @@ class Alphasense(object):
         ('mtof', '<4B'),
         ('sample flow rate', '<f'),
         ('weather', '<f'),
-        ('sampling period', '<I'),
+        ('sampling period', '<f'),
         ('checksum', '<H'),
         ('pm1', '<f'),
         ('pm2.5', '<f'),
@@ -147,8 +152,16 @@ class Alphasense(object):
         self.serial.close()
 
     def transfer(self, data):
-        sleep(0.005)
-        return iss_spi_transfer_data(self.serial, data)
+        result = bytearray(len(data))
+
+        for i, x in enumerate(data):
+            iss_result = iss_spi_transfer_data(self.serial, [x])
+            if iss_result[0] != 0xFF:
+                raise RuntimeError('USB-ISS Read Error')
+            result[i] = iss_result[1]
+            sleep(0.001)
+
+        return result
 
     def power_on(self, fan=True, laser=True):
         if fan and laser:
@@ -174,29 +187,35 @@ class Alphasense(object):
 
     def get_firmware_version(self):
         self.transfer([0x3F])
-        sleep(0.1)
-        return bytes(bytearray(self.transfer([0x3F])[0] for i in range(60)))
+        sleep(0.01)
+        return self.transfer([0] * 60)
 
     def get_config_data_raw(self):
         self.transfer([0x3C])
-        sleep(0.1)
-        return bytes(bytearray(self.transfer([0x3C])[0] for i in range(256)))
+        sleep(0.01)
+        return self.transfer([0] * 256)
 
     def get_config_data(self):
         config_data = self.get_config_data_raw()
         return unpack_structs(self.config_data_structs, config_data)
 
-    def ping(self):
-        response = self.transfer([0xCF])
-        return response[0] == 0xF3
+    def ready(self):
+        return self.transfer([0xCF])[0] == 0xF3
 
     def get_histogram_raw(self):
         self.transfer([0x30])
-        sleep(0.1)
-        return bytes(bytearray(self.transfer([0x30])[0] for i in range(62)))
+        sleep(0.01)
+        return self.transfer([0] * 62)
 
     def get_histogram(self):
-        return decode17(self.get_histogram_binary())
+        return decode17(self.get_histogram_raw())
+
+    def get_pm(self):
+        self.transfer([0x32])
+        sleep(0.01)
+        data = self.transfer([0] * 12)
+        return struct.unpack('<3f', data)
+
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
@@ -206,28 +225,33 @@ if __name__ == '__main__':
     alphasense = Alphasense(sys.argv[1])
     sleep(3)
 
+    version = alphasense.get_firmware_version()
+    sleep(1)
+    pprint(version)
+
+    alphasense.set_fan_power(255)
+    sleep(1)
+
+    alphasense.set_laser_power(190)
+    sleep(1)
+
     alphasense.power_on()
-    sleep(3)
+    sleep(1)
     config = alphasense.get_config_data()
+    sleep(1)
+    pprint(config)
 
     try:
         while True:
+            sleep(10)
             rawdata = alphasense.get_histogram_raw()
-
             data = decode17(rawdata)
+            pprint(data)
 
             if data['error']:
-                alphasense.close()
                 raise RuntimeError('Alphasense histogram error.')
-
-            for size, count in zip(config['bin particle volume'], data['bins']):
-                print(('{: 3.4f} {:>6}'.format(size, count)))
-            print()
-
-            for pm in ['pm1', 'pm2.5', 'pm10']:
-                print(('{} {}'.format(pm, data[pm])))
-            print()
-
-            sleep(10)
     finally:
+        # flush device with status commands
+        for _ in range(512):
+            alphasense.ready()
         alphasense.close()
