@@ -21,7 +21,6 @@ from serial import Serial
 from time import sleep
 import struct
 import sys
-from pprint import pprint
 import logging
 
 
@@ -227,7 +226,9 @@ if __name__ == '__main__':
 
     version = alphasense.get_firmware_version()
     sleep(1)
-    pprint(version)
+
+    config = alphasense.get_config_data()
+    sleep(1)
 
     alphasense.set_fan_power(255)
     sleep(1)
@@ -237,21 +238,17 @@ if __name__ == '__main__':
 
     alphasense.power_on()
     sleep(1)
-    config = alphasense.get_config_data()
-    sleep(1)
-    pprint(config)
 
     try:
         while True:
             sleep(10)
+
             rawdata = alphasense.get_histogram_raw()
             data = decode17(rawdata)
-            pprint(data)
 
             if data['error']:
                 raise RuntimeError('Alphasense histogram error.')
+
+            print(data)
     finally:
-        # flush device with status commands
-        for _ in range(512):
-            alphasense.ready()
         alphasense.close()
