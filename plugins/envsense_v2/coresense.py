@@ -51,7 +51,7 @@ class Connection(object):
 
     def recv(self):
         """Receives a list of sensor entries from the device."""
-        data = self.recv_packet_data()
+        frame, data = self.recv_packet_data()
 
         timestamp = int(time.time())
 
@@ -73,7 +73,7 @@ class Connection(object):
 
             offset += 2 + length  # header + contents
 
-        return Message(timestamp, entries)
+        return Message(timestamp, entries, frame)
 
     def recv_packet_data(self):
         """Receives raw packet data from the device."""
@@ -96,12 +96,14 @@ class Connection(object):
                 if len(self.data) >= HEADER_SIZE + length + FOOTER_SIZE:
                     crc = self.data[HEADER_SIZE + length + 0]
                     end = self.data[HEADER_SIZE + length + 1]
+
+                    frame = bytes(self.data[:HEADER_SIZE + FOOTER_SIZE + length])
                     body = bytes(self.data)[HEADER_SIZE:HEADER_SIZE + length]
 
                     self.data[0] = 0  # clear frame byte to allow other packets
 
                     if end == END_BYTE and crc == crc8(body):
-                        return body
+                        return frame, body
 
                     failures += 1
 
@@ -124,9 +126,10 @@ def create_connection(device):
 class Message(object):
     """Contains a list of sensor entries."""
 
-    def __init__(self, timestamp, entries):
+    def __init__(self, timestamp, entries, frame):
         self.timestamp = timestamp
         self.entries = entries
+        self.frame = frame
 
     def __repr__(self):
         return '[{} : {}]'.format(self.timestamp, self.entries)
@@ -344,7 +347,7 @@ def MLX75305_AL(input):
     return irradiance
 
 MLX75305_AL.length = 2
-    
+
 
 def ML8511_UV(input):
     byte1 = input[0]
@@ -397,7 +400,7 @@ def SPV_light(input):
     byte1 = input[0]
     byte2 = input[1]
     value = (byte1 << 8) | byte2
-    
+
     raw_out = value / 32768.0000 * 2.048
     voltage = raw_out * 5.00 / 2.00
     voltage_level = -math.log10(voltage/3.3) * 20.00
