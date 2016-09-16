@@ -14,7 +14,7 @@ class CoresensePlugin(waggle.pipeline.Plugin):
                 message = conn.recv()
                 if message is not None:
                     self.send(sensor='frame', data=message.frame)
-                time.sleep(10)
+                time.sleep(5)
 
 
 class register(object):
