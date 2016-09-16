@@ -3,4 +3,5 @@ system_router
 system_receive
 system_base
 #envsense_v2
-
+#example_sensor
+#fake_sensor

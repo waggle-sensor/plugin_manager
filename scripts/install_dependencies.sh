@@ -17,3 +17,4 @@ pip3 install tabulate
 pip3 install pyzmq
 pip3 install psutil
 pip3 install pyinotify
+pip3 install pika

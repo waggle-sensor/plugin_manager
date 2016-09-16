@@ -2,6 +2,7 @@
 
 import time, serial, sys, datetime, pprint, logging, socket, os, zmq
 from multiprocessing import Queue
+import pika
 
 sys.path.append('./waggle_protocol/')
 from utilities import packetmaker
@@ -10,6 +11,11 @@ from protocol import PacketHandler
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 
+pika_credentials = pika.PlainCredentials('node', 'waggle')
+pika_params=pika.ConnectionParameters(host='localhost', credentials=pika_credentials, virtual_host='/')
+pika_connection = pika.BlockingConnection(pika_params)
+pika_channel = pika_connection.channel()
+pika_properties = pika.BasicProperties(delivery_mode = 2)
 
 def read_file( str ):
     if not os.path.isfile(str) :
@@ -114,6 +120,20 @@ class system_send(object):
                 continue
 
             for pack in packet:
+
+                ### Use RabbitMQ in parallel to send persistent messages to local data queue. ###
+                ### Data will be automatically forwarded to the beehive server.               ###
+                print(pack)
+                try:
+                  pika_channel.basic_publish(exchange='',
+                                        	   routing_key='data',
+                                             body=pack,
+																						 properties=pika_properties)
+                except Exception as e:
+                  logger.error("Could not send RabbitMQ message: %s" % str(e))
+                logger.debug("sent the following message to the 'data' queue: %s" % pack)
+                #################################################################################
+
                 while 1:
                     try:
                         self.send(pack)
