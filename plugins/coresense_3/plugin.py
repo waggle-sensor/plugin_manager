@@ -9,7 +9,7 @@ class CoresensePlugin(waggle.pipeline.Plugin):
     plugin_version = '3'
 
     def run(self):
-        with coresense.create_connection('/dev/tty.usbmodem1421') as conn:
+        with coresense.create_connection('/dev/waggle_coresense') as conn:
             while True:
                 message = conn.recv()
                 if message is not None:
