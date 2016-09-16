@@ -1,8 +1,6 @@
-#!/usr/bin/env python3
 import waggle.pipeline
 import time
 import coresense
-from multiprocessing import Process, Queue
 
 
 class CoresensePlugin(waggle.pipeline.Plugin):
@@ -25,9 +23,13 @@ class register(object):
         CoresensePlugin(name, man, mailbox_outgoing).run()
 
 
-q = Queue()
-p = Process(target=register, args=('', '', q))
-p.start()
+if __name__ == '__main__':
+    from multiprocessing import Process, Queue
 
-while True:
-    print(q.get())
+    q = Queue()
+    p = Process(target=register, args=('', '', q))
+    p.start()
+
+    while True:
+        print(q.get())
+        print()

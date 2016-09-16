@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 This module provides an interface to the Waggle coresense device. The Waggle
 coresense devices show up as USB serial devices. For example, the device may
