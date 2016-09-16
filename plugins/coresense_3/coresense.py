@@ -23,7 +23,7 @@ from contextlib import contextmanager
 import time
 import math
 
-from .RTlist import getRT
+# from .RTlist import getRT
 
 
 START_BYTE = b'\xaa'
@@ -52,28 +52,8 @@ class Connection(object):
     def recv(self):
         """Receives a list of sensor entries from the device."""
         frame, data = self.recv_packet_data()
-
         timestamp = int(time.time())
-
-        entries = []
-
-        offset = 0
-
-        while offset < len(data):
-            identifier = data[offset]
-
-            header = data[offset + 1]
-            length = header & 0x7F
-            valid = header & 0x80 != 0
-
-            entry_data = data[offset+2:offset+2+length]
-
-            if valid:
-                entries.append(parse_sensor(identifier, entry_data))
-
-            offset += 2 + length  # header + contents
-
-        return Message(timestamp, entries, frame)
+        return Message(timestamp=timestamp, entries=[], frame=frame)
 
     def recv_packet_data(self):
         """Receives raw packet data from the device."""
@@ -110,7 +90,7 @@ class Connection(object):
                     if failures >= 10:
                         raise NoPacketError(failures)
             # prevent consuming huge CPU recource
-            time.sleep(0.2)
+            time.sleep(1)
 
 
 @contextmanager
