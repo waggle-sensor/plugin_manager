@@ -1,6 +1,7 @@
 import waggle.pipeline
 import time
 import coresense
+import sys
 
 
 class CoresensePlugin(waggle.pipeline.Plugin):
@@ -9,7 +10,12 @@ class CoresensePlugin(waggle.pipeline.Plugin):
     plugin_version = '3'
 
     def run(self):
-        with coresense.create_connection('/dev/waggle_coresense') as conn:
+        if len(sys.argv) == 2:
+            device = sys.argv[1]
+        else:
+            device = '/dev/waggle_coresense'
+
+        with coresense.create_connection(device) as conn:
             while True:
                 message = conn.recv()
                 if message is not None:
@@ -24,12 +30,7 @@ class register(object):
 
 
 if __name__ == '__main__':
-    from multiprocessing import Process, Queue
+    def callback(data):
+        print(data)
 
-    q = Queue()
-    p = Process(target=register, args=('', '', q))
-    p.start()
-
-    while True:
-        print(q.get())
-        print()
+    waggle.pipeline.run_standalone(CoresensePlugin, callback)
