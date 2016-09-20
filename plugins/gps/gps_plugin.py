@@ -4,7 +4,7 @@
 import datetime
 import logging
 import pynmea2
-import Serial
+from serial import Serial
 import time
 
 logger = logging.getLogger(__name__)
@@ -38,19 +38,20 @@ class gps(object):
             
             try:
               serial = Serial(device, timeout=180)
-                  while self.running:
-                      try:
-                          msg = serial.readline()
-                      except Exception as e:
-                          logger.error("(Inner loop) Error of type %s: %s" % (str(type(e)), str(e)))
-                          msg = None
-                          time.sleep(1)
-                          break
-                  
-                      if msg:    
-                          self.handle_message(msg)
+              while self.running:
+                  try:
+                      msg = serial.readline()
+                  except Exception as e:
+                      logger.error("(Inner loop) Error of type %s: %s" % (str(type(e)), str(e)))
+                      msg = None
+                      time.sleep(1)
+                      break
+              
+                  if msg:    
+                      self.handle_message(msg)
             except Exception as e:
                 logger.error("(Outer loop) Error of type %s: %s" % (str(type(e)), str(e)))
+                raise
             
             time.sleep(10)
 
@@ -66,8 +67,19 @@ class gps(object):
     def handle_message_entry(self, parsed_data):
         
         timestamp_date = time.strftime('%Y-%m-%d', datetime.datetime.now())
-        timestamp_time = str(parsed_data.timestamp)
-        data_string = '%s %s %s %s' % (parsed_data.lat, parsed_data.lat_dir, parsed_data.lon, parsed_data.lon_dir)
+        timestamp_time = datetime.datetime.now().replace(
+          hour=parsed_data.timestamp.hour,
+          minute=parsed_data.timestamp.minute,
+          second=parsed_data.timestamp.second)
+        lat = float(parsed_data.lat)
+        lat_deg = int(lat/100)
+        lat_minutes = float(lat-lat_deg)
+        lon = float(parsed_data.lon)
+        lon_deg = int(lon/100)
+        lon_minutes = float(lon-lon_deg)
+        degree_sign = u'\N{DEGREE SIGN}'
+        data_string = '%s%s%s\'%s %s%s%s\'%s' % (lat_deg, degree_sign, lat_minutes, parsed_data.lat_dir,\
+                                                 lon_deg, degree_sign, lon_minutes, parsed_data.lon_dir)
         
         #self.outqueue.put([
         message = [
@@ -88,3 +100,8 @@ class gps(object):
     def running(self, state):
         self.man[self.name] = 1 if state else 0
 
+if __name__ == "__main__":
+  man = {}
+  mail_outgoing = []
+  plugin = gps('gps', man, mail_outgoing)
+  plugin.run()
