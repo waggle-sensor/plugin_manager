@@ -15,11 +15,11 @@ class FaceDetectionPlugin(waggle.pipeline.Plugin):
 		if len(sys.argv) == 2:
 			cascPath = sys.argv[1]
 		else:
-			cascPath = 'haarcascade_frontalface_default.xml'
+			cascPath = 'plugins/facedetection/haarcascade_frontalface_default.xml'
 		
 		faceCascade = cv2.CascadeClassifier(cascPath)
 
-		debugging = True
+		debugging = False
 		#if debugging:
 		#	self.man[self.name] = 1
 
