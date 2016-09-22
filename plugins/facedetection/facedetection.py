@@ -1,10 +1,8 @@
 import waggle.pipeline
-import sys, time
+import sys
+import time
+import cv2
 
-try:
-	import cv2
-except ImportError:
-	raise
 
 class FaceDetectionPlugin(waggle.pipeline.Plugin):
 
@@ -16,7 +14,7 @@ class FaceDetectionPlugin(waggle.pipeline.Plugin):
 			cascPath = sys.argv[1]
 		else:
 			cascPath = 'plugins/facedetection/haarcascade_frontalface_default.xml'
-		
+
 		faceCascade = cv2.CascadeClassifier(cascPath)
 
 		debugging = False
@@ -94,10 +92,9 @@ class FaceDetectionPlugin(waggle.pipeline.Plugin):
 		video_capture.release()
 		cv2.destroyAllWindows()
 
-class register(object):
 
-	def __init__(self, name, man, mailbox_outgoing):
-		FaceDetectionPlugin(name, man, mailbox_outgoing).run()
+def register(name, man, mailbox_outgoing):
+	FaceDetectionPlugin(name, man, mailbox_outgoing).run()
 
 
 if __name__ == "__main__":
