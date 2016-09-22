@@ -14,7 +14,7 @@ class ExamplePlugin(waggle.pipeline.Plugin):
             self.send('greeting',
                       'hello!')
             self.send('temperature',
-                      20.00 + random.random() - 0.5)
+                      str(20.00 + random.random() - 0.5))
             time.sleep(10)
 
 
