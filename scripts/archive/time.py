@@ -1,16 +1,11 @@
-#!/usr/bin/env python
-
-
-import sys
-sys.path.append('../waggle_protocol/')
-from utilities import packetmaker
+#!/usr/bin/env python3
+'''
+A python script that creates and sends a time request.
+'''
+from waggle.protocol.utils import packetmaker
 from send import send
 
-"""
-    A python script that creates and sends a time request. 
-""" 
-
 packet = packetmaker.make_time_packet()
-print 'Time request packet made...' 
+print('Time request packet made...')
 for pack in packet:
         send(pack)

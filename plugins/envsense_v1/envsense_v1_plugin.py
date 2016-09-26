@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-
-import time, serial, sys, datetime, pprint, logging
-sys.path.append('waggle_protocol/')
-from utilities import packetmaker
+import time
+import serial
+import datetime
+import pprint
+import logging
+from waggle.protocol.utils import packetmaker
 from lib.send import send
-from multiprocessing import Queue
 
 
 logger = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ def process_data(output2sensor, readData):
             sensorsData = readData.split(';')
             if len(sensorsData) > 2:
                 sensorDataAvail = True
-            
+
         except:
             pass
     else:
@@ -40,7 +41,7 @@ def process_data(output2sensor, readData):
     if not sensorDataAvail:
         logger.error( "Data empty or format wrong")
         return
-        
+
     if not (sensorsData[0] == 'WXSensor' and sensorsData[-1]=='WXSensor\r\n'):
         logger.error( "Format wrong, WXSensor keywords missing")
         return
@@ -50,7 +51,7 @@ def process_data(output2sensor, readData):
     timestamp_epoch =  epoch_time(timestamp_utc)
 
 
-    # extract sensor name    
+    # extract sensor name
     output_array = sensorsData[1].split(':')
     output_name = output_array[0]
 
@@ -61,16 +62,16 @@ def process_data(output2sensor, readData):
         logger.warning( "Output %s unknown" % (output_name))
         return
 
-    
-    
+
+
     return [str(timestamp_date), 'env_sense', '1', 'default', '%d' % (timestamp_epoch), sensor_name, "meta.txt", sensorsData[1:-1]]
-    
-                    
+
+
 
 def sensor_read(name, man, mailbox_outgoing):
-    
+
     """
-    This connects to a sensor board via a serial connection. It reads and parses the sensor data into meaningful information, packs, and sends the data packet to the cloud. 
+    This connects to a sensor board via a serial connection. It reads and parses the sensor data into meaningful information, packs, and sends the data packet to the cloud.
 
 
     """
@@ -238,14 +239,14 @@ def sensor_read(name, man, mailbox_outgoing):
                                                                                'reading_note': 'Voltage_Divider_5V_NTC_Tap_68K_GND',
                                                                                'unit': 'Units10B0V5'}}}
 
-    
+
 
     # convert above tables into hash
     output2sensor={}
     for sensor in sensors:
     	for output in sensors[sensor]:
     		output2sensor[output]=sensor
-            
+
 
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(sensors)
@@ -263,7 +264,7 @@ def sensor_read(name, man, mailbox_outgoing):
                     wxsensor = serial.Serial('/dev/ttyACM0',57600,timeout=300)
                     wxconnection = True
                 except:
-                    #Will not work if sensor board is not plugged in. 
+                    #Will not work if sensor board is not plugged in.
                     #If sensor board is plugged in, check to see if it is trying to connect to the right port
                     #TODO may want to add a rule to the configuration to specify which port will be used.
                     logger.warning( "Could not connect. Is the sensor board plugged in?")
@@ -274,7 +275,7 @@ def sensor_read(name, man, mailbox_outgoing):
             except:
                 wxsensor.close()
                 continue
-                
+
             while wxconnection == True and man[name]:
                 time.sleep(1)
                 readData = None
@@ -285,27 +286,27 @@ def sensor_read(name, man, mailbox_outgoing):
                     wxsensor.close()
                     wxconnection = False
                     break
-                
+
                 if not readData:
                     continue
-                
+
                 logger.debug("readData: %s" %(readData))
-                sendData = None  
-                try:     
+                sendData = None
+                try:
                     sendData = process_data(output2sensor, readData)
                 except Exception as e:
                     logger.error( "process_data failed: "+ str(e))
                     continue
-                
+
                 if not sendData:
                     logger.warning( "process_data returned nothing")
                     continue
-                
+
                 if mailbox_outgoing:
                     logger.debug( 'Sending data via queue mailbox_outgoing.')
                     mailbox_outgoing.put(sendData)
-                    
-                    
+
+
                 else:
                     logger.debug( 'Sending data via send.py.')
                     #packs and sends the data
@@ -315,23 +316,19 @@ def sensor_read(name, man, mailbox_outgoing):
                             send(pack)
                         except Exception as e:
                             logger.error( "Exception sending pack: "+str(e))
-                            raise        
-                            
-                   
-                        
+                            raise
+
+
+
     except KeyboardInterrupt as k:
         try:
              wxsensor.close()
-        except: 
+        except:
              pass
     except Exception as e:
         logger.error( "Exception: "+str(e))
-        
+
 
 
 if __name__ == '__main__':
      sensor_read(None)
-     
-     
-     
-     

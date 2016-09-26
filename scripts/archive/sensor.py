@@ -1,13 +1,16 @@
-import time, serial, sys
-sys.path.append('../waggle_protocol/')
-from utilities import packetmaker
+'''
+This connects to a sensor board via a serial connection. It reads and parses
+the sensor data into meaningful information, packs, and sends the data packet
+to the cloud.
+'''
+import time
+import serial
+import sys
+from waggle.protocol.utils import packetmaker
 from send import send
-"""
-   This connects to a sensor board via a serial connection. It reads and parses the sensor data into meaningful information, packs, and sends the data packet to the cloud. 
-   
-   
-"""
-print 'Beginning sensor script...'
+
+
+print('Beginning sensor script...')
 
 Sensor_Index=["D6T_44L_06_1_T_C","MMA8452_1_A_X_Units","MMA8452_1_A_Y_Units",
               "MMA8452_1_A_Z_Units","MMA8452_1_A_RMS_Units","SHT15_1_T_C","SHT15_1_H_%","SHT75_1_T_C",
@@ -63,29 +66,29 @@ reading_note = [["PTAT",
                     "RMS_3Axis",
                     "",
                     "RH",
-                    "", 
+                    "",
                     "RH",
                     "non-standard",
                     "non-standard",
-                    "Voltage_Divider_5V_PDV_Tap_4K7_GND", 
+                    "Voltage_Divider_5V_PDV_Tap_4K7_GND",
                     "RH",
                     "Voltage_Divider_5V_NTC_Tap_68K_GND",
                     "",
                     "",
                     "",
-                    "RH", 
-                    "", 
+                    "RH",
+                    "",
                     "Barometric",
                     "",
-                    "", 
-                    "", 
-                    ""]    
+                    "",
+                    "",
+                    ""]
 
 sensor_array_index = [2,7,7,7,7,5,5,12,12,15,14,0,13,3,8,9,10,10,6,6,11,4,4,1]
 
-sensor_names = ["PDV_P8104.API.2006", "MLX90614ESF-DAA.Melexis.008-2013", "D6T-44L-06.Omron.2012", "Thermistor_NTC_PR103J2.US_Sensor.2003", 
-        "HIH6130.Honeywell.2011", "SHT15.Sensirion.4_3-2010", "BMP180.Bosch.2_5-2013", "MMA8452Q.Freescale.8_1-2013", 
-        "DS18B20.Maxim.2008", "TMP421.Texas_Instruments.2012", "RHT03.Maxdetect.2011", "TMP102.Texas_Instruments.2008", 
+sensor_names = ["PDV_P8104.API.2006", "MLX90614ESF-DAA.Melexis.008-2013", "D6T-44L-06.Omron.2012", "Thermistor_NTC_PR103J2.US_Sensor.2003",
+        "HIH6130.Honeywell.2011", "SHT15.Sensirion.4_3-2010", "BMP180.Bosch.2_5-2013", "MMA8452Q.Freescale.8_1-2013",
+        "DS18B20.Maxim.2008", "TMP421.Texas_Instruments.2012", "RHT03.Maxdetect.2011", "TMP102.Texas_Instruments.2008",
         "SHT75.Sensirion.5_2011", "HIH4030.Honeywell.2008", "GA1A1S201WP.Sharp.2007", "MAX4466.Maxim.1_2001"]
 try:
     while True:
@@ -97,9 +100,9 @@ try:
                 wxsensor = serial.Serial('/dev/ttyACM0',57600,timeout=300)
                 wxconnection = True
             except:
-                #Will not work if sensor board is not plugged in. 
+                #Will not work if sensor board is not plugged in.
                 #If sensor board is plugged in, check to see if it is trying to connect to the right port
-                print "Still Waiting for Connection... Is the sensor board plugged in?"
+                print("Still Waiting for Connection... Is the sensor board plugged in?")
                 time.sleep(1)
         try:
             wxsensor.flushInput()
@@ -168,5 +171,5 @@ try:
 except KeyboardInterrupt, k:
     try:
         wxsensor.close()
-    except: 
+    except:
         pass
