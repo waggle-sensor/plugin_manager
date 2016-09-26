@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 import logging
 import time
-from base64 import b64encode
 import waggle.pipeline
 from contextlib import closing
 import sys
-from alphasense import Alphasense
+from .alphasense import Alphasense
 
 
 logger = logging.getLogger(__name__)

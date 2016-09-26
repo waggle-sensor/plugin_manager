@@ -1,7 +1,7 @@
 import waggle.pipeline
 import time
-import coresense
 import sys
+import .coresense
 
 
 class CoresensePlugin(waggle.pipeline.Plugin):
