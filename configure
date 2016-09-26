@@ -3,7 +3,8 @@
 set -x
 set -e
 
-
+pip3 install git+https://github.com/waggle-sensor/pywaggle
+pip install git+https://github.com/waggle-sensor/pywaggle
 
 
 # set node controller IP for "internal" network
@@ -46,5 +47,3 @@ rm -f ./upstart/waggle_*
 
 set +x
 echo "done"
-
-
