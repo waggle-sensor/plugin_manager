@@ -1,7 +1,7 @@
 import waggle.pipeline
 import time
 import sys
-import .coresense
+from .coresense import create_connection
 
 
 class CoresensePlugin(waggle.pipeline.Plugin):
@@ -15,7 +15,7 @@ class CoresensePlugin(waggle.pipeline.Plugin):
         else:
             device = '/dev/waggle_coresense'
 
-        with coresense.create_connection(device) as conn:
+        with create_connection(device) as conn:
             while True:
                 message = conn.recv()
                 if message is not None:
