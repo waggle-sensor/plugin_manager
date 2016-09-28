@@ -87,18 +87,15 @@ class FaceDetectionPlugin(waggle.pipeline.Plugin):
 			else:
 				self.send(sensor='camera', data=['nodata:error'])
 
-
 		# When everything is done, release the capture
 		video_capture.release()
 		cv2.destroyAllWindows()
 
 
-def register(name, man, mailbox_outgoing):
-	FaceDetectionPlugin(name, man, mailbox_outgoing).run()
+register = FaceDetectionPlugin.register
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
 	def callback(data):
 		print(data)
 
-	waggle.pipeline.run_standalone(FaceDetectionPlugin, callback)
+	FaceDetectionPlugin.run_standalone(callback)
