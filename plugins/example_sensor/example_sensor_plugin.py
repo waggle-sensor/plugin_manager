@@ -18,12 +18,10 @@ class ExamplePlugin(waggle.pipeline.Plugin):
             time.sleep(10)
 
 
-def register(name, man, mailbox_outgoing):
-    plugin = ExamplePlugin(name, man, mailbox_outgoing)
-    plugin.run()
+register = ExamplePlugin.register
 
 if __name__ == '__main__':
     def callback(data):
         print(data)
 
-    waggle.pipeline.run_standalone(ExamplePlugin, callback)
+    ExamplePlugin.run_standalone(callback)

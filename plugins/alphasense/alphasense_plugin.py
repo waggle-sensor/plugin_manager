@@ -50,13 +50,10 @@ class AlphasensePlugin(waggle.pipeline.Plugin):
                     time.sleep(10)
 
 
-def register(name, man, mailbox_outgoing):
-    plugin = AlphasensePlugin(name, man, mailbox_outgoing)
-    plugin.run()
-
+register = AlphasensePlugin.register
 
 if __name__ == '__main__':
     def callback(data):
         print(data)
 
-    waggle.pipeline.run_standalone(AlphasensePlugin, callback)
+    AlphasensePlugin.run_standalone(callback)

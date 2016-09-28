@@ -23,12 +23,10 @@ class CoresensePlugin(waggle.pipeline.Plugin):
                 time.sleep(5)
 
 
-def register(name, man, mailbox_outgoing):
-    CoresensePlugin(name, man, mailbox_outgoing).run()
-
+register = CoresensePlugin.register
 
 if __name__ == '__main__':
     def callback(data):
         print(data)
 
-    waggle.pipeline.run_standalone(CoresensePlugin, callback)
+    CoresensePlugin.run_standalone(callback)
