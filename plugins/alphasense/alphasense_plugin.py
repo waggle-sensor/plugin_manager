@@ -53,7 +53,9 @@ class AlphasensePlugin(waggle.pipeline.Plugin):
 register = AlphasensePlugin.register
 
 if __name__ == '__main__':
-    def callback(data):
+    def callback(sensor, data):
+        print(sensor)
         print(data)
+        print()
 
     AlphasensePlugin.run_standalone(callback)

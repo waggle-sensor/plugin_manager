@@ -95,7 +95,9 @@ class FaceDetectionPlugin(waggle.pipeline.Plugin):
 register = FaceDetectionPlugin.register
 
 if __name__ == '__main__':
-	def callback(data):
-		print(data)
+    def callback(sensor, data):
+        print(sensor)
+        print(data)
+        print()
 
 	FaceDetectionPlugin.run_standalone(callback)
