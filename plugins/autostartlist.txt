@@ -1,2 +1,3 @@
 waggle_coresense:coresense_3
 alphasense:alphasense
+gps_module:gps
