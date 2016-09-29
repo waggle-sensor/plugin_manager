@@ -1,7 +1,7 @@
 import waggle.pipeline
 import time
 import sys
-from coresense import create_connection
+from .coresense import create_connection
 
 
 class CoresensePlugin(waggle.pipeline.Plugin):
