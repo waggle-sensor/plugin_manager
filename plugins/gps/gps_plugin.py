@@ -23,7 +23,6 @@ class GPSPluign(waggle.pipeline.Plugin):
       line = serial.readline().decode()
       if "$GPGGA" in line:
         parsed_data = pynmea2.parse(line)
-        print(parsed_data)
         # check for empty values
         try:
           lat_degree = int(float(parsed_data.lat) / 100)
