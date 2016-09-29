@@ -21,7 +21,8 @@ class ExamplePlugin(waggle.pipeline.Plugin):
 register = ExamplePlugin.register
 
 if __name__ == '__main__':
-    def callback(data):
+    def callback(sensor, data):
+        print(sensor)
         print(data)
 
     ExamplePlugin.run_standalone(callback)
