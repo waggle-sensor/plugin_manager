@@ -2,6 +2,6 @@ system_send
 system_router
 system_receive
 system_base
-#envsense_v2
+#coresense_3
 #example_sensor
 #fake_sensor
