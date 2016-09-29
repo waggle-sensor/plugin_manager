@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-
-# -*- coding: utf-8 -*-
-import logging, os
+import logging
 import time
-from base64 import b64encode
+import waggle.pipeline
+from contextlib import closing
+import sys
 from .alphasense import Alphasense
 
 
@@ -11,91 +11,51 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class register(object):
-
-    def __init__(self, name, man, mailbox_outgoing):
-        plugin = AlphasensePlugin(name, man, mailbox_outgoing)
-        plugin.run()
-
-class AlphasensePlugin(object):
+class AlphasensePlugin(waggle.pipeline.Plugin):
 
     plugin_name = 'alphasense'
     plugin_version = '1'
 
-    def __init__(self, name, man, mailbox_outgoing):
-        self.name = name
-        self.man = man
-        self.outqueue = mailbox_outgoing
-
     def run(self):
-        self.running = True
+        if len(sys.argv) == 2:
+            device = sys.argv[1]
+        else:
+            device = '/dev/alphasense'
 
-        while self.running:
-            if not os.path.exists('/dev/alphasense'):
-                logger.info('alphasense does not exist')
-                time.sleep(3)
-                continue
-            alphasense = Alphasense('/dev/alphasense')
-            time.sleep(1)
-            logger.info('alphasense init')
-
+        with closing(Alphasense(device)) as alphasense:
+            logger.info('setting alphasense fan power')
             alphasense.set_fan_power(255)
             time.sleep(1)
 
+            logger.info('setting alphasense laser power')
             alphasense.set_laser_power(190)
             time.sleep(1)
 
+            logger.info('powering alphasense on')
             alphasense.power_on()
             time.sleep(1)
 
-            logger.info('alphasense on')
+            logger.info('alphasense ready')
 
-            try:
-                while self.running:
-                    firmware_version = alphasense.get_firmware_version()
-                    config_data = alphasense.get_config_data_raw()
-                    message = [
-                        'firmware:'.encode('iso-8859-1') + firmware_version,
-                        'config:'.encode('iso-8859-1') + str(config_data).encode('iso-8859-1'),
-                    ]
+            while True:
+                self.send('firmware',
+                          alphasense.get_firmware_version())
 
-                    self.send_message('config', message)
-                    logger.info('firmware / config sent')
-                    time.sleep(1)
+                self.send('config',
+                          alphasense.get_config_data_raw())
 
-                    for _ in range(100):
-                        histogram_data = alphasense.get_histogram_raw()
-                        self.send_message('data', ['data:'.encode('iso-8859-1') + b64encode(histogram_data)])
-                        logger.info('data sent')
-                        time.sleep(10)
-            finally:
-                alphasense.close()
+                for _ in range(100):
+                    self.send('histogram',
+                              alphasense.get_histogram_raw())
+                    time.sleep(10)
 
-    def stop(self):
-        self.running = False
 
-    def send_message(self, ident, data):
-        timestamp_utc = int(time.time())
-        timestamp_date  = time.strftime('%Y-%m-%d', time.gmtime(timestamp_utc))
-        timestamp_epoch = timestamp_utc * 1000
+register = AlphasensePlugin.register
 
-        message_data = [
-            str(timestamp_date).encode('iso-8859-1'),
-            'alphasense'.encode('iso-8859-1'),
-            '1'.encode('iso-8859-1'),
-            'default'.encode('iso-8859-1'),
-            '%d' % (timestamp_epoch),
-            ident.encode('iso-8859-1'),
-            'base64'.encode('iso-8859-1'),
-            data,
-        ]
+if __name__ == '__main__':
+    def callback(sensor, data):
+        print(sensor)
+        print(data)
+        print()
 
-        self.outqueue.put(message_data)
-
-    @property
-    def running(self):
-        return self.man[self.name] != 0
-
-    @running.setter
-    def running(self, state):
-        self.man[self.name] = 1 if state else 0
+    AlphasensePlugin.run_standalone(callback)

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 '''
 Alphasense reader using the USB-ISS interface. The only real dependency
 is on the set_spi_mode and transfer_data functions. This could easily be

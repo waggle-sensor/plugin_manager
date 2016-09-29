@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-
-import time, serial, sys, datetime, pprint, logging, socket, os
-#sys.path.append('../waggle_protocol/')
-#from utilities import packetmaker
+import time
+import sys
+import logging
+import os
 from multiprocessing import Queue
-
-from queue import Full
 
 
 logger = logging.getLogger(__name__)
+
 
 class register(object):
     # def __init__(self, name, man, mailbox_outgoing, mailbox_incoming, listeners):
@@ -17,16 +16,16 @@ class register(object):
     #     sr = system_router(name, man, mailbox_outgoing, mailbox_incoming, listeners)
     def __init__(self, name, man, plugin_mailbox, listeners):
         man[name] = 1
-        
+
         sr = system_router(name, man, plugin_mailbox, listeners)
         try:
             sr.run()
         except KeyboardInterrupt:
             sys.exit(0)
-        
 
 
-def check_pid(pid):        
+
+def check_pid(pid):
     """ Check For the existence of a unix pid. """
     try:
         os.kill(pid, 0)
@@ -34,11 +33,11 @@ def check_pid(pid):
         return False
     else:
         return True
-        
-        
+
+
 
 class system_router(object):
-    
+
     # def __init__(self,name, man, mailbox_outgoing, mailbox_incoming, listeners):
     #     self.name = name
     #     self.man = man
@@ -79,48 +78,48 @@ class system_router(object):
         self.man = man
         self.plugin_mailbox = plugin_mailbox
         self.listeners = listeners
-        
+
     def run(self):
         check_interval = 10
-        
+
         for listener_uuid in self.listeners:
             logger.info("listener: %s" % (self.listeners[listener_uuid]['name']))
-            
+
         last_check = time.time()
         delete_listeners = []
         while self.man[self.name]:
-            
+
             # TODO select.select statment to read from multiple plugin queues
             msg = self.plugin_mailbox.get() # a blocking call.
-            
-            
+
+
             check_listener = 0
             current = time.time()
-            
+
             if current > (last_check + check_interval):
                 check_listener = 1
                 last_check = current
-            
-            
+
+
             for listener_uuid in self.listeners:
-                
+
                 #logger.debug("listener: %s" % (listener_name))
                 listener = self.listeners[listener_uuid]
                 queue = listener['queue']
-                
+
                 do_send = 1
-                
+
                 if check_listener and ('pid' in listener):
                     pid = listener['pid']
-                    
+
                     if not check_pid(pid):
                         logger.info("Listener process %s is not running anymore, pid: %d" % (listener['name'], pid))
                         do_send = 0
                         delete_listeners.append(listener_uuid)
-                        
+
                     else:
                         logger.debug("Listener process %s is still running, pid: %d" % (listener['name'], pid))
-                        
+
                 if do_send:
                     try:
                         queue.put(msg)
@@ -128,24 +127,24 @@ class system_router(object):
                         logger.warning("Queue %s is full, cannot push messages" % (listener_name))
                     except Exception as e:
                         logger.error("Error trying to put message into queue %s (%s): %s" % (listener['name'], str(type(e)), str(e)))
-            
+
             # clean up
             if delete_listeners:
                 for listener_uuid in delete_listeners:
                     del self.listeners[listener_uuid]
                 delete_listeners = []
         # check_interval = 10
-        
+
         # for listener_uuid in self.routingTable:
         #     logger.info("listener: %s" % (self.routingTable[listener_uuid]['name']))
-            
+
         # last_check = time.time()
         # delete_listeners = []
         # while self.man[self.name]:
-            
+
         #     # TODO select.select statment to read from multiple plugin queues
         #     # msg = self.plugin_mailbox.get() # a blocking call.
-            
+
         #     # check message from system_receive
         #     if not self.incoming.empty():
         #         msg = self.incoming.get(timeout=self.blockingTimeout)

@@ -1,45 +1,40 @@
 #!/usr/bin/env python3
-# msg_handler.py
-
-import os, os.path, sys
-sys.path.append('./waggle_protocol/')
-from protocol.PacketHandler import *
+from waggle.protocol.PacketHandler import *
 from .send import send
+
 
 def msg_handler(msg):
     """
-    
-        Unpacks and acts on messages sent to the node. This is called by the communicator process whenever messages are received. 
-        
-        :param string msg: The packed message sent to the node.
-        
+    Unpacks and acts on messages sent to the node. This is called by the communicator process whenever messages are received.
+
+    :param string msg: The packed message sent to the node.
     """
     #TODO Add new message types that are created for waggle
     header = None
     try:
         #unpacks the header
         header = get_header(msg)
-    except: 
+    except:
         print('Message is corrupt.')
         raise
-        
+
     #get the major header type
     major = chr(header['msg_mj_type'])
     minor = chr(header['msg_mi_type'])
-    
+
     #large file transfer
     if major == 'F':
         #TODO pass to packet reassembler
         pass
-    
+
     #small file transfer
     elif major == 'f':
         #TODO do something with this file
         pass
-    
+
     #ping
     elif major == 'p':
-        #ping request. 
+        #ping request.
         if minor == 'r':
             resp_header = {
                 'msg_mj_type' : ord('p'),
@@ -76,9 +71,9 @@ def msg_handler(msg):
             print('Node received time: ', time[1])
     #sensor data
     elif major == 's':
-        #TODO do stuff here 
-        pass 
-    
+        #TODO do stuff here
+        pass
+
     #registration
     elif major =='r':
         #TODO do stuff here if ever neccessary
@@ -86,23 +81,7 @@ def msg_handler(msg):
         reg = unpack(msg)
         #print out the body of the message
         print('GN received: ', reg[1])
-    
-    #message type unrecognized 
-    else: 
+
+    #message type unrecognized
+    else:
         print('Message major type, ' , major, ' unrecognized.')
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-    
