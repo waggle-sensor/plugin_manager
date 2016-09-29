@@ -4,14 +4,8 @@ import sys
 import logging
 import zmq
 from waggle.protocol.utils import packetmaker
-
-import time, serial, sys, datetime, pprint, logging, socket, os, zmq
-from multiprocessing import Queue
 import pika
 
-sys.path.append('./waggle_protocol/')
-from utilities import packetmaker
-from protocol import PacketHandler
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
