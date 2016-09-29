@@ -1,2 +1,2 @@
-waggle_coresense:envsense_v2
+waggle_coresense:coresense_3
 alphasense:alphasense
