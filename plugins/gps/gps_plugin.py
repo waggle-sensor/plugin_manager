@@ -27,7 +27,7 @@ class GPSPluign(waggle.pipeline.Plugin):
                     lat_minute = float(parsed_data.lat) - lat_degree*100
                     lon_degree = int(float(parsed_data.lon) / 100)
                     lon_minute = float(parsed_data.lon) - lon_degree*100
-                    data_string = u'%s\u00b0%s\'%s,%s\u00b0%s\'%s,%s%s' % (lat_degree, lat_minute, parsed_data.lat_dir,
+                    data_string = '%s*%s\'%s,%s*%s\'%s,%s%s' % (lat_degree, lat_minute, parsed_data.lat_dir,
                                                                            lon_degree, lon_minute, parsed_data.lon_dir,
                                                                            parsed_data.altitude, parsed_data.altitude_units.lower())
 
