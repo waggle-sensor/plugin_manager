@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class GPSPluign(waggle.pipeline.Plugin):
+class GPSPlugin(waggle.pipeline.Plugin):
 
     plugin_name = 'gps'
     plugin_version = '1'
@@ -36,12 +36,9 @@ class GPSPluign(waggle.pipeline.Plugin):
                     pass
 
 
-register = GPSPluign.register
+register = GPSPlugin.register
 
 if __name__ == '__main__':
-    def callback(sensor, data):
-        print(sensor)
-        print(data)
-        print()
-
-    GPSPluign.run_standalone(callback)
+    plugin = GPSPlugin()
+    plugin.add_handler(waggle.pipeline.LogHandler())
+    plugin.run()
