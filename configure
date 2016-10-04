@@ -3,8 +3,6 @@
 set -x
 set -e
 
-apt-get update && apt-get install python-pip python3-pip
-
 pip3 install git+https://github.com/waggle-sensor/pywaggle
 pip install git+https://github.com/waggle-sensor/pywaggle
 
