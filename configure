@@ -13,7 +13,7 @@ if [ ! -e /etc/waggle/node_controller_host ] ; then
 fi
 
 if [ ! -e /etc/waggle/node_id ] ; then
- CRT_ND_SCR="/usr/lib/waggle/core/create_node_id.sh"
+ CRT_ND_SCR="/usr/lib/waggle/core/scripts/create_node_id.sh"
  if [ ! -e ${CRT_ND_SCR} ] ; then
    echo "node_id is missing and create_node_id.sh script was not found."
    echo "Please execute:"
