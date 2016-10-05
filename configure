@@ -12,17 +12,17 @@ if [ ! -e /etc/waggle/node_controller_host ] ; then
   echo "10.31.81.10" > /etc/waggle/node_controller_host
 fi
 
-if [ ! -e /etc/waggle/node_id ] ; then
- CRT_ND_SCR="/usr/lib/waggle/core/scripts/create_node_id.sh"
- if [ ! -e ${CRT_ND_SCR} ] ; then
-   echo "node_id is missing and create_node_id.sh script was not found."
-   echo "Please execute:"
-   echo "  mkdir -p /usr/lib/waggle/ ; cd /usr/lib/waggle/ ; git clone https://github.com/waggle-sensor/core.git"
-   exit 1
- fi
-
- source ${CRT_ND_SCR}
-fi
+#if [ ! -e /etc/waggle/node_id ] ; then
+# CRT_ND_SCR="/usr/lib/waggle/core/scripts/create_node_id.sh"
+# if [ ! -e ${CRT_ND_SCR} ] ; then
+#   echo "node_id is missing and create_node_id.sh script was not found."
+#   echo "Please execute:"
+#   echo "  mkdir -p /usr/lib/waggle/ ; cd /usr/lib/waggle/ ; git clone https://github.com/waggle-sensor/core.git"
+#   exit 1
+# fi
+#
+# source ${CRT_ND_SCR}
+#fi
 
 
 ln -sf /usr/lib/waggle/plugin_manager/waggle-plugins.py /usr/bin/waggle-plugins
