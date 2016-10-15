@@ -46,6 +46,7 @@ rm -f /etc/supervisor/conf.d/waggle_plugin_manager.conf
 
 # copy systemd scripts
 cp ./systemd/waggle-* /etc/systemd/system
+systemctl enable waggle-plugin-manager.service
 
 set +x
 echo "done"
