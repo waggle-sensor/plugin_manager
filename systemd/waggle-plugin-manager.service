@@ -5,7 +5,7 @@ Description=Manages plugins.
 WorkingDirectory=/usr/lib/waggle/plugin_manager
 ExecStart=./plugin_manager.py --logging --force
 
-Restart=Always
+Restart=always
 RestartSec=5
 
 [Install]
