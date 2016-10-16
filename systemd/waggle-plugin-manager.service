@@ -1,0 +1,12 @@
+[Unit]
+Description=Manages plugins.
+
+[Service]
+WorkingDirectory=/usr/lib/waggle/plugin_manager
+ExecStart=./plugin_manager.py --logging --force
+
+Restart=Always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
