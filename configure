@@ -3,6 +3,8 @@
 set -x
 set -e
 
+export current_dir="$(pwd)"
+
 pip3 install git+https://github.com/waggle-sensor/pywaggle
 pip install git+https://github.com/waggle-sensor/pywaggle
 
@@ -45,7 +47,7 @@ rm -f /etc/supervisor/conf.d/waggle_plugin_manager.conf
 #cp ./upstart/waggle-* /etc/init/
 
 # copy systemd scripts
-cp ./systemd/waggle-* /etc/systemd/system
+cp ${current_dir}/systemd/waggle-* /etc/systemd/system
 systemctl enable waggle-plugin-manager.service
 
 set +x
