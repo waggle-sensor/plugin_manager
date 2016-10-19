@@ -3,6 +3,8 @@ import logging
 import pynmea2
 from serial import Serial
 import waggle.pipeline
+import sys
+import time
 
 
 logger = logging.getLogger(__name__)
@@ -15,13 +17,20 @@ class GPSPlugin(waggle.pipeline.Plugin):
     plugin_version = '1'
 
     def run(self):
-        serial = Serial('/dev/gps_module', timeout=180)
+        if len(sys.argv) <= 1:
+            serial = Serial('/dev/gps_module', timeout=180)
+        else:
+            serial = Serial(sys.argv[1], timeout=180)
 
         while True:
             line = serial.readline().decode()
             if "$GPGGA" in line:
                 parsed_data = pynmea2.parse(line)
-                # check for empty values
+
+                if not parsed_data.lat:
+                    logging.warn('gps could not lock')
+                    continue
+
                 try:
                     lat_degree = int(float(parsed_data.lat) / 100)
                     lat_minute = float(parsed_data.lat) - lat_degree*100
@@ -32,8 +41,9 @@ class GPSPlugin(waggle.pipeline.Plugin):
                                                                            parsed_data.altitude, parsed_data.altitude_units.lower())
 
                     self.send('gps', data_string)
-                except:
-                    pass
+                    time.sleep(10)
+                except Exception as e:
+                    logging.exception(e)
 
 
 register = GPSPlugin.register
