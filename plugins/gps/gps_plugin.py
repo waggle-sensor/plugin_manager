@@ -3,7 +3,6 @@ import logging
 import pynmea2
 from serial import Serial
 import waggle.pipeline
-import sys
 import time
 
 
@@ -17,10 +16,7 @@ class GPSPlugin(waggle.pipeline.Plugin):
     plugin_version = '1'
 
     def run(self):
-        if len(sys.argv) <= 1:
-            serial = Serial('/dev/gps_module', timeout=180)
-        else:
-            serial = Serial(sys.argv[1], timeout=180)
+        serial = Serial('/dev/gps_module', timeout=180)
 
         while True:
             line = serial.readline().decode()
