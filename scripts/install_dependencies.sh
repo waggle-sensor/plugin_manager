@@ -13,3 +13,4 @@ pip3 install pyserial
 pip3 install pyzmq
 pip3 install pyinotify
 pip3 install pika
+pip3 install pynmea2
