@@ -359,7 +359,7 @@ class base_plugin(waggle.pipeline.Plugin):
 
         # notifier = Notifier(wm, PTmp())
         # wdd = wm.add_watch(path, mask, rec=True)
-        while self.man[self.name]:
+        while True:
 
             # Check if predefined serial port is recognizable (sensor attached)
             # try:
