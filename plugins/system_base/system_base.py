@@ -1,19 +1,13 @@
 #!/usr/bin/env python3
 import waggle.pipeline
 import os
-import psutil
 import subprocess
 import datetime
 import time
 import logging
 import socket
 import json
-from collections import namedtuple
-import pyinotify
-from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
-import sys
 import zmq
-import operator
 
 # ********** SH_TEST_STRAT
 # Get info using zeromq from wagman_publihser.py
@@ -186,7 +180,7 @@ class base_plugin(waggle.pipeline.Plugin):
             return None
 
         try:
-            client_sock.sendall(command.encode('iso-8859-15'))
+            client_sock.sendall(command.encode())
         except Exception as e:
             print(("Error talking to socket: %s" % (str(e))))
             client_sock.close()
@@ -194,7 +188,7 @@ class base_plugin(waggle.pipeline.Plugin):
 
         #ready = select.select([mysocket], [], [], timeout_in_seconds)
         try:
-            data = client_sock.recv(2048).decode('iso-8859-15') #TODO need better solution
+            data = client_sock.recv(2048).decode() #TODO need better solution
         except Exception as e:
             print(("Error reading socket: %s" % (str(e))))
             client_sock.close()
