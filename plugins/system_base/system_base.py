@@ -336,7 +336,7 @@ class base_plugin(waggle.pipeline.Plugin):
 
         # Wait 40 seconds for other services preparing to run
         # TODO: need to know when all system/services are green so this report can send right information of the current system status.
-        time.sleep(40)
+        # time.sleep(40)
         data = self.collect_system_info()
         self.send('system info', data)
         data = self.collect_service_info()
