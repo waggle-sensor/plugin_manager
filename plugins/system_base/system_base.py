@@ -125,7 +125,7 @@ def get_service_list():
 
 class base_plugin(waggle.pipeline.Plugin):
 
-    plugin_name = 'base plugin'
+    plugin_name = 'base'
     plugin_version = '1'
 
     def get_boot_info(self):
