@@ -169,26 +169,6 @@ class base_plugin(waggle.pipeline.Plugin):
     plugin_name = 'base plugin'
     plugin_version = '1'
 
-    def __init__(self, name, man, mailbox_outgoing):
-        self.name = name
-        self.man = man
-        self.outqueue = mailbox_outgoing
-
-        self.nc_hb = 0
-        self.gn_hb = 0
-        self.cs_hb = 0
-
-        self.wagman_info = {}
-
-        # Socket to talk to server
-        context = zmq.Context()
-        self.socket = context.socket(zmq.SUB)
-        self.socket.setsockopt(zmq.RCVTIMEO, 3000)
-        self.socket.setsockopt(zmq.SUBSCRIBE, ''.encode('latin-1'))
-        self.socket.connect ('ipc:///tmp/zeromq_wagman-pub')
-        # socket.setsockopt_string(zmq.SUBSCRIBE, sys.argv[1])
-        #********** SH_TEST_END
-
     def get_boot_info(self):
         ret = ""
 
@@ -346,6 +326,20 @@ class base_plugin(waggle.pipeline.Plugin):
 
     def run(self):
         global autoplugins
+
+        self.nc_hb = 0
+        self.gn_hb = 0
+        self.cs_hb = 0
+
+        self.wagman_info = {}
+
+        # Socket to talk to server
+        context = zmq.Context()
+        self.socket = context.socket(zmq.SUB)
+        self.socket.setsockopt(zmq.RCVTIMEO, 3000)
+        self.socket.setsockopt(zmq.SUBSCRIBE, ''.encode('latin-1'))
+        self.socket.connect ('ipc:///tmp/zeromq_wagman-pub')
+
         # Wait 40 seconds for other services preparing to run
         # TODO: need to know when all system/services are green so this report can send right information of the current system status.
         time.sleep(40)
