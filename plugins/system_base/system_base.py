@@ -409,6 +409,5 @@ class base_plugin(waggle.pipeline.Plugin):
 register = base_plugin.register
 
 if __name__ == '__main__':
-    plugin = base_plugin()
-    plugin.add_handler(waggle.pipeline.LogHandler())
+    plugin = base_plugin.defaultConfig()
     plugin.run()
