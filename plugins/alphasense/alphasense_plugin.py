@@ -65,6 +65,5 @@ class AlphasensePlugin(waggle.pipeline.Plugin):
 register = AlphasensePlugin.register
 
 if __name__ == '__main__':
-    plugin = AlphasensePlugin()
-    plugin.add_handler(waggle.pipeline.LogHandler())
+    plugin = AlphasensePlugin.defaultConfig()
     plugin.run()
