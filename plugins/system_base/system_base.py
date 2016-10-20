@@ -309,6 +309,7 @@ class base_plugin(waggle.pipeline.Plugin):
 
         # Get whitelist
         whitelist = get_white_list()
+
         if 'error:' in whitelist:
             whitelist = []
 
@@ -316,41 +317,35 @@ class base_plugin(waggle.pipeline.Plugin):
         autoplugins = self.get_autostart_dict("/dev/")
         delete_plugins = []
 
-        # notifier = Notifier(wm, PTmp())
-        # wdd = wm.add_watch(path, mask, rec=True)
         while True:
+            for device, plugin in autoplugins.items():
+                if not os.path.islink(device) and not os.path.isfile(device):
+                    continue
 
-            # Check if predefined serial port is recognizable (sensor attached)
-            # try:
-            #     notifier.process_events()
-            #     if notifier.check_events():
-            #         notifier.read_events()
-            # except Exception as e:
-            #     notifier.stop()
-            for device in autoplugins:
-                plugin = autoplugins[device]
-                # Check if the device is attached or not, based on device_rules in waggle_image
-                if os.path.islink(device) or os.path.isfile(device):
-                    if plugin in whitelist:
-                        continue
-                    elif plugin == '':
-                        continue
-                    else:
-                        # Check if plugin alive
-                        cmd = "info %s" % (plugin)
-                        ret = self.send_command(cmd)
-                        if 'status' in ret and ret['status'] == 'success':
-                            continue
-                        else:
-                            # Start the plugin
-                            logger.debug("Try to start %s" % (plugin))
-                            cmd = "start %s" % (plugin)
-                            ret = self.send_command(cmd)
-                            if 'status' in ret and ret['status'] == 'success':
-                                logger.debug("%s is up and running" % (plugin))
-                                delete_plugins.append(device)
-                            else:
-                                logger.debug("%s failed to start" % (plugin))
+                if plugin in whitelist:
+                    continue
+
+                if plugin in whitelist:
+                    continue
+
+                if plugin == '':
+                    continue
+
+                # Check if plugin alive
+                cmd = "info %s" % (plugin)
+                ret = self.send_command(cmd)
+                if ret is not None and 'status' in ret and ret['status'] == 'success':
+                    continue
+
+                # Start the plugin
+                logger.debug("Try to start %s" % (plugin))
+                cmd = "start %s" % (plugin)
+                ret = self.send_command(cmd)
+                if ret is not None and 'status' in ret and ret['status'] == 'success':
+                    logger.debug("%s is up and running" % (plugin))
+                    delete_plugins.append(device)
+                else:
+                    logger.debug("%s failed to start" % (plugin))
 
             if delete_plugins:
                 for device in delete_plugins:
@@ -359,11 +354,11 @@ class base_plugin(waggle.pipeline.Plugin):
 
             # Check the current status of Wagman and report
             ret = self.get_wagman_info()
-            if ret:
+            if ret is not None:
                 data = ['{}:{}'.format(keys, ret[keys]) for keys in ret]
                 self.send('wagman_info', data)
 
-            #time.sleep(3)
+            # time.sleep(3)
 
 register = base_plugin.register
 
