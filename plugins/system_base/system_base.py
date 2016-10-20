@@ -122,41 +122,6 @@ def get_service_list():
         ret = "error on getting waggle-service list: %s" % (str(e))
     return ret
 
-# def initialize_plugin():
-#     if plugin in whitelist:
-#         continue
-#     elif plugin == '':
-#         continue
-#     else:
-#         # Check if plugin alive
-#         cmd = "info %s" % (plugin)
-#         ret = self.send_command(cmd)
-#         if 'status' in ret and ret['status'] == 'success':
-#             continue
-#         else:
-#             # Start the plugin
-#             logger.debug("Try to start %s" % (plugin))
-#             cmd = "start %s" % (plugin)
-#             ret = self.send_command(cmd)
-#             if 'status' in ret and ret['status'] == 'success':
-#                 logger.debug("%s is up and running" % (plugin))
-#                 delete_plugins.append(device)
-#             else:
-#                 logger.debug("%s failed to start" % (plugin))
-
-# class PTmp(ProcessEvent):
-#     def process_IN_IGNORED (self, event):
-#         pass
-
-#     def process_IN_CREATE(self, event):
-#         global autoplugins
-#         logger.debug("%s detected" % (event.name))
-#         # for device in autoplugins:
-#         #     if device == event.name:
-
-#     def process_IN_DELETE(self, event):
-#         global autoplugins
-#         logger.debug("%s rejected" % (event.name))
 
 class base_plugin(waggle.pipeline.Plugin):
 
@@ -164,12 +129,12 @@ class base_plugin(waggle.pipeline.Plugin):
     plugin_version = '1'
 
     def get_boot_info(self):
-        ret = ""
+        pass
 
     def send_command(self, command, timeout=3):
         socket_file = '/tmp/plugin_manager'
         client_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        #client_sock.setblocking(0)
+        # client_sock.setblocking(0)
 
         client_sock.settimeout(timeout)
         try:
@@ -180,7 +145,7 @@ class base_plugin(waggle.pipeline.Plugin):
             return None
 
         try:
-            client_sock.sendall(command.encode())
+            client_sock.sendall(command)
         except Exception as e:
             print(("Error talking to socket: %s" % (str(e))))
             client_sock.close()
@@ -188,7 +153,7 @@ class base_plugin(waggle.pipeline.Plugin):
 
         #ready = select.select([mysocket], [], [], timeout_in_seconds)
         try:
-            data = client_sock.recv(2048).decode() #TODO need better solution
+            data = client_sock.recv(2048).decode() # TODO need better solution
         except Exception as e:
             print(("Error reading socket: %s" % (str(e))))
             client_sock.close()
@@ -226,19 +191,19 @@ class base_plugin(waggle.pipeline.Plugin):
         data['shutdowns'] = get_shutdown_info(4)
         data['temperature'] = get_current_cpu_temp()
 
-        return ['{}:{}'.format(keys, data[keys]).encode('iso-8859-1') for keys in data]
+        return ['{}:{}'.format(keys, data[keys]) for keys in data]
 
     def collect_service_info(self):
         data = {}
         data['whitelist'] = get_white_list()
         data['services'] = get_service_list()
 
-        return ['{}:{}'.format(keys, data[keys]).encode('iso-8859-1') for keys in data]
+        return ['{}:{}'.format(keys, data[keys]) for keys in data]
 
     def collect_plugin_info(self):
         data = {}
 
-        return ['{}:{}'.format(keys, data[keys]).encode('iso-8859-1') for keys in data]
+        return ['{}:{}'.format(keys, data[keys]) for keys in data]
 
 
     #********** SH_TEST_START
@@ -331,8 +296,8 @@ class base_plugin(waggle.pipeline.Plugin):
         context = zmq.Context()
         self.socket = context.socket(zmq.SUB)
         self.socket.setsockopt(zmq.RCVTIMEO, 3000)
-        self.socket.setsockopt(zmq.SUBSCRIBE, ''.encode('latin-1'))
-        self.socket.connect ('ipc:///tmp/zeromq_wagman-pub')
+        self.socket.setsockopt(zmq.SUBSCRIBE, b'')
+        self.socket.connect('ipc:///tmp/zeromq_wagman-pub')
 
         # Wait 40 seconds for other services preparing to run
         # TODO: need to know when all system/services are green so this report can send right information of the current system status.
@@ -395,7 +360,7 @@ class base_plugin(waggle.pipeline.Plugin):
             # Check the current status of Wagman and report
             ret = self.get_wagman_info()
             if ret:
-                data = ['{}:{}'.format(keys, ret[keys]).encode('iso-8859-1') for keys in ret]
+                data = ['{}:{}'.format(keys, ret[keys]) for keys in ret]
                 self.send('wagman_info', data)
 
             #time.sleep(3)
