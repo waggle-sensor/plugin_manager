@@ -1,0 +1,13 @@
+[Unit]
+Description=Base monitoring plugin.
+After=network.target
+
+[Service]
+WorkingDirectory=/usr/lib/waggle/plugin_manager/plugins/system_base
+ExecStart=/usr/lib/waggle/plugin_manager/plugins/system_base/system_base.py
+
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

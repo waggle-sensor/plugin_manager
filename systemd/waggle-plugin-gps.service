@@ -1,0 +1,13 @@
+[Unit]
+Description=GPS plugin.
+After=network.target
+
+[Service]
+WorkingDirectory=/usr/lib/waggle/plugin_manager/plugins/gps/
+ExecStart=/usr/lib/waggle/plugin_manager/plugins/gps/gps_plugin.py
+
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=Coresense 3.1 plugin.
+After=network.target
+
+[Service]
+WorkingDirectory=/usr/lib/waggle/plugin_manager/plugins/coresense_3
+ExecStart=/usr/lib/waggle/plugin_manager/plugins/coresense_3/plugin.py
+
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
