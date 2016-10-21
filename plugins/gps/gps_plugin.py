@@ -45,6 +45,5 @@ class GPSPlugin(waggle.pipeline.Plugin):
 register = GPSPlugin.register
 
 if __name__ == '__main__':
-    plugin = GPSPlugin()
-    plugin.add_handler(waggle.pipeline.LogHandler())
+    plugin = GPSPlugin.defaultConfig()
     plugin.run()
