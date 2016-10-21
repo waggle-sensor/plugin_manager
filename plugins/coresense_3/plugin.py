@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import waggle.pipeline
 import time
 import sys
@@ -29,11 +30,5 @@ class CoresensePlugin(waggle.pipeline.Plugin):
 register = CoresensePlugin.register
 
 if __name__ == '__main__':
-    # allows for post processing of data
-    def callback(sensor, data):
-        pass
-
-    plugin = CoresensePlugin()
-    plugin.add_handler(waggle.pipeline.LogHandler())
-    plugin.add_handler(waggle.pipeline.CallbackHandler(callback))
+    plugin = CoresensePlugin.defaultConfig()
     plugin.run()
