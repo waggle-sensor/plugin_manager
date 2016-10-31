@@ -271,15 +271,15 @@ class base_plugin(waggle.pipeline.Plugin):
                 if self.nc_hb == 0:
                     self.wagman_info['hbeat_nc'] = "NA"
                 else:
-                    self.wagman_info['hbeat_nc'] = str(int(time.time() - self.nc_hb))
+                    self.wagman_info['hbeat_nc'] = str(int(time.time() - self.nc_hb)) + " sec ago"
                 if self.gn_hb == 0:
                     self.wagman_info['hbeat_gn'] = "NA"
                 else:
-                    self.wagman_info['hbeat_gn'] = str(int(time.time() - self.gn_hb))
+                    self.wagman_info['hbeat_gn'] = str(int(time.time() - self.gn_hb)) + " sec ago"
                 if self.cs_hb == 0:
                     self.wagman_info['hbeat_cs'] = "NA"
                 else:
-                    self.wagman_info['hbeat_cs'] = str(int(time.time() - self.cs_hb))
+                    self.wagman_info['hbeat_cs'] = str(int(time.time() - self.cs_hb)) + " sec ago"
 
                 ret = self.wagman_info
                 self.wagman_info = {}
