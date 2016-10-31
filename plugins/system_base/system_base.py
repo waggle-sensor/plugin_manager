@@ -239,42 +239,47 @@ class base_plugin(waggle.pipeline.Plugin):
 
         if prefix == "nc":
             if content == "heartbeat":
-                self.nc_hb += 1
+                self.nc_hb = time.time()
             else:
                 if not 'nc_info' in self.wagman_info:
                     self.wagman_info['nc_info'] = content
                 else:
-                    self.wagman_info['nc_info'] += content
+                    self.wagman_info['nc_info'] += ', ' + content
 
         elif prefix == "gn":
             if content == "heartbeat":
-                self.gn_hb += 1
+                self.gn_hb = time.time()
             else:
                 if not 'gn_info' in self.wagman_info:
                     self.wagman_info['gn_info'] = content
                 else:
-                    self.wagman_info['gn_info'] += content
+                    self.wagman_info['gn_info'] +=  ', ' + content
 
         elif prefix == "cs":
             if content == "heartbeat":
-                self.cs_hb += 1
+                self.cs_hb = time.time()
             else:
                 if not 'cs_info' in self.wagman_info:
                     self.wagman_info['cs_info'] = content
                 else:
-                    self.wagman_info['cs_info'] += content
+                    self.wagman_info['cs_info'] +=  ', ' + content
 
         else:
             self.wagman_info[prefix] = content
 
             if prefix == "media":
-                self.wagman_info['hbeat_nc'] = str(self.nc_hb) + "/6"
-                self.wagman_info['hbeat_gn'] = str(self.gn_hb) + "/6"
-                self.wagman_info['hbeat_cs'] = str(self.cs_hb) + "/6"
-
-                self.nc_hb = 0
-                self.gn_hb = 0
-                self.cs_hb = 0
+                if self.nc_hb == 0:
+                    self.wagman_info['hbeat_nc'] = "NA"
+                else:
+                    self.wagman_info['hbeat_nc'] = str(int(time.time() - self.nc_hb))
+                if self.gn_hb == 0:
+                    self.wagman_info['hbeat_gn'] = "NA"
+                else:
+                    self.wagman_info['hbeat_gn'] = str(int(time.time() - self.gn_hb))
+                if self.cs_hb == 0:
+                    self.wagman_info['hbeat_cs'] = "NA"
+                else:
+                    self.wagman_info['hbeat_cs'] = str(int(time.time() - self.cs_hb))
 
                 ret = self.wagman_info
                 self.wagman_info = {}
