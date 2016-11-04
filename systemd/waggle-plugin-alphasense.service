@@ -1,0 +1,13 @@
+[Unit]
+Description=Alphasense OPC-N2 plugin.
+After=network.target
+
+[Service]
+WorkingDirectory=/usr/lib/waggle/plugin_manager/plugins/alphasense
+ExecStart=/usr/lib/waggle/plugin_manager/plugins/alphasense/alphasense_plugin.py
+
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
