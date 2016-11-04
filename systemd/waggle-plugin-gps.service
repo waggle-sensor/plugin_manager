@@ -1,6 +1,6 @@
 [Unit]
 Description=GPS plugin.
-After=network.target
+After=network.target waggle-epoch.service rabbitmq-server.service
 
 [Service]
 WorkingDirectory=/usr/lib/waggle/plugin_manager/plugins/gps/
