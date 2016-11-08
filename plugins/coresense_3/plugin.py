@@ -14,10 +14,10 @@ class CoresensePlugin(waggle.pipeline.Plugin):
     plugin_version = '3'
 
     def run(self):
-        print('Connecting to {}'.format(device), flush=True)
+        print('Connecting to device: {}'.format(device), flush=True)
 
         with create_connection(device) as conn:
-            print('Connected to {}'.format(device), flush=True)
+            print('Connected to device: {}'.format(device), flush=True)
 
             while True:
                 message = conn.recv()

@@ -2,18 +2,13 @@
 import logging
 import time
 import waggle.pipeline
-from contextlib import closing
 import sys
-
-try:
-    from .alphasense import Alphasense
-except:
-    from alphasense import Alphasense
+import os
+from alphasense import Alphasense
+from contextlib import closing
 
 
-logger = logging.getLogger('alphasense')
-logger.setLevel(logging.DEBUG)
-
+device = os.environ.get('ALPHASENSE_DEVICE', '/dev/alphasense')
 
 class AlphasensePlugin(waggle.pipeline.Plugin):
 
@@ -21,21 +16,20 @@ class AlphasensePlugin(waggle.pipeline.Plugin):
     plugin_version = '1'
 
     def run(self):
-        if len(sys.argv) == 2:
-            device = sys.argv[1]
-        else:
-            device = '/dev/alphasense'
+        print('Connecting to device: {}'.format(device), flush=True)
 
         with closing(Alphasense(device)) as alphasense:
-            logger.info('setting alphasense fan power')
+            print('Connected to device: {}'.format(device), flush=True)
+
+            print('Setting OPN-N2 fan power.', flush=True)
             alphasense.set_fan_power(255)
             time.sleep(3)
 
-            logger.info('setting alphasense laser power')
+            print('Setting OPN-N2 laser power.', flush=True)
             alphasense.set_laser_power(190)
             time.sleep(3)
 
-            logger.info('powering alphasense on')
+            print('Powering OPN-N2 on.', flush=True)
             alphasense.power_on()
             time.sleep(3)
 
@@ -61,9 +55,5 @@ class AlphasensePlugin(waggle.pipeline.Plugin):
                     self.send('histogram', histogram)
                     time.sleep(10)
 
-
-register = AlphasensePlugin.register
-
-if __name__ == '__main__':
-    plugin = AlphasensePlugin.defaultConfig()
-    plugin.run()
+plugin = AlphasensePlugin.defaultConfig()
+plugin.run()
