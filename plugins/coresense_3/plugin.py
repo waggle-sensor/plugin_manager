@@ -2,11 +2,11 @@
 import waggle.pipeline
 import time
 import sys
-try:
-    from .coresense import create_connection
-except:
-    from coresense import create_connection
+import os
+from coresense import create_connection
 
+
+device = os.environ.get('CORESENSE_DEVICE', '/dev/waggle_coresense')
 
 class CoresensePlugin(waggle.pipeline.Plugin):
 
@@ -14,21 +14,17 @@ class CoresensePlugin(waggle.pipeline.Plugin):
     plugin_version = '3'
 
     def run(self):
-        if len(sys.argv) == 2:
-            device = sys.argv[1]
-        else:
-            device = '/dev/waggle_coresense'
+        print('Connecting to {}'.format(device), flush=True)
 
         with create_connection(device) as conn:
+            print('Connected to {}'.format(device), flush=True)
+
             while True:
                 message = conn.recv()
                 if message is not None:
+                    print('Received frame.', flush=True)
                     self.send(sensor='frame', data=message.frame)
                 time.sleep(5)
 
-
-register = CoresensePlugin.register
-
-if __name__ == '__main__':
-    plugin = CoresensePlugin.defaultConfig()
-    plugin.run()
+plugin = CoresensePlugin.defaultConfig()
+plugin.run()
