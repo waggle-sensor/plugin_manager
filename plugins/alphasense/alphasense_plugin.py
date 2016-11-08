@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-import logging
-import time
 import waggle.pipeline
+import time
 import sys
 import os
 from alphasense import Alphasense
