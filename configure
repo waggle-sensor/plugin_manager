@@ -52,6 +52,7 @@ systemctl disable waggle-plugin-manager.service
 systemctl enable waggle-plugin-alphasense.service
 systemctl enable waggle-plugin-coresense.service
 systemctl enable waggle-plugin-gps.service
+#systemctl enable waggle-plugin-facedetection.service
 
 
 set +x

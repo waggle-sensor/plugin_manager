@@ -1,0 +1,13 @@
+[Unit]
+Description=Face detection demo.
+After=network.target waggle-epoch.service rabbitmq-server.service
+
+[Service]
+WorkingDirectory=/usr/lib/waggle/plugin_manager/plugins/facedetection/
+ExecStart=/usr/lib/waggle/plugin_manager/plugins/facedetection/facedetection.py
+
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
