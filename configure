@@ -5,8 +5,9 @@ set -e
 
 export current_dir="$(pwd)"
 
-pip3 install git+https://github.com/waggle-sensor/pywaggle
-pip install git+https://github.com/waggle-sensor/pywaggle
+pywaggle_tag="v0.8.0"
+pip install git+https://github.com/waggle-sensor/pywaggle@${pywaggle_tag}
+pip3 install git+https://github.com/waggle-sensor/pywaggle@${pywaggle_tag}
 
 
 # set node controller IP for "internal" network
