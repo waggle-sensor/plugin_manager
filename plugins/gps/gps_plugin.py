@@ -25,6 +25,7 @@ class GPSPlugin(waggle.pipeline.Plugin):
 
                 if not parsed_data.lat:
                     logging.warn('gps could not lock')
+                    time.sleep(10)
                     continue
 
                 try:
