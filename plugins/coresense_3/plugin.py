@@ -14,17 +14,21 @@ class CoresensePlugin(waggle.pipeline.Plugin):
     plugin_version = '3'
 
     def run(self):
-        print('Connecting to device: {}'.format(device), flush=True)
+        while True:
+          try:
+            print('Connecting to device: {}'.format(device), flush=True)
 
-        with create_connection(device) as conn:
-            print('Connected to device: {}'.format(device), flush=True)
+            with create_connection(device) as conn:
+                print('Connected to device: {}'.format(device), flush=True)
 
-            while True:
-                message = conn.recv()
-                if message is not None:
-                    print('Received frame.', flush=True)
-                    self.send(sensor='frame', data=message.frame)
-                time.sleep(5)
+                while True:
+                    message = conn.recv()
+                    if message is not None:
+                        print('Received frame.', flush=True)
+                        self.send(sensor='frame', data=message.frame)
+                    time.sleep(5)
+          except NoPacketError:
+              print('No packets are being received. Resetting the serial connection...')
 
 plugin = CoresensePlugin.defaultConfig()
 plugin.run()
