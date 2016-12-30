@@ -5,6 +5,8 @@ from serial import Serial, SerialException
 from contextlib import contextmanager
 import time
 
+class NoPacketError(Exception):
+    pass
 
 START_BYTE = b'\xaa'
 END_BYTE = 0x55
@@ -43,6 +45,9 @@ class Connection(object):
             # get more data from device
             if self.serial.inWaiting() > 0:
                 self.data.extend(self.serial.read(self.serial.inWaiting()))
+            else:
+                failures += 1
+                time.sleep(2)
 
             # either align to possible packet or drop non-existent frame
             try:
@@ -63,12 +68,14 @@ class Connection(object):
                     self.data[0] = 0  # clear frame byte to allow other packets
 
                     if end == END_BYTE and crc == crc8(body):
+                        failures = 0
                         return frame, body
 
                     failures += 1
 
-                    if failures >= 10:
-                        raise NoPacketError(failures)
+            if failures >= 10:
+                raise NoPacketError(failures)
+
             # prevent consuming huge CPU recource
             time.sleep(1)
 
