@@ -3,7 +3,7 @@ import waggle.pipeline
 import time
 import sys
 import os
-from coresense import create_connection
+from coresense import create_connection, NoPacketError
 
 
 device = os.environ.get('CORESENSE_DEVICE', '/dev/waggle_coresense')
