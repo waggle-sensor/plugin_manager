@@ -48,7 +48,6 @@ rm -f /etc/supervisor/conf.d/waggle_plugin_manager.conf
 
 # copy systemd scripts
 cp ${current_dir}/systemd/waggle-* /etc/systemd/system
-systemctl disable waggle-plugin-manager.service
 systemctl enable waggle-plugin-alphasense.service
 systemctl enable waggle-plugin-coresense.service
 systemctl enable waggle-plugin-gps.service
