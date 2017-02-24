@@ -183,6 +183,11 @@ class Alphasense(object):
     def set_fan_power(self, power):
         self.transfer([0x42, 0x00, power])
 
+    def get_serial_number(self):
+        self.transfer([0x10])
+        sleep(0.01)
+        return self.transfer([0] * 16)
+
     def get_firmware_version(self):
         self.transfer([0x3F])
         sleep(0.01)
@@ -224,6 +229,9 @@ if __name__ == '__main__':
     sleep(3)
 
     version = alphasense.get_firmware_version()
+    sleep(1)
+
+    serial_number = alphasense.get_serial_number()
     sleep(1)
 
     config = alphasense.get_config_data()

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import logging
+import os.path
 import pynmea2
 from serial import Serial
 import waggle.pipeline
@@ -14,9 +15,14 @@ class GPSPlugin(waggle.pipeline.Plugin):
 
     plugin_name = 'gps'
     plugin_version = '1'
+    device_file = '/dev/gps_module'
 
     def run(self):
-        serial = Serial('/dev/gps_module', timeout=180)
+        # don't bother trying to connect to the GPS device if it doesn't exist
+        while not os.path.isfile(device_file) :
+          time.sleep(10)
+
+        serial = Serial(device_file, timeout=180)
 
         while True:
             line = serial.readline().decode()
