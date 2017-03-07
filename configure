@@ -47,12 +47,11 @@ rm -f /etc/supervisor/conf.d/waggle_plugin_manager.conf
 #cp ./upstart/waggle-* /etc/init/
 
 # copy systemd scripts
-cp ${current_dir}/systemd/waggle-* /etc/systemd/system
-systemctl disable waggle-plugin-manager.service
+cp ${current_dir}/etc/systemd/system/waggle-* /etc/systemd/system
 systemctl enable waggle-plugin-alphasense.service
 systemctl enable waggle-plugin-coresense.service
 systemctl enable waggle-plugin-gps.service
-#systemctl enable waggle-plugin-facedetection.service
+systemctl disable waggle-plugin-facedetection.service
 
 
 set +x
