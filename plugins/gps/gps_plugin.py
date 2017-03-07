@@ -12,10 +12,9 @@ logger.setLevel(logging.DEBUG)
 
 
 class GPSPlugin(waggle.pipeline.Plugin):
-    def __init__(self):
-        self.plugin_name = 'gps'
-        self.plugin_version = '1'
-        self.device_file = '/dev/gps_module'
+    plugin_name = 'gps'
+    plugin_version = '1'
+    device_file = '/dev/gps_module'
 
     def run(self):
         # don't bother trying to connect to the GPS device if it doesn't exist
