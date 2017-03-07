@@ -5,10 +5,6 @@ set -e
 
 export current_dir="$(pwd)"
 
-pip3 install git+https://github.com/waggle-sensor/pywaggle
-pip install git+https://github.com/waggle-sensor/pywaggle
-
-
 # set node controller IP for "internal" network
 if [ ! -e /etc/waggle/node_controller_host ] ; then
   echo "10.31.81.10" > /etc/waggle/node_controller_host
@@ -28,9 +24,6 @@ fi
 
 
 ln -sf /usr/lib/waggle/plugin_manager/waggle-plugins.py /usr/bin/waggle-plugins
-
-#change this to offline install
-./scripts/install_dependencies.sh
 
 # daemons
 mkdir -p /var/log/waggle
