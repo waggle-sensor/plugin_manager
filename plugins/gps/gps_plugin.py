@@ -8,7 +8,8 @@ import time
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARN)
+logging.basicConfig(level=logging.WARN)
 
 
 class GPSPlugin(waggle.pipeline.Plugin):
@@ -18,7 +19,8 @@ class GPSPlugin(waggle.pipeline.Plugin):
 
     def run(self):
         # don't bother trying to connect to the GPS device if it doesn't exist
-        while not os.path.isfile(self.device_file) :
+        while not os.path.islink(self.device_file) :
+          logger.debug("waiting 10 seconds for", self.device_file, "to appear")
           time.sleep(10)
 
         serial = Serial(self.device_file, timeout=180)
@@ -29,7 +31,7 @@ class GPSPlugin(waggle.pipeline.Plugin):
                 parsed_data = pynmea2.parse(line)
 
                 if not parsed_data.lat:
-                    logging.warn('gps could not lock')
+                    logger.warn('gps could not lock')
                     time.sleep(10)
                     continue
 
@@ -42,10 +44,11 @@ class GPSPlugin(waggle.pipeline.Plugin):
                                                                            lon_degree, lon_minute, parsed_data.lon_dir,
                                                                            parsed_data.altitude, parsed_data.altitude_units.lower())
 
+                    logger.debug(data_string)
                     self.send('gps', data_string)
                     time.sleep(10)
                 except Exception as e:
-                    logging.exception(e)
+                    logger.exception(e)
 
 
 register = GPSPlugin.register
