@@ -16,7 +16,7 @@ class AlphasensePlugin(waggle.pipeline.Plugin):
 
     def run(self):
         # don't bother trying to connect to the alphasense if it doesn't exist
-        while not os.path.isfile(device) :
+        while not os.path.islink(device) :
           time.sleep(10)
 
         print('Connecting to device: {}'.format(device), flush=True)
