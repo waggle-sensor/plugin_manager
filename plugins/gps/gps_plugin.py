@@ -43,12 +43,13 @@ class GPSPlugin(waggle.pipeline.Plugin):
                     data_string = '%s*%s\'%s,%s*%s\'%s,%s%s' % (lat_degree, lat_minute, parsed_data.lat_dir,
                                                                            lon_degree, lon_minute, parsed_data.lon_dir,
                                                                            parsed_data.altitude, parsed_data.altitude_units.lower())
-
-                    logger.debug(data_string)
-                    self.send('gps', data_string)
-                    time.sleep(10)
                 except Exception as e:
                     logger.exception(e)
+                    time.sleep(10)
+                    continue
+                logger.debug(data_string)
+                self.send('gps', data_string)
+                time.sleep(10)
 
 
 register = GPSPlugin.register
