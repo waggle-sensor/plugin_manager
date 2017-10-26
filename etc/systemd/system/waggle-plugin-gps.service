@@ -1,6 +1,7 @@
 [Unit]
 Description=GPS plugin.
 After=waggle-platform.target
+ConditionPathExists=/dev/gps_module
 
 [Service]
 WorkingDirectory=/usr/lib/waggle/plugin_manager/plugins/gps/

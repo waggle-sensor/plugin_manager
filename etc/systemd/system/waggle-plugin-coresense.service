@@ -1,6 +1,7 @@
 [Unit]
 Description=Coresense 3.1 plugin.
 After=waggle-platform.target
+ConditionPathExists=/dev/waggle_coresense
 
 [Service]
 WorkingDirectory=/usr/lib/waggle/plugin_manager/plugins/coresense_3

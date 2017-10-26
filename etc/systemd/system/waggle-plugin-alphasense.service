@@ -1,6 +1,7 @@
 [Unit]
 Description=Alphasense OPC-N2 plugin.
 After=waggle-platform.target
+ConditionPathExists=/dev/alphasense
 
 [Service]
 WorkingDirectory=/usr/lib/waggle/plugin_manager/plugins/alphasense
