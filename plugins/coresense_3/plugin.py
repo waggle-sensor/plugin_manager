@@ -30,5 +30,8 @@ class CoresensePlugin(waggle.pipeline.Plugin):
           except NoPacketError:
               print('No packets are being received. Resetting the serial connection...')
 
-plugin = CoresensePlugin.defaultConfig()
-plugin.run()
+if os.path.exists(device):
+    plugin = CoresensePlugin.defaultConfig()
+    plugin.run()
+else:
+    exit(1)

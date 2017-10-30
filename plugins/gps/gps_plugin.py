@@ -11,19 +11,15 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARN)
 logging.basicConfig(level=logging.WARN)
 
+device = os.environ.get('GPS_DEVICE', '/dev/gps_module')
+
 
 class GPSPlugin(waggle.pipeline.Plugin):
     plugin_name = 'gps'
     plugin_version = '1'
-    device_file = '/dev/gps_module'
 
     def run(self):
-        # don't bother trying to connect to the GPS device if it doesn't exist
-        while not os.path.islink(self.device_file) :
-          logger.debug("waiting 10 seconds for", self.device_file, "to appear")
-          time.sleep(10)
-
-        serial = Serial(self.device_file, timeout=180)
+        serial = Serial(device, timeout=180)
 
         while True:
             line = serial.readline().decode()
@@ -51,9 +47,8 @@ class GPSPlugin(waggle.pipeline.Plugin):
                 self.send('gps', data_string)
                 time.sleep(10)
 
-
-register = GPSPlugin.register
-
-if __name__ == '__main__':
+if os.path.exists(device):
     plugin = GPSPlugin.defaultConfig()
     plugin.run()
+else:
+    exit(1)

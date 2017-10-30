@@ -58,5 +58,8 @@ class AlphasensePlugin(waggle.pipeline.Plugin):
                     self.send('histogram', histogram)
                     time.sleep(10)
 
-plugin = AlphasensePlugin.defaultConfig()
-plugin.run()
+if os.path.exists(device):
+    plugin = AlphasensePlugin.defaultConfig()
+    plugin.run()
+else:
+    exit(1)
