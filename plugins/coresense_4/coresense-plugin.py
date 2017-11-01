@@ -20,22 +20,23 @@ class DeviceHandler(object):
         while True:
             if self.serial.inWaiting() > 0:
                 data.extend(self.serial.read(self.serial.inWaiting()))
-                if 0x55 in data:
+                if 'end' in data:
                     return data
 
 
     def request_data(self, sensors):
         # Packaging
-        data_type = 0x00 # request
-        protocol = 0x02
-        sequence = 0x80
         buffer = bytearray()
         buffer.append(0xAA) # preamble
-        buffer.append(0x00) # data type ( request )
-        buffer.append(0x02) # protocol ( 2 )
+        buffer.append(0x02) # data type ( request )
         buffer.append(0x80) # sequence ( 0 )
-        buffer.append(len(sensors))
-        buffer.append(sensors)
+        data = bytearray()
+        for sensor in sensors:
+            data.append(0x21)
+            data.append(sensor)
+        buffer.append(len(data))
+        buffer.extend(data)
+        buffer.append(0x00) # crc
         buffer.append(0x55) # postscript
 
         self.serial.write(bytes(buffer))
@@ -74,7 +75,7 @@ class CoresensePlugin4(object):
     def run(self):
         while True:
             # Blocking function
-            message = self.input_handler.request_data(_get_requests())
+            message = self.input_handler.request_data(self._get_requests())
             print(message)
 
             if self.beehive:
@@ -85,6 +86,7 @@ class CoresensePlugin4(object):
                 # Print in human readable form
             else:
                 # Print received packet
+                pass
 
             time.sleep(0.5)
 
