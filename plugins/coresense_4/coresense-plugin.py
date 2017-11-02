@@ -5,12 +5,19 @@ import os
 import argparse
 from serial import Serial, SerialException
 
+from waggle.protocol import decode_frame, convert
+
 device = os.environ.get('CORESENSE_DEVICE', '/dev/waggle_coresense')
 
 
 class DeviceHandler(object):
     def __init__(self, device):
-        self.serial = Serial(device, timeout=180)
+        self.serial = Serial(device, baudrate=115200, timeout=180)
+
+        self.START_BYTE = 0xAA
+        self.END_BYTE = 0x55
+        self.HEADER_SIZE = 4
+        self.HEADER_SIZE = 2
 
     def close(self):
         self.serial.close()
@@ -20,11 +27,25 @@ class DeviceHandler(object):
         while True:
             if self.serial.inWaiting() > 0:
                 data.extend(self.serial.read(self.serial.inWaiting()))
-                if 'end' in data:
-                    return data
+                try:
+                    del data[:data.index(self.START_BYTE)]
+                except ValueError:
+                    del data[:]
+
+                if len(data) >= self.HEADER_SIZE:
+                    packet_length = data[4]
+                    if len(data) >= self.HEADER_SIZE + length + self.FOOTER_SIZE:
+                        packet = data[:self.HEADER_SIZE + length + self.FOOTER_SIZE]
+                        del data[:len(packet)]
+                        return packet
+
+            else:
+                time.sleep(0.1)
 
 
     def request_data(self, sensors):
+        if sensors == []:
+            return None
         # Packaging
         buffer = bytearray()
         buffer.append(0xAA) # preamble
@@ -68,25 +89,30 @@ class CoresensePlugin4(object):
             s = self.sensors[sensor]
             if s['last_updated'] + s['interval'] < current_time:
                 requests.append(s['sensor_id'])
-                s['interval'] = current_time
-            self.sensors[sensor] = s
+                s['last_updated'] = current_time
+                self.sensors[sensor] = s
         return requests
+
+    def _print(packets, hrf=False):
+        decoded = decode_frame(packets)
+        print(decoded)
 
     def run(self):
         while True:
             # Blocking function
             message = self.input_handler.request_data(self._get_requests())
-            print(message)
+            if message not None:
+                print('Error: Received None!')
 
             if self.beehive:
                 pass
                 # Send it to beehive
             elif self.hrf:
-                pass
+                _print(message, hrf=True)
                 # Print in human readable form
             else:
                 # Print received packet
-                pass
+                _print(message, hrf=False)
 
             time.sleep(0.5)
 
