@@ -34,7 +34,7 @@ class DeviceHandler(object):
                     del data[:]
                 
                 if len(data) >= self.HEADER_SIZE:
-                    packet_length = data[4]
+                    packet_length = data[3]
                     if len(data) >= self.HEADER_SIZE + packet_length + self.FOOTER_SIZE:
                         packet = data[:self.HEADER_SIZE + packet_length + self.FOOTER_SIZE]
                         del data[:len(packet)]
@@ -94,14 +94,23 @@ class CoresensePlugin4(object):
 
     def _print(self, packets, hrf=False):
         decoded = decode_frame(packets)
-        print(decoded)
+
+        if isinstance(decoded, dict):
+            for item in decoded:
+                for entity in decoded[item]:
+                    entity_value = decoded[item][entity]
+                    converted_value = convert(entity_value, item, entity)
+                    print(converted_value)
+        else:
+            print('Error: Could not decode the packet %s' % (str(decoded),))
+
 
     def run(self):
         while True:
             # Blocking function
             requests = self._get_requests()
             if len(requests) > 0:
-            message = self.input_handler.request_data(requests)
+                message = self.input_handler.request_data(requests)
                 if message is None:
                     print('Error: Received None!')
                 else:
@@ -122,8 +131,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     sensor_table = {
-        'MetMAC': { 'sensor_id': 0x00, 'interval': 3 },
-        # 'TMP112': {'sensor_id': 0x01, 'interval': 1 },
+        'MetMAC': { 'sensor_id': 0x00, 'interval': 5 },
+        'TMP112': {'sensor_id': 0x01, 'interval': 5 },
+        'HTU21D': {'sensor_id': 0x02, 'interval': 5 },
     }
 
     handler = None
