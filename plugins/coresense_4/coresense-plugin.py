@@ -38,6 +38,7 @@ class DeviceHandler(object):
                     if len(data) >= self.HEADER_SIZE + packet_length + self.FOOTER_SIZE:
                         packet = data[:self.HEADER_SIZE + packet_length + self.FOOTER_SIZE]
                         del data[:len(packet)]
+                        print(packet)
                         return packet
 
             else:
@@ -53,6 +54,7 @@ class DeviceHandler(object):
         data = bytearray()
         for sensor in sensors:
             data.append(0x21)
+            # data.append(0x11)
             data.append(sensor)
         buffer.append(len(data))
         buffer.extend(data)
@@ -97,10 +99,12 @@ class CoresensePlugin4(object):
 
         if isinstance(decoded, dict):
             for item in decoded:
-                for entity in decoded[item]:
-                    entity_value = decoded[item][entity]
-                    converted_value = convert(entity_value, item, entity)
-                    print(converted_value)
+                converted_value = convert(decoded[item], item)
+                print(converted_value)
+                # for entity in decoded[item]:
+                #     entity_value = decoded[item][entity]
+                #     converted_value = convert(entity_value, item, entity)
+                #     print(converted_value)
         else:
             print('Error: Could not decode the packet %s' % (str(decoded),))
 
@@ -131,9 +135,33 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     sensor_table = {
-        'MetMAC': { 'sensor_id': 0x00, 'interval': 5 },
-        'TMP112': {'sensor_id': 0x01, 'interval': 5 },
-        'HTU21D': {'sensor_id': 0x02, 'interval': 5 },
+        # 'MetMAC': { 'sensor_id': 0x00, 'interval': 5 },  #o
+        'TMP112': { 'sensor_id': 0x01, 'interval': 5 },  #o
+        'HTU21D': { 'sensor_id': 0x02, 'interval': 5 },  #o
+        # 'HIH4030': { 'sensor_id': 0x03, 'interval': 5 },  #o
+        # 'BMP180': { 'sensor_id': 0x04, 'interval': 5 },  #o
+        # 'PR103J2': { 'sensor_id': 0x05, 'interval': 5 },  #o
+        # 'TSL250RDMS': { 'sensor_id': 0x06, 'interval': 5 },  #o, light, return raw
+        # 'MMA8452Q': { 'sensor_id': 0x07, 'interval': 5 },  #o
+        # # 'SPV1840LR5H-B': { 'sensor_id': 0x08, 'interval': 5 }
+        # 'TSYS01': { 'sensor_id': 0x09, 'interval': 5 },  #o
+
+        # 'HMC5883L': { 'sensor_id': 0x0A, 'interval': 5 },  #o
+        # 'HIH6130': { 'sensor_id': 0x0B, 'interval': 5 },  #o
+        # 'APDS_9006_020': { 'sensor_id':0x0C, 'interval': 5 },  #o, light, return raw
+        # 'TSL260': { 'sensor_id': 0x0D, 'interval': 5 },  #o, light, return raw
+        # 'TSL250RDLS': { 'sensor_id': 0x0E, 'interval': 5 },  #o, light, return raw
+        # 'MLX75305': { 'sensor_id': 0x0F, 'interval': 5 },  #o, light, return raw
+        # 'ML8511': { 'sensor_id': 0x10, 'interval': 5 },  #o, light, return raw
+        # 'TMP421': { 'sensor_id': 0x13, 'interval': 5 },  #o
+
+        # 'CHEMSENSE': { 'sensor_id': 0x2A, 'interval': 1 },  #o
+        # 'CHEMSENSE': { 'sensor_id': 0x2A, 'interval': 1 },  #o
+        # 'CHEMSENSE': { 'sensor_id': 0x2A, 'interval': 1 },  #o
+
+        # 'AlphaON': { 'sensor_id': 0x2B, 'interval': 1 },  #o
+        'AlphaSerial': { 'sensor_id': 0x29, 'interval': 5 },
+        'AlphaFirmware': { 'sensor_id': 0x30, 'interval': 5 },
     }
 
     handler = None
