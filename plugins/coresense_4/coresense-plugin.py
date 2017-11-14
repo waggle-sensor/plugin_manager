@@ -5,7 +5,7 @@ import os
 import argparse
 from serial import Serial, SerialException
 
-from waggle.protocol.v5.decoder import decode_frame, convert
+from waggle.protocol.v5.decoder import decode_frame, convert, check_crc
 from waggle.protocol.v5.encoder import encode_frame
 
 device = os.environ.get('CORESENSE_DEVICE', '/dev/waggle_coresense')
@@ -25,21 +25,33 @@ class DeviceHandler(object):
 
     def read_response(self):
         data = bytearray()
+        packets = bytearray()
         while True:
-            if self.serial.inWaiting() > 0:
+            if self.serial.inWaiting() > 0 or len(data) > 0:
                 data.extend(self.serial.read(self.serial.inWaiting()))
-                try:
-                    del data[:data.index(self.START_BYTE)]
-                except ValueError:
-                    del data[:]
-                
-                if len(data) >= self.HEADER_SIZE:
-                    packet_length = data[3]
-                    if len(data) >= self.HEADER_SIZE + packet_length + self.FOOTER_SIZE:
-                        packet = data[:self.HEADER_SIZE + packet_length + self.FOOTER_SIZE]
-                        del data[:len(packet)]
-                        print(packet)
-                        return packet
+                print(data)
+                while True:
+                    try:
+                        del data[:data.index(self.START_BYTE)]
+                    except ValueError:
+                        del data[:]
+                    
+                    if len(data) >= self.HEADER_SIZE:
+                        packet_length = data[3]
+                        if len(data) >= self.HEADER_SIZE + packet_length + self.FOOTER_SIZE:
+                            packet = data[:self.HEADER_SIZE + packet_length + self.FOOTER_SIZE]
+                            crc = packet[-2]
+                            if not check_crc(crc, packet[self.HEADER_SIZE:-2]):
+                                return None
+                            sequence = data[2]
+                            packets.extend(packet)
+                            del data[:len(packet)]
+                            if (sequence & 0x80) == 0x80:
+                                return packets
+                            # print(packet)
+                            # return packet
+                    else:
+                        break
 
             else:
                 time.sleep(0.1)
@@ -96,6 +108,7 @@ class CoresensePlugin4(object):
 
     def _print(self, packets, hrf=False):
         decoded = decode_frame(packets)
+        print(decoded)
 
         if isinstance(decoded, dict):
             for item in decoded:
@@ -114,9 +127,10 @@ class CoresensePlugin4(object):
             # Blocking function
             requests = self._get_requests()
             if len(requests) > 0:
+                # print(requests)
                 message = self.input_handler.request_data(requests)
                 if message is None:
-                    print('Error: Received None!')
+                    print('Errors or invalid crc')
                 else:
                     if self.beehive:
                         pass
@@ -136,8 +150,8 @@ if __name__ == '__main__':
 
     sensor_table = {
         # 'MetMAC': { 'sensor_id': 0x00, 'interval': 5 },  #o
-        'TMP112': { 'sensor_id': 0x01, 'interval': 5 },  #o
-        'HTU21D': { 'sensor_id': 0x02, 'interval': 5 },  #o
+        # 'TMP112': { 'sensor_id': 0x01, 'interval': 1 },  #o
+        # 'HTU21D': { 'sensor_id': 0x02, 'interval': 1 },  #o
         # 'HIH4030': { 'sensor_id': 0x03, 'interval': 5 },  #o
         # 'BMP180': { 'sensor_id': 0x04, 'interval': 5 },  #o
         # 'PR103J2': { 'sensor_id': 0x05, 'interval': 5 },  #o
@@ -155,13 +169,16 @@ if __name__ == '__main__':
         # 'ML8511': { 'sensor_id': 0x10, 'interval': 5 },  #o, light, return raw
         # 'TMP421': { 'sensor_id': 0x13, 'interval': 5 },  #o
 
-        # 'CHEMSENSE': { 'sensor_id': 0x2A, 'interval': 1 },  #o
-        # 'CHEMSENSE': { 'sensor_id': 0x2A, 'interval': 1 },  #o
-        # 'CHEMSENSE': { 'sensor_id': 0x2A, 'interval': 1 },  #o
+        # 'ChemConfig': { 'sensor_id': 0x16, 'interval': 1 },  #o
+        # 'Chemsense': { 'sensor_id': 0x2A, 'interval': 1 },  #o
+        'Chemsense': { 'sensor_id': 0x2A, 'interval': 1 },  #o
+        # 'Chemsense': { 'sensor_id': 0x2A, 'interval': 1 },  #o
 
-        # 'AlphaON': { 'sensor_id': 0x2B, 'interval': 1 },  #o
-        'AlphaSerial': { 'sensor_id': 0x29, 'interval': 5 },
-        'AlphaFirmware': { 'sensor_id': 0x30, 'interval': 5 },
+        # 'AlphaON': { 'sensor_id': 0x2B, 'interval': 5 },  #o
+        # 'AlphaFirmware': { 'sensor_id': 0x30, 'interval': 5 },  #o
+        # 'AlphaSerial': { 'sensor_id': 0x29, 'interval': 5 },  #o
+        # 'AlphaHisto': { 'sensor_id': 0x28, 'interval': 5 },  #o
+        # 'AlphaConfig': { 'sensor_id': 0x31, 'interval': 1 },
     }
 
     handler = None
