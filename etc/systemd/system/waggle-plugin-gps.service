@@ -2,6 +2,7 @@
 Description=GPS plugin.
 After=waggle-platform.target
 #ConditionPathExists=/etc/waggle/enable-gps_module
+ConditionPathExists=/root/fs_locked
 
 [Service]
 WorkingDirectory=/usr/lib/waggle/plugin_manager/plugins/gps/

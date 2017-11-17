@@ -2,6 +2,8 @@
 Description=Face detection demo.
 After=waggle-platform.target
 
+ConditionPathExists=/root/fs_locked
+
 [Service]
 WorkingDirectory=/usr/lib/waggle/plugin_manager/plugins/facedetection/
 ExecStart=/usr/lib/waggle/plugin_manager/plugins/facedetection/facedetection.py

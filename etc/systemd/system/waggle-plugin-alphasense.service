@@ -2,6 +2,7 @@
 Description=Alphasense OPC-N2 plugin.
 After=waggle-platform.target
 #ConditionPathExists=/etc/waggle/enable-alphasense
+ConditionPathExists=/root/fs_locked
 
 [Service]
 WorkingDirectory=/usr/lib/waggle/plugin_manager/plugins/alphasense
