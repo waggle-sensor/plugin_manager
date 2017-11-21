@@ -17,7 +17,7 @@ class DeviceHandler(object):
 
         self.START_BYTE = 0xAA
         self.END_BYTE = 0x55
-        self.HEADER_SIZE = 4
+        self.HEADER_SIZE = 3
         self.FOOTER_SIZE = 2
 
     def close(self):
@@ -29,7 +29,7 @@ class DeviceHandler(object):
         while True:
             if self.serial.inWaiting() > 0 or len(data) > 0:
                 data.extend(self.serial.read(self.serial.inWaiting()))
-                print(data)
+                # print("print data    ", data)
                 while True:
                     try:
                         del data[:data.index(self.START_BYTE)]
@@ -37,13 +37,13 @@ class DeviceHandler(object):
                         del data[:]
                     
                     if len(data) >= self.HEADER_SIZE:
-                        packet_length = data[3]
+                        packet_length = data[2]
                         if len(data) >= self.HEADER_SIZE + packet_length + self.FOOTER_SIZE:
                             packet = data[:self.HEADER_SIZE + packet_length + self.FOOTER_SIZE]
                             crc = packet[-2]
                             if not check_crc(crc, packet[self.HEADER_SIZE:-2]):
                                 return None
-                            sequence = data[2]
+                            sequence = data[3]
                             packets.extend(packet)
                             del data[:len(packet)]
                             if (sequence & 0x80) == 0x80:
@@ -62,14 +62,15 @@ class DeviceHandler(object):
         buffer = bytearray()
         buffer.append(0xAA) # preamble
         buffer.append(0x02) # data type ( request )
+        buffer.append(len(buffer))
         buffer.append(0x80) # sequence ( 0 )
         data = bytearray()
         for sensor in sensors:
-            data.append(0x21)
-            # data.append(0x11)
+            data.append(0x05) # call function type
+            data.append(0x01) # ack --> 0 1bit, 7-bit parameter length
             data.append(sensor)
-        buffer.append(len(data))
         buffer.extend(data)
+        buffer[2] = len(data) + 1
         buffer.append(0x00) # crc
         buffer.append(0x55) # postscript
 
@@ -108,7 +109,7 @@ class CoresensePlugin4(object):
 
     def _print(self, packets, hrf=False):
         decoded = decode_frame(packets)
-        print(decoded)
+        # print(decoded)
 
         if isinstance(decoded, dict):
             for item in decoded:
@@ -149,29 +150,29 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     sensor_table = {
-        # 'MetMAC': { 'sensor_id': 0x00, 'interval': 5 },  #o
-        # 'TMP112': { 'sensor_id': 0x01, 'interval': 1 },  #o
-        # 'HTU21D': { 'sensor_id': 0x02, 'interval': 1 },  #o
-        # 'HIH4030': { 'sensor_id': 0x03, 'interval': 5 },  #o
-        # 'BMP180': { 'sensor_id': 0x04, 'interval': 5 },  #o
-        # 'PR103J2': { 'sensor_id': 0x05, 'interval': 5 },  #o
-        # 'TSL250RDMS': { 'sensor_id': 0x06, 'interval': 5 },  #o, light, return raw
-        # 'MMA8452Q': { 'sensor_id': 0x07, 'interval': 5 },  #o
-        # # 'SPV1840LR5H-B': { 'sensor_id': 0x08, 'interval': 5 }
-        # 'TSYS01': { 'sensor_id': 0x09, 'interval': 5 },  #o
+    #     'MetMAC': { 'sensor_id': 0x00, 'interval': 1 },  #o
+        'TMP112': { 'sensor_id': 0x01, 'interval': 1 },  #o
+    #     'HTU21D': { 'sensor_id': 0x02, 'interval': 1 },  #o
+    #     'HIH4030': { 'sensor_id': 0x03, 'interval': 1 },  #o
+    #     'BMP180': { 'sensor_id': 0x04, 'interval': 1 },  #o
+    #     'PR103J2': { 'sensor_id': 0x05, 'interval': 1 },  #o
+    #     'TSL250RDMS': { 'sensor_id': 0x06, 'interval': 1 },  #o, light, return raw
+    #     'MMA8452Q': { 'sensor_id': 0x07, 'interval': 1 },  #o
+        # 'SPV1840LR5H-B': { 'sensor_id': 0x08, 'interval': 5 },  #o 63 readings
+        # 'TSYS01': { 'sensor_id': 0x09, 'interval': 1 },  #o
 
-        # 'HMC5883L': { 'sensor_id': 0x0A, 'interval': 5 },  #o
-        # 'HIH6130': { 'sensor_id': 0x0B, 'interval': 5 },  #o
-        # 'APDS_9006_020': { 'sensor_id':0x0C, 'interval': 5 },  #o, light, return raw
-        # 'TSL260': { 'sensor_id': 0x0D, 'interval': 5 },  #o, light, return raw
-        # 'TSL250RDLS': { 'sensor_id': 0x0E, 'interval': 5 },  #o, light, return raw
-        # 'MLX75305': { 'sensor_id': 0x0F, 'interval': 5 },  #o, light, return raw
-        # 'ML8511': { 'sensor_id': 0x10, 'interval': 5 },  #o, light, return raw
-        # 'TMP421': { 'sensor_id': 0x13, 'interval': 5 },  #o
+        # 'HMC5883L': { 'sensor_id': 0x0A, 'interval': 1 },  #o
+        # 'HIH6130': { 'sensor_id': 0x0B, 'interval': 1 },  #o
+        # 'APDS_9006_020': { 'sensor_id':0x0C, 'interval': 1 },  #o, light, return raw
+        # 'TSL260': { 'sensor_id': 0x0D, 'interval': 1 },  #o, light, return raw
+        # 'TSL250RDLS': { 'sensor_id': 0x0E, 'interval': 1 },  #o, light, return raw
+        # 'MLX75305': { 'sensor_id': 0x0F, 'interval': 1 },  #o, light, return raw
+        # 'ML8511': { 'sensor_id': 0x10, 'interval': 1 },  #o, light, return raw
+        # 'TMP421': { 'sensor_id': 0x13, 'interval': 1 },  #o
 
         # 'ChemConfig': { 'sensor_id': 0x16, 'interval': 1 },  #o
         # 'Chemsense': { 'sensor_id': 0x2A, 'interval': 1 },  #o
-        'Chemsense': { 'sensor_id': 0x2A, 'interval': 1 },  #o
+        # 'Chemsense': { 'sensor_id': 0x2A, 'interval': 1 },  #o
         # 'Chemsense': { 'sensor_id': 0x2A, 'interval': 1 },  #o
 
         # 'AlphaON': { 'sensor_id': 0x2B, 'interval': 5 },  #o
