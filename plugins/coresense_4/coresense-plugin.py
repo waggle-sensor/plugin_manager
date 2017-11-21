@@ -5,7 +5,7 @@ import os
 import argparse
 from serial import Serial, SerialException
 
-from waggle.protocol.v5.decoder import decode_frame, convert, check_crc
+from waggle.protocol.v5.decoder import decode_frame, convert, check_crc, create_crc
 from waggle.protocol.v5.encoder import encode_frame
 
 device = os.environ.get('CORESENSE_DEVICE', '/dev/waggle_coresense')
@@ -71,7 +71,7 @@ class DeviceHandler(object):
             data.append(sensor)
         buffer.extend(data)
         buffer[2] = len(data) + 1
-        buffer.append(0x00) # crc
+        buffer.append(create_crc(buffer[3:])) # crc
         buffer.append(0x55) # postscript
 
         self.serial.write(bytes(buffer))
@@ -150,11 +150,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     sensor_table = {
-    #     'MetMAC': { 'sensor_id': 0x00, 'interval': 1 },  #o
+        'MetMAC': { 'sensor_id': 0x00, 'interval': 1 },  #o
         'TMP112': { 'sensor_id': 0x01, 'interval': 1 },  #o
-    #     'HTU21D': { 'sensor_id': 0x02, 'interval': 1 },  #o
-    #     'HIH4030': { 'sensor_id': 0x03, 'interval': 1 },  #o
-    #     'BMP180': { 'sensor_id': 0x04, 'interval': 1 },  #o
+        'HTU21D': { 'sensor_id': 0x02, 'interval': 1 },  #o
+        'HIH4030': { 'sensor_id': 0x03, 'interval': 1 },  #o
+        'BMP180': { 'sensor_id': 0x04, 'interval': 1 },  #o
     #     'PR103J2': { 'sensor_id': 0x05, 'interval': 1 },  #o
     #     'TSL250RDMS': { 'sensor_id': 0x06, 'interval': 1 },  #o, light, return raw
     #     'MMA8452Q': { 'sensor_id': 0x07, 'interval': 1 },  #o
