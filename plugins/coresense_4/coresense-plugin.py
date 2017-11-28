@@ -6,7 +6,7 @@ import argparse
 from serial import Serial, SerialException
 
 from waggle.protocol.v5.decoder import decode_frame, convert, check_crc, create_crc
-from waggle.protocol.v5.encoder import encode_frame
+from waggle.protocol.v5.encoder import coresense_encode_frame
 
 device = os.environ.get('CORESENSE_DEVICE', '/dev/waggle_coresense')
 
@@ -29,7 +29,10 @@ class DeviceHandler(object):
         while True:
             if self.serial.inWaiting() > 0 or len(data) > 0:
                 data.extend(self.serial.read(self.serial.inWaiting()))
-                # print("print data    ", data)
+                # data.extend(self.serial.readline())
+
+                print(data)
+
                 while True:
                     try:
                         del data[:data.index(self.START_BYTE)]
@@ -47,9 +50,14 @@ class DeviceHandler(object):
                             packets.extend(packet)
                             del data[:len(packet)]
                             if (sequence & 0x80) == 0x80:
+
+                                print('output')
+
+                                for i in range(len(packets)):
+                                    print(hex(packets[i]), end=' ')
+                                print(' ')
+
                                 return packets
-                            # print(packet)
-                            # return packet
                     else:
                         break
 
@@ -75,6 +83,10 @@ class DeviceHandler(object):
         buffer.append(0x55) # postscript
 
         self.serial.write(bytes(buffer))
+        print('input')
+        for i in range(len(buffer)):
+            print(hex(buffer[i]), end=' ')
+        print('')
 
         return self.read_response()
 
@@ -97,12 +109,12 @@ class CoresensePlugin4(object):
         self.input_handler.close()
 
     def _get_requests(self):
-        requests = []
+        requests = {}
         current_time = time.time()
         for sensor in self.sensors:
             s = self.sensors[sensor]
             if s['last_updated'] + s['interval'] < current_time:
-                requests.append(s['sensor_id'])
+                requests[s['sensor_id']] = s['function_call']
                 s['last_updated'] = current_time
                 self.sensors[sensor] = s
         return requests
@@ -129,7 +141,8 @@ class CoresensePlugin4(object):
             requests = self._get_requests()
             if len(requests) > 0:
                 # print(requests)
-                message = self.input_handler.request_data(requests)
+                # message = self.input_handler.request_data(requests)
+                message = coresense_encode_frame(requests)
                 if message is None:
                     print('Errors or invalid crc')
                 else:
@@ -150,36 +163,36 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     sensor_table = {
-        'MetMAC': { 'sensor_id': 0x00, 'interval': 1 },  #o
-        'TMP112': { 'sensor_id': 0x01, 'interval': 1 },  #o
-        'HTU21D': { 'sensor_id': 0x02, 'interval': 1 },  #o
-        'HIH4030': { 'sensor_id': 0x03, 'interval': 1 },  #o
-        'BMP180': { 'sensor_id': 0x04, 'interval': 1 },  #o
-    #     'PR103J2': { 'sensor_id': 0x05, 'interval': 1 },  #o
-    #     'TSL250RDMS': { 'sensor_id': 0x06, 'interval': 1 },  #o, light, return raw
-    #     'MMA8452Q': { 'sensor_id': 0x07, 'interval': 1 },  #o
-        # 'SPV1840LR5H-B': { 'sensor_id': 0x08, 'interval': 5 },  #o 63 readings
-        # 'TSYS01': { 'sensor_id': 0x09, 'interval': 1 },  #o
+        'MetMAC': { 'sensor_id': 0x00, 'function_call': 5, 'interval': 5},  #o
+        'TMP112': { 'sensor_id': 0x01, 'function_call': 5, 'interval': 7 },  #o
+        'HTU21D': { 'sensor_id': 0x02, 'function_call': 5, 'interval': 2 },  #o
+        'HIH4030': { 'sensor_id': 0x03, 'function_call': 5, 'interval':1 },  #o
+        'BMP180': { 'sensor_id': 0x04, 'function_call': 5, 'interval': 3 },  #o
+        'PR103J2': { 'sensor_id': 0x05, 'function_call': 5, 'interval': 1 },  #o
+        'TSL250RDMS': { 'sensor_id': 0x06, 'function_call': 5, 'interval': 1 },  #o, light, return raw
+        'MMA8452Q': { 'sensor_id': 0x07, 'function_call': 5, 'interval': 1 },  #o
+        'SPV1840LR5H-B': { 'sensor_id': 0x08, 'function_call': 5, 'interval': 5 },  #o 63 readings
+        'TSYS01': { 'sensor_id': 0x09, 'function_call': 5, 'interval': 1 },  #o
 
-        # 'HMC5883L': { 'sensor_id': 0x0A, 'interval': 1 },  #o
-        # 'HIH6130': { 'sensor_id': 0x0B, 'interval': 1 },  #o
-        # 'APDS_9006_020': { 'sensor_id':0x0C, 'interval': 1 },  #o, light, return raw
-        # 'TSL260': { 'sensor_id': 0x0D, 'interval': 1 },  #o, light, return raw
-        # 'TSL250RDLS': { 'sensor_id': 0x0E, 'interval': 1 },  #o, light, return raw
-        # 'MLX75305': { 'sensor_id': 0x0F, 'interval': 1 },  #o, light, return raw
-        # 'ML8511': { 'sensor_id': 0x10, 'interval': 1 },  #o, light, return raw
-        # 'TMP421': { 'sensor_id': 0x13, 'interval': 1 },  #o
+        # 'HMC5883L': { 'sensor_id': 0x0A, 'function_call': 5, 'interval': 1 },  #o
+        # 'HIH6130': { 'sensor_id': 0x0B, 'function_call': 5, 'interval': 1 },  #o
+        # 'APDS_9006_020': { 'sensor_id':0x0C, 'function_call': 5, 'interval': 1 },  #o, light, return raw
+        # 'TSL260': { 'sensor_id': 0x0D, 'function_call': 5, 'interval': 1 },  #o, light, return raw
+        # 'TSL250RDLS': { 'sensor_id': 0x0E, 'function_call': 5, 'interval': 1 },  #o, light, return raw
+        # 'MLX75305': { 'sensor_id': 0x0F, 'function_call': 5, 'interval': 1 },  #o, light, return raw
+        # 'ML8511': { 'sensor_id': 0x10, 'function_call': 5, 'interval': 1 },  #o, light, return raw
+        # 'TMP421': { 'sensor_id': 0x13, 'function_call': 5, 'interval': 1 },  #o
 
-        # 'ChemConfig': { 'sensor_id': 0x16, 'interval': 1 },  #o
-        # 'Chemsense': { 'sensor_id': 0x2A, 'interval': 1 },  #o
-        # 'Chemsense': { 'sensor_id': 0x2A, 'interval': 1 },  #o
-        # 'Chemsense': { 'sensor_id': 0x2A, 'interval': 1 },  #o
+        # 'ChemConfig': { 'sensor_id': 0x16, 'function_call': 5, 'interval': 1 },  #o
+        # 'Chemsense': { 'sensor_id': 0x2A, 'function_call': 5, 'interval': 1 },  #o
+        'Chemsense': { 'sensor_id': 0x2A, 'function_call': 5, 'interval': 1 },  #o
+        # 'Chemsense': { 'sensor_id': 0x2A, 'function_call': 5, 'interval': 1 },  #o
 
-        # 'AlphaON': { 'sensor_id': 0x2B, 'interval': 5 },  #o
-        # 'AlphaFirmware': { 'sensor_id': 0x30, 'interval': 5 },  #o
-        # 'AlphaSerial': { 'sensor_id': 0x29, 'interval': 5 },  #o
-        # 'AlphaHisto': { 'sensor_id': 0x28, 'interval': 5 },  #o
-        # 'AlphaConfig': { 'sensor_id': 0x31, 'interval': 1 },
+        # 'AlphaON': { 'sensor_id': 0x2B, 'function_call': 5, 'interval': 5 },  #o
+        # 'AlphaFirmware': { 'sensor_id': 0x30, 'function_call': 5, 'interval': 5 },  #o
+        # 'AlphaSerial': { 'sensor_id': 0x29, 'function_call': 5, 'interval': 5 },  #o
+        # 'AlphaHisto': { 'sensor_id': 0x28, 'function_call': 5, 'interval': 5 },  #o
+        # 'AlphaConfig': { 'sensor_id': 0x31, 'function_call': 5, 'interval': 1 },
     }
 
     handler = None
