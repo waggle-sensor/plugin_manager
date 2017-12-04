@@ -1,0 +1,157 @@
+{
+    "MetMAC": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 0
+    },
+    "TMP112": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 1
+    },
+    "HTU21D": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 2
+    },
+    "HIH4030": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 3
+    },
+    "BMP180": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 4
+    },
+    "PR103J2": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 5
+    },
+    "TSL250RDMS": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 6
+    },
+    "MMA8452Q": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 7
+    },
+    "SPV1840LR5H-B": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 8
+    },
+    "TSYS01": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 9
+    },
+
+    "HMC5883L": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 10
+    },
+    "HIH6130": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 11
+    },
+    "APDS_9006_020": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 12
+    },
+    "TSL260": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 13
+    },
+    "TSL250RDLS": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 14
+    },
+    "MLX75305": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 15
+    },
+    "ML8511": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 16
+    },
+    "TMP421": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 19
+    },
+
+    "Chemsense": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 42
+    },
+    "ChemConfig": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 22
+    },
+
+    "AlphaON": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 43
+    },
+    "AlphaFirmware": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 48
+    },
+    "AlphaHisto": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 40
+    },
+    "AlphaConfig": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 49
+    },
+    "AlphaSerial": {
+        "interval": 25,
+        "function_call": 5,
+        "sensor_id": 41
+    },
+
+    "BusTMP112": {
+        "bus_type": 0,
+        "params": [
+            0
+        ],
+        "function_call": 21,
+        "interval": 25,
+        "bus_address": 72
+    },
+    "BusHTU21D": {
+        "bus_type": 0,
+        "params": [
+            243,
+            245
+        ],
+        "function_call": 21,
+        "interval": 25,
+        "bus_address": 64
+    },
+    "BusChemsense": {
+        "bus_type": 2,
+        "params": [],
+        "function_call": 21,
+        "interval": 25,
+        "bus_address": 3
+    }
+}
