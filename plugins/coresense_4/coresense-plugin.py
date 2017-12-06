@@ -76,9 +76,9 @@ class DeviceHandler(object):
         while (len(sensors) != 0):
             # print("request:   ", sensors)
             if sensors[0] <= 0x06:
-                data.append(sensors[0])
+                data.append(sensors[0])   # function type
                 data.append(0x01)
-                data.append(sensors[1])
+                data.append(sensors[1])   # sensor id
                 sensors = sensors[2::]
             elif sensors[0] >= 0x11 and sensors[0] <= 0x16:
                 data.append(sensors[0])   # function type
@@ -113,6 +113,21 @@ class CoresensePlugin4(object):
         self.beehive = beehive
         self.hrf = hrf
 
+        self.function_type = {
+            'sensor_init': 1,
+            'sensor_config': 2,
+            'sensor_enable': 3,
+            'sensor_diable': 4,
+            'sensor_read': 5,
+            'sensor_write': 6,
+            'bus_init': 17,
+            'bus_config': 18,
+            'bus_enable': 19,
+            'bus_disable': 20,
+            'bus_read': 21,
+            'bus_write': 22
+        }
+
     def close(self):
         self.input_handler.close()
 
@@ -122,10 +137,11 @@ class CoresensePlugin4(object):
         for sensor in self.sensors:
             s = self.sensors[sensor]
             if s['last_updated'] + s['interval'] < current_time:
-                requests.append(s['function_call'])
-                if (s['function_call'] <= 0x06):
+                function_call_type = self.function_type[s['function_call']]
+                requests.append(function_call_type)
+                if (function_call_type <= 0x06):
                     requests.append(s['sensor_id'])
-                elif (s['function_call'] >= 0x11 and s['function_call'] <= 0x16):
+                elif (function_call_type >= 0x11 and function_call_type <= 0x16):
                     length_buffer = []
                     length_buffer.append(s['bus_type'])
                     length_buffer.append(s['bus_address'])
@@ -187,38 +203,38 @@ if __name__ == '__main__':
             sensor_table = json.loads(config.read())
     else:
         sensor_table = {
-            'MetMAC': { 'sensor_id': 0x00, 'function_call': 0x05, 'interval': 1 },  #o
-            'TMP112': { 'sensor_id': 0x01, 'function_call': 0x05, 'interval': 1 },  #o
-            'HTU21D': { 'sensor_id': 0x02, 'function_call': 0x05, 'interval': 1 },  #o
-            'HIH4030': { 'sensor_id': 0x03, 'function_call': 0x05, 'interval': 1 },  #o
-            'BMP180': { 'sensor_id': 0x04, 'function_call': 0x05, 'interval': 1 },  #o
-            'PR103J2': { 'sensor_id': 0x05, 'function_call': 0x05, 'interval': 1 },  #o
-            'TSL250RDMS': { 'sensor_id': 0x06, 'function_call': 0x05, 'interval': 1 },  #o, light, return raw
-            'MMA8452Q': { 'sensor_id': 0x07, 'function_call': 0x05, 'interval': 1 },  #o
-            'SPV1840LR5H-B': { 'sensor_id': 0x08, 'function_call': 0x05, 'interval': 1 },  #o 63 readings
-            'TSYS01': { 'sensor_id': 0x09, 'function_call': 0x05, 'interval': 1 },  #o
+            'MetMAC': { 'sensor_id': 0x00, 'function_call': 'sensor_read', 'interval': 1 },  #o
+            'TMP112': { 'sensor_id': 0x01, 'function_call': 'sensor_read', 'interval': 1 },  #o
+            'HTU21D': { 'sensor_id': 0x02, 'function_call': 'sensor_read', 'interval': 1 },  #o
+            'HIH4030': { 'sensor_id': 0x03, 'function_call': 'sensor_read', 'interval': 1 },  #o
+            'BMP180': { 'sensor_id': 0x04, 'function_call': 'sensor_read', 'interval': 1 },  #o
+            'PR103J2': { 'sensor_id': 0x05, 'function_call': 'sensor_read', 'interval': 1 },  #o
+            'TSL250RDMS': { 'sensor_id': 0x06, 'function_call': 'sensor_read', 'interval': 1 },  #o, light, return raw
+            'MMA8452Q': { 'sensor_id': 0x07, 'function_call': 'sensor_read', 'interval': 1 },  #o
+            'SPV1840LR5H-B': { 'sensor_id': 0x08, 'function_call': 'sensor_read', 'interval': 1 },  #o 63 readings
+            'TSYS01': { 'sensor_id': 0x09, 'function_call': 'sensor_read', 'interval': 1 },  #o
 
-            'HMC5883L': { 'sensor_id': 0x0A, 'function_call': 0x05, 'interval': 1 },  #o
-            'HIH6130': { 'sensor_id': 0x0B, 'function_call': 0x05, 'interval': 1 },  #o
-            'APDS_9006_020': { 'sensor_id':0x0C, 'function_call': 0x05, 'interval': 1 },  #o, light, return raw
-            'TSL260': { 'sensor_id': 0x0D, 'function_call': 0x05, 'interval': 1 },  #o, light, return raw
-            'TSL250RDLS': { 'sensor_id': 0x0E, 'function_call': 0x05, 'interval': 1 },  #o, light, return raw
-            'MLX75305': { 'sensor_id': 0x0F, 'function_call': 0x05, 'interval': 1 },  #o, light, return raw
-            'ML8511': { 'sensor_id': 0x10, 'function_call': 0x05, 'interval': 1 },  #o, light, return raw
-            'TMP421': { 'sensor_id': 0x13, 'function_call': 0x05, 'interval': 1 },  #o
+            'HMC5883L': { 'sensor_id': 0x0A, 'function_call': 'sensor_read', 'interval': 1 },  #o
+            'HIH6130': { 'sensor_id': 0x0B, 'function_call': 'sensor_read', 'interval': 1 },  #o
+            'APDS_9006_020': { 'sensor_id':0x0C, 'function_call': 'sensor_read', 'interval': 1 },  #o, light, return raw
+            'TSL260': { 'sensor_id': 0x0D, 'function_call': 'sensor_read', 'interval': 1 },  #o, light, return raw
+            'TSL250RDLS': { 'sensor_id': 0x0E, 'function_call': 'sensor_read', 'interval': 1 },  #o, light, return raw
+            'MLX75305': { 'sensor_id': 0x0F, 'function_call': 'sensor_read', 'interval': 1 },  #o, light, return raw
+            'ML8511': { 'sensor_id': 0x10, 'function_call': 'sensor_read', 'interval': 1 },  #o, light, return raw
+            'TMP421': { 'sensor_id': 0x13, 'function_call': 'sensor_read', 'interval': 1 },  #o
 
-            # 'BusTMP112': { 'function_call': 0x15, 'bus_type': 0x00, 'bus_address': 0x48, 'params': [0x00], 'interval': 1 },
-            # 'BusHTU21D': { 'function_call': 0x15, 'bus_type': 0x00, 'bus_address': 0x40, 'params': [0xF3, 0xF5], 'interval': 1 },
-            # 'BusChemsense': { 'function_call': 0x15, 'bus_type': 0x02, 'bus_address': 0x03, 'params': [], 'interval': 1 },
+            # 'BusTMP112': { 'function_call': 'bus_read', 'bus_type': 0x00, 'bus_address': 0x48, 'params': [0x00], 'interval': 1 },
+            # 'BusHTU21D': { 'function_call': 'bus_read', 'bus_type': 0x00, 'bus_address': 0x40, 'params': [0xF3, 0xF5], 'interval': 1 },
+            # 'BusChemsense': { 'function_call': 'bus_read', 'bus_type': 0x02, 'bus_address': 0x03, 'params': [], 'interval': 1 },
 
-            # 'ChemConfig': { 'sensor_id': 0x16, 'function_call': 0x05, 'interval': 1 },  #o
-            'Chemsense': { 'sensor_id': 0x2A, 'function_call': 0x05, 'interval': 1 },  #o
+            # 'ChemConfig': { 'sensor_id': 0x16, 'function_call': 'sensor_read', 'interval': 1 },  #o
+            'Chemsense': { 'sensor_id': 0x2A, 'function_call': 'sensor_read', 'interval': 1 },  #o
 
-            # 'AlphaON': { 'sensor_id': 0x2B, 'function_call': 0x05, 'interval': 1 },  #o
-            'AlphaFirmware': { 'sensor_id': 0x30, 'function_call': 0x05, 'interval': 1 },  #o
-            'AlphaSerial': { 'sensor_id': 0x29, 'function_call': 0x05, 'interval': 1 },  #o
-            'AlphaHisto': { 'sensor_id': 0x28, 'function_call': 0x05, 'interval': 1 },  #o
-            # 'AlphaConfig': { 'sensor_id': 0x31, 'function_call': 0x05, 'interval': 1 },
+            # 'AlphaON': { 'sensor_id': 0x2B, 'function_call': 'sensor_read', 'interval': 1 },  #o
+            'AlphaFirmware': { 'sensor_id': 0x30, 'function_call': 'sensor_read', 'interval': 1 },  #o
+            'AlphaSerial': { 'sensor_id': 0x29, 'function_call': 'sensor_read', 'interval': 1 },  #o
+            'AlphaHisto': { 'sensor_id': 0x28, 'function_call': 'sensor_read', 'interval': 1 },  #o
+            # 'AlphaConfig': { 'sensor_id': 0x31, 'function_call': 'sensor_read', 'interval': 1 },
         }
         with open(sensor_config_file, 'w') as config:
             config.write(json.dumps(sensor_table))
