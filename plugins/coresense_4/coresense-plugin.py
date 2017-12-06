@@ -127,6 +127,14 @@ class CoresensePlugin4(object):
             'bus_read': 21,
             'bus_write': 22
         }
+        self.bus_type = {
+            0: 'i2c',
+            1: 'spi',
+            2: 'serial',
+            3: 'analog',
+            4: 'digital',
+            5: 'pwm'
+        }
 
     def close(self):
         self.input_handler.close()
@@ -143,7 +151,7 @@ class CoresensePlugin4(object):
                     requests.append(s['sensor_id'])
                 elif (function_call_type >= 0x11 and function_call_type <= 0x16):
                     length_buffer = []
-                    length_buffer.append(s['bus_type'])
+                    length_buffer.append(self.bus_type[s['bus_type']])
                     length_buffer.append(s['bus_address'])
                     length_buffer.extend(s['params'])
                     requests.append(len(length_buffer))
@@ -197,7 +205,7 @@ if __name__ == '__main__':
     parser.add_argument('--hrf', action='store_true', help='Print in human readable form')
     args = parser.parse_args()
 
-    sensor_config_file = '/wagglerw/waggle/sensor_table.conf'
+    sensor_config_file = '/home/sager/wagglerw/waggle/sensor_table.conf'
     if os.path.isfile(sensor_config_file):
         with open(sensor_config_file) as config:
             sensor_table = json.loads(config.read())
