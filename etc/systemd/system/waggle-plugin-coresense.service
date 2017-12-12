@@ -1,12 +1,12 @@
 [Unit]
-Description=Coresense 3.1 plugin.
+Description=Coresense 4.1 plugin.
 After=waggle-platform.target
 #ConditionPathExists=/etc/waggle/enable-coresense
 ConditionPathExists=/root/fs_locked
 
 [Service]
-WorkingDirectory=/usr/lib/waggle/plugin_manager/plugins/coresense_3
-ExecStart=/usr/lib/waggle/plugin_manager/plugins/coresense_3/plugin.py
+WorkingDirectory=/usr/lib/waggle/plugin_manager/plugins/coresense_4
+ExecStart=/usr/lib/waggle/plugin_manager/plugins/coresense_4/plugin.py
 
 Restart=always
 RestartSec=15

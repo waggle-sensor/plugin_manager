@@ -5,6 +5,7 @@ import os
 import argparse
 from serial import Serial, SerialException
 
+from waggle.pipeline import Plugin
 from waggle.protocol.v5.decoder import decode_frame, convert, check_crc, create_crc
 
 import json
@@ -100,17 +101,18 @@ class DeviceHandler(object):
 
 
 
-class CoresensePlugin4(object):
-    def __init__(self, input_handler, sensors, beehive=True, hrf=False):
-        self.plugin_name = 'coresense'
-        self.plugin_version = '4'
+class CoresensePlugin4(Plugin):
+    plugin_name = 'coresense'
+    plugin_version = '4'
+
+    def __init__(self, input_handler, sensors, hrf=False):
+        super().__init__()
         self.sensors = sensors
         for sensor in self.sensors:
             s = self.sensors[sensor]
             s['last_updated'] = time.time()
             self.sensors[sensor] = s
         self.input_handler = input_handler
-        self.beehive = beehive
         self.hrf = hrf
 
         self.function_type = {
@@ -161,7 +163,7 @@ class CoresensePlugin4(object):
                 self.sensors[sensor] = s
         return requests
 
-    def _print(self, packets, hrf=False):
+    def _print(self, packets):
         decoded = decode_frame(packets)
         # print(decoded)
 
@@ -189,23 +191,20 @@ class CoresensePlugin4(object):
                 if message is None:
                     print('Errors or invalid crc')
                 else:
-                    if self.beehive:
-                        pass
-                        # Send it to beehive
+                    if self.hrf:
+                        self._print(message, hrf=self.hrf)
                     else:
-                        self._print(message, hrf=args.hrf)
+                        self.send(sensor='frame', data=message)
             else:
                 time.sleep(0.5)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--on-node', action='store_true', help='Run on node')
-    parser.add_argument('--beehive', action='store_true', help='Report to Beehive')
     parser.add_argument('--hrf', action='store_true', help='Print in human readable form')
     args = parser.parse_args()
 
-    sensor_config_file = '/home/sager/wagglerw/waggle/sensor_table.conf'
+    sensor_config_file = '/wagglerw/waggle/sensor_table.conf'
     if os.path.isfile(sensor_config_file):
         with open(sensor_config_file) as config:
             sensor_table = json.loads(config.read())
@@ -248,13 +247,12 @@ if __name__ == '__main__':
             config.write(json.dumps(sensor_table))
 
     handler = None
-    if args.on_node:
+    if os.path.exists(device):
         handler = DeviceHandler(device)
     else:
-        parser.print_help()
         exit(1)
 
-    plugin = CoresensePlugin4(handler, sensors=sensor_table, beehive=args.beehive, hrf=args.hrf)
+    plugin = CoresensePlugin4(handler, sensors=sensor_table, hrf=args.hrf)
     try:
         plugin.run()
     except KeyboardInterrupt:
