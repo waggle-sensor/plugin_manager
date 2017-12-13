@@ -252,14 +252,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--input-sensor', action='store_true', help='Data from the sensor board')
     parser.add_argument('--hrf', action='store_true', help='Print in human readable form')
-    parser.add_argument('--input-beehive', action='store_true', help='Data from beehive')
+    #parser.add_argument('--input-beehive', action='store_true', help='Data from beehive')
     args = parser.parse_args()
 
     if args.input_sensor:
         if not os.path.exists(device):
             exit(1)
 
-        plugin = CoresensePlugin4(hrf=args.hrf)
+        if args.hrf:
+            plugin = CoresensePlugin4(hrf=args.hrf)
+        else:
+            plugin = CoresensePlugin4.defaultConfig()
         try:
             plugin.run()
         except KeyboardInterrupt:
@@ -267,6 +270,7 @@ if __name__ == '__main__':
         finally:
             plugin.close()
     elif args.input_beehive:
-        worker = CoresenseWorker4()
+        pass
+        #worker = CoresenseWorker4()
     else:
         parser.print_help()
