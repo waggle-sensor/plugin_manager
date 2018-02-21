@@ -12,6 +12,34 @@ import json
 
 device = os.environ.get('CORESENSE_DEVICE', '/dev/waggle_coresense')
 
+def get_default_configuration():
+    sensor_table = {
+        'MetMAC': { 'sensor_id': 0x00, 'function_call': 'sensor_read', 'interval': 25 },
+        'TMP112': { 'sensor_id': 0x01, 'function_call': 'sensor_read', 'interval': 25 },
+        'HTU21D': { 'sensor_id': 0x02, 'function_call': 'sensor_read', 'interval': 25 },
+        'HIH4030': { 'sensor_id': 0x03, 'function_call': 'sensor_read', 'interval': 25 },
+        'BMP180': { 'sensor_id': 0x04, 'function_call': 'sensor_read', 'interval': 25 },
+        'PR103J2': { 'sensor_id': 0x05, 'function_call': 'sensor_read', 'interval': 25 },
+        'TSL250RDMS': { 'sensor_id': 0x06, 'function_call': 'sensor_read', 'interval': 25 },
+        'MMA8452Q': { 'sensor_id': 0x07, 'function_call': 'sensor_read', 'interval': 25 },
+        'SPV1840LR5H-B': { 'sensor_id': 0x08, 'function_call': 'sensor_read', 'interval': 25 },
+        'TSYS01': { 'sensor_id': 0x09, 'function_call': 'sensor_read', 'interval': 25 },
+
+        'HMC5883L': { 'sensor_id': 0x0A, 'function_call': 'sensor_read', 'interval': 25 },
+        'HIH6130': { 'sensor_id': 0x0B, 'function_call': 'sensor_read', 'interval': 25 },
+        'APDS_9006_020': { 'sensor_id':0x0C, 'function_call': 'sensor_read', 'interval': 25 },
+        'TSL260': { 'sensor_id': 0x0D, 'function_call': 'sensor_read', 'interval': 25 },
+        'TSL250RDLS': { 'sensor_id': 0x0E, 'function_call': 'sensor_read', 'interval': 25 },
+        'MLX75305': { 'sensor_id': 0x0F, 'function_call': 'sensor_read', 'interval': 25 },
+        'ML8511': { 'sensor_id': 0x10, 'function_call': 'sensor_read', 'interval': 25 },
+        'TMP421': { 'sensor_id': 0x13, 'function_call': 'sensor_read', 'interval': 25 },
+
+        'Chemsense': { 'sensor_id': 0x2A, 'function_call': 'sensor_read', 'interval': 25 },
+
+        'AlphaHisto': { 'sensor_id': 0x28, 'function_call': 'sensor_read', 'interval': 25 }, 
+    }
+    return sensor_table
+
 class DeviceHandler(object):
     def __init__(self, device):
         self.serial = Serial(device, baudrate=115200, timeout=180)
@@ -25,16 +53,15 @@ class DeviceHandler(object):
     def close(self):
         self.serial.close()
 
-    def read_response(self):
+    def read_response(self, timeout=180):
         data = bytearray()
         packets = bytearray()
-        while True:
+
+        # The response must be received within 3 minutes
+        for i in range(timeout * 2)
             if self.serial.inWaiting() > 0 or len(data) > 0:
                 data.extend(self.serial.read(self.serial.inWaiting()))
-                # data.extend(self.serial.readline())
-
-                # print(data)
-
+                
                 while True:
                     try:
                         del data[:data.index(self.START_BYTE)]
@@ -55,9 +82,11 @@ class DeviceHandler(object):
                                 return packets
                     else:
                         break
-
             else:
-                time.sleep(0.1)
+                time.sleep(0.5)
+
+        # TIMTOUT: return packet that have bene received
+        return packets
 
 
     def request_data(self, sensors):
@@ -75,7 +104,6 @@ class DeviceHandler(object):
 
         data = bytearray()
         while (len(sensors) != 0):
-            # print("request:   ", sensors)
             if sensors[0] <= 0x06:
                 data.append(sensors[0])   # function type
                 data.append(0x01)
@@ -85,7 +113,6 @@ class DeviceHandler(object):
                 data.append(sensors[0])   # function type
                 data.append(sensors[1])   # bus type
                 data.append(sensors[2])   # bus address
-                # print(sensors[4: sensors[1] + 2])
                 data.extend(sensors[3:sensors[1] + 2])   # parameters
                 sensors = sensors[sensors[1] + 2::]
         buffer.extend(data)
@@ -93,56 +120,8 @@ class DeviceHandler(object):
         buffer[2] = len(data) + 1
         buffer.append(create_crc(buffer[3:])) # crc
         buffer.append(0x55) # postscript
-
-        # print(data, len(data))
-        # print(buffer, len(buffer))
         self.serial.write(bytes(buffer))
         return self.read_response()
-
-def get_config_table():
-    sensor_config_file = '/wagglerw/waggle/sensor_table.conf'
-    sensor_table = None
-    if os.path.isfile(sensor_config_file):
-        with open(sensor_config_file) as config:
-            sensor_table = json.loads(config.read())
-    else:
-        sensor_table = {
-            'MetMAC': { 'sensor_id': 0x00, 'function_call': 'sensor_read', 'interval': 25 },  #o
-            'TMP112': { 'sensor_id': 0x01, 'function_call': 'sensor_read', 'interval': 25 },  #o
-            'HTU21D': { 'sensor_id': 0x02, 'function_call': 'sensor_read', 'interval': 25 },  #o
-            'HIH4030': { 'sensor_id': 0x03, 'function_call': 'sensor_read', 'interval': 25 },  #o
-            'BMP180': { 'sensor_id': 0x04, 'function_call': 'sensor_read', 'interval': 25 },  #o
-            'PR103J2': { 'sensor_id': 0x05, 'function_call': 'sensor_read', 'interval': 25 },  #o
-            'TSL250RDMS': { 'sensor_id': 0x06, 'function_call': 'sensor_read', 'interval': 25 },  #o, light, return raw
-            'MMA8452Q': { 'sensor_id': 0x07, 'function_call': 'sensor_read', 'interval': 25 },  #o
-            'SPV1840LR5H-B': { 'sensor_id': 0x08, 'function_call': 'sensor_read', 'interval': 25 },  #o 63 readings
-            'TSYS01': { 'sensor_id': 0x09, 'function_call': 'sensor_read', 'interval': 25 },  #o
-
-            'HMC5883L': { 'sensor_id': 0x0A, 'function_call': 'sensor_read', 'interval': 25 },  #o
-            'HIH6130': { 'sensor_id': 0x0B, 'function_call': 'sensor_read', 'interval': 25 },  #o
-            'APDS_9006_020': { 'sensor_id':0x0C, 'function_call': 'sensor_read', 'interval': 25 },  #o, light, return raw
-            'TSL260': { 'sensor_id': 0x0D, 'function_call': 'sensor_read', 'interval': 25 },  #o, light, return raw
-            'TSL250RDLS': { 'sensor_id': 0x0E, 'function_call': 'sensor_read', 'interval': 25 },  #o, light, return raw
-            'MLX75305': { 'sensor_id': 0x0F, 'function_call': 'sensor_read', 'interval': 25 },  #o, light, return raw
-            'ML8511': { 'sensor_id': 0x10, 'function_call': 'sensor_read', 'interval': 25 },  #o, light, return raw
-            'TMP421': { 'sensor_id': 0x13, 'function_call': 'sensor_read', 'interval': 25 },  #o
-
-            # 'BusTMP112': { 'function_call': 'bus_read', 'bus_type': 0x00, 'bus_address': 0x48, 'params': [0x00], 'interval': 1 },
-            # 'BusHTU21D': { 'function_call': 'bus_read', 'bus_type': 0x00, 'bus_address': 0x40, 'params': [0xF3, 0xF5], 'interval': 1 },
-            # 'BusChemsense': { 'function_call': 'bus_read', 'bus_type': 0x02, 'bus_address': 0x03, 'params': [], 'interval': 1 },
-
-            # 'ChemConfig': { 'sensor_id': 0x16, 'function_call': 'sensor_read', 'interval': 1 },  #o
-            'Chemsense': { 'sensor_id': 0x2A, 'function_call': 'sensor_read', 'interval': 25 },  #o
-
-            # 'AlphaON': { 'sensor_id': 0x2B, 'function_call': 'sensor_read', 'interval': 1 },  #o
-            'AlphaFirmware': { 'sensor_id': 0x30, 'function_call': 'sensor_read', 'interval': 25 },  #o
-            'AlphaSerial': { 'sensor_id': 0x29, 'function_call': 'sensor_read', 'interval': 25 },  #o
-            'AlphaHisto': { 'sensor_id': 0x28, 'function_call': 'sensor_read', 'interval': 25 },  #o
-            # 'AlphaConfig': { 'sensor_id': 0x31, 'function_call': 'sensor_read', 'interval': 1 },
-        }
-        with open(sensor_config_file, 'w') as config:
-            config.write(json.dumps(sensor_table))
-    return sensor_table
 
 
 class CoresensePlugin4(Plugin):
@@ -151,7 +130,7 @@ class CoresensePlugin4(Plugin):
 
     def __init__(self, hrf=False):
         super().__init__()
-        self.sensors = get_config_table()
+        self.sensors = self._get_config_table()
         for sensor in self.sensors:
             s = self.sensors[sensor]
             s['last_updated'] = time.time()
@@ -185,6 +164,19 @@ class CoresensePlugin4(Plugin):
     def close(self):
         self.input_handler.close()
 
+    def _get_config_table(self):
+        sensor_config_file = '/wagglerw/waggle/sensor_table.conf'
+        sensor_table = None
+        try:
+            with open(sensor_config_file) as config:
+                sensor_table = json.loads(config.read())
+        except:
+            sensor_table = get_default_configuration()
+            with open(sensor_config_file, 'w') as config:
+                config.write(json.dumps(sensor_table))
+
+        return sensor_table
+
     def _get_requests(self):
         requests = []
         current_time = time.time()
@@ -209,17 +201,12 @@ class CoresensePlugin4(Plugin):
 
     def _print(self, packets):
         decoded = decode_frame(packets)
-        # print(decoded)
 
         if isinstance(decoded, dict):
             for item in decoded:
                 converted_value = convert(decoded[item], item)
                 print(converted_value)
 
-                # for entity in decoded[item]:
-                #     entity_value = decoded[item][entity]
-                #     converted_value = convert(entity_value, item, entity)
-                #     print(converted_value)
         else:
             print('Error: Could not decode the packet %s' % (str(decoded),))
 
@@ -228,11 +215,15 @@ class CoresensePlugin4(Plugin):
         while True:
             requests = self._get_requests()
             if len(requests) > 0:
-                # print(requests)
-                message = self.input_handler.request_data(requests)
+                try:
+                    message = self.input_handler.request_data(requests)
+                except SerialException:
+                    print('Error in serial connection. Restarting...')
+                    break
 
                 if message is None:
                     print('Errors or invalid crc')
+                    time.sleep(5)
                 else:
                     if self.hrf:
                         self._print(message)
@@ -242,17 +233,10 @@ class CoresensePlugin4(Plugin):
                 time.sleep(1)
 
 
-class CoresenseWorker4(object):
-    plugin_name = 'coresense'
-    plugin_version = '4'
-
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--input-sensor', action='store_true', help='Data from the sensor board')
     parser.add_argument('--hrf', action='store_true', help='Print in human readable form')
-    #parser.add_argument('--input-beehive', action='store_true', help='Data from beehive')
     args = parser.parse_args()
 
     if args.input_sensor:
@@ -265,12 +249,9 @@ if __name__ == '__main__':
             plugin = CoresensePlugin4.defaultConfig()
         try:
             plugin.run()
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, Exception):
             pass
         finally:
             plugin.close()
-    elif args.input_beehive:
-        pass
-        #worker = CoresenseWorker4()
     else:
         parser.print_help()
