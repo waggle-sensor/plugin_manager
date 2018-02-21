@@ -48,6 +48,6 @@ sensor_table = {
         'AlphaHisto': { 'sensor_id': 0x28, 'function_call': 'sensor_read', 'interval': 25 }, 
         'AlphaConfig': { 'sensor_id': 0x31, 'function_call': 'sensor_read', 'interval': 1 },
     }
-    ```
+```
 
-    Note that there are some *ONE-TIME* commands: `AlphaON`, `AlphaConfig`, and `ChemConfig` -- those are designed to be called only when necessary.
+Note that there are some *ONE-TIME* commands: `AlphaON`, `AlphaConfig`, and `ChemConfig` -- those are designed to be called only when necessary.
