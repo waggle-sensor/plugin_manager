@@ -58,7 +58,7 @@ class DeviceHandler(object):
         packets = bytearray()
 
         # The response must be received within 3 minutes
-        for i in range(timeout * 2)
+        for i in range(timeout * 2):
             if self.serial.inWaiting() > 0 or len(data) > 0:
                 data.extend(self.serial.read(self.serial.inWaiting()))
                 
@@ -85,7 +85,7 @@ class DeviceHandler(object):
             else:
                 time.sleep(0.5)
 
-        # TIMTOUT: return packet that have bene received
+        # TIMEOUT: return packet that have been received
         return packets
 
 
