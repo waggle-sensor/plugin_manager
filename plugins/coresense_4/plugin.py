@@ -225,6 +225,7 @@ class CoresensePlugin4(Plugin):
                     print('Errors or invalid crc')
                     time.sleep(5)
                 else:
+                    print('Received frame')
                     if self.hrf:
                         self._print(message)
                     else:

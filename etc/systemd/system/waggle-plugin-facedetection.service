@@ -6,7 +6,7 @@ ConditionPathExists=/root/fs_locked
 
 [Service]
 WorkingDirectory=/usr/lib/waggle/plugin_manager/plugins/facedetection/
-ExecStart=/usr/lib/waggle/plugin_manager/plugins/facedetection/facedetection.py
+ExecStart=/usr/bin/python3 -u /usr/lib/waggle/plugin_manager/plugins/facedetection/facedetection.py
 
 Restart=always
 RestartSec=15
