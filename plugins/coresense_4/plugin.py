@@ -12,37 +12,49 @@ import json
 
 device = os.environ.get('CORESENSE_DEVICE', '/dev/waggle_coresense')
 
+
 def get_default_configuration():
-    sensor_table = {
-        'MetMAC': { 'sensor_id': 0x00, 'function_call': 'sensor_read', 'interval': 25 },
-        'TMP112': { 'sensor_id': 0x01, 'function_call': 'sensor_read', 'interval': 25 },
-        'HTU21D': { 'sensor_id': 0x02, 'function_call': 'sensor_read', 'interval': 25 },
-        'HIH4030': { 'sensor_id': 0x03, 'function_call': 'sensor_read', 'interval': 25 },
-        'BMP180': { 'sensor_id': 0x04, 'function_call': 'sensor_read', 'interval': 25 },
-        'PR103J2': { 'sensor_id': 0x05, 'function_call': 'sensor_read', 'interval': 25 },
-        'TSL250RDMS': { 'sensor_id': 0x06, 'function_call': 'sensor_read', 'interval': 25 },
-        'MMA8452Q': { 'sensor_id': 0x07, 'function_call': 'sensor_read', 'interval': 25 },
-        'SPV1840LR5H-B': { 'sensor_id': 0x08, 'function_call': 'sensor_read', 'interval': 25 },
-        'TSYS01': { 'sensor_id': 0x09, 'function_call': 'sensor_read', 'interval': 25 },
-
-        'HMC5883L': { 'sensor_id': 0x0A, 'function_call': 'sensor_read', 'interval': 25 },
-        'HIH6130': { 'sensor_id': 0x0B, 'function_call': 'sensor_read', 'interval': 25 },
-        'APDS_9006_020': { 'sensor_id':0x0C, 'function_call': 'sensor_read', 'interval': 25 },
-        'TSL260': { 'sensor_id': 0x0D, 'function_call': 'sensor_read', 'interval': 25 },
-        'TSL250RDLS': { 'sensor_id': 0x0E, 'function_call': 'sensor_read', 'interval': 25 },
-        'MLX75305': { 'sensor_id': 0x0F, 'function_call': 'sensor_read', 'interval': 25 },
-        'ML8511': { 'sensor_id': 0x10, 'function_call': 'sensor_read', 'interval': 25 },
-        'TMP421': { 'sensor_id': 0x13, 'function_call': 'sensor_read', 'interval': 25 },
-
-        'Chemsense': { 'sensor_id': 0x2A, 'function_call': 'sensor_read', 'interval': 25 },
-
-        'AlphaHisto': { 'sensor_id': 0x28, 'function_call': 'sensor_read', 'interval': 25 }, 
-    }
+    default_sensor_list = [
+        # SENSOR_NAME SENSOR_ID
+        ('MetMAC', 0x00),
+        ('TMP112', 0x01),
+        ('HTU21D', 0x02),
+        ('HIH4030', 0x03),
+        ('BMP180', 0x04),
+        ('PR103J2', 0x05),
+        ('TSL250RDMS', 0x06),
+        ('MMA8452Q', 0x07),
+        ('SPV1840LR5H-B', 0x08),
+        ('TSYS01', 0x09),
+        ('HMC5883L', 0x0A),
+        ('HIH6130', 0x0B),
+        ('APDS_9006_020', 0x0C),
+        ('TSL260', 0x0D),
+        ('TSL250RDLS', 0x0E),
+        ('MLX75305', 0x0F),
+        ('ML8511', 0x10),
+        ('TMP421', 0x13),
+        ('Chemsense', 0x2A),
+        ('AlphaHisto', 0x28)
+    ]
+    sensor_table = {}
+    for item in default_sensor_list:
+        sensor_name, sensor_id = item
+        sensor_to_be_added = {
+            sensor_name: {
+                'sensor_id': sensor_id,
+                'function_call': 'sensor_read',
+                'interval': 25  # seconds
+            }
+        }
+        sensor_table.update(sensor_to_be_added)
     return sensor_table
+
 
 class DeviceHandler(object):
     def __init__(self, device):
-        self.serial = Serial(device, baudrate=115200, timeout=180)
+        self.serial = None
+        self.device = device
 
         self.START_BYTE = 0xAA
         self.END_BYTE = 0x55
@@ -50,8 +62,18 @@ class DeviceHandler(object):
         self.FOOTER_SIZE = 2
         self.SQN = 0
 
+    def open(self):
+        if self.serial is not None:
+            if self.serial.is_open:
+                self.serial.close()
+                time.sleep(1)
+            self.serial = None
+        self.serial = Serial(self.device, baudrate=115200, timeout=180)
+
     def close(self):
-        self.serial.close()
+        if self.serial is not None:
+            if self.serial.is_open:
+                self.serial.close()
 
     def read_response(self, timeout=180):
         data = bytearray()
@@ -61,7 +83,7 @@ class DeviceHandler(object):
         for i in range(timeout * 2):
             if self.serial.inWaiting() > 0 or len(data) > 0:
                 data.extend(self.serial.read(self.serial.inWaiting()))
-                
+
                 while True:
                     try:
                         del data[:data.index(self.START_BYTE)]
@@ -88,19 +110,18 @@ class DeviceHandler(object):
         # TIMEOUT: return packet that have been received
         return packets
 
-
     def request_data(self, sensors):
         # Packaging
         buffer = bytearray()
-        buffer.append(0xAA) # preamble
-        buffer.append(0x02) # data type (request) | protocol version (2)
+        buffer.append(0xAA)  # preamble
+        buffer.append(0x02)  # data type (request) | protocol version (2)
         buffer.append(len(buffer))
         third_byte = 0x80 | self.SQN
         if self.SQN < 0x7F:
             self.SQN += 1
         else:
             self.SQN = 0
-        buffer.append(third_byte) # sequence ( 0 )
+        buffer.append(third_byte)  # sequence ( 0 )
 
         data = bytearray()
         while (len(sensors) != 0):
@@ -118,8 +139,8 @@ class DeviceHandler(object):
         buffer.extend(data)
 
         buffer[2] = len(data) + 1
-        buffer.append(create_crc(buffer[3:])) # crc
-        buffer.append(0x55) # postscript
+        buffer.append(create_crc(buffer[3:]))  # crc
+        buffer.append(0x55)  # postscript
         self.serial.write(bytes(buffer))
         return self.read_response()
 
@@ -136,6 +157,7 @@ class CoresensePlugin4(Plugin):
             s['last_updated'] = time.time()
             self.sensors[sensor] = s
         self.input_handler = DeviceHandler(device)
+        self.input_handler.open()
         self.hrf = hrf
 
         self.function_type = {
@@ -170,7 +192,7 @@ class CoresensePlugin4(Plugin):
         try:
             with open(sensor_config_file) as config:
                 sensor_table = json.loads(config.read())
-        except:
+        except Exception:
             sensor_table = get_default_configuration()
             with open(sensor_config_file, 'w') as config:
                 config.write(json.dumps(sensor_table, sort_keys=True, indent=4))
@@ -210,11 +232,10 @@ class CoresensePlugin4(Plugin):
         else:
             print('Error: Could not decode the packet %s' % (str(decoded),))
 
-
     def run(self):
         # Check firmware version and print
         try:
-            check_firmware_request = [5, 255] # sensor_read, 0xFF
+            check_firmware_request = [5, 255]  # sensor_read, 0xFF
             message = self.input_handler.request_data(check_firmware_request)
             if message is None:
                 raise Exception('Version is null')
@@ -262,14 +283,14 @@ if __name__ == '__main__':
         if not os.path.exists(device):
             exit(1)
 
-        if args.hrf:
-            plugin = CoresensePlugin4(hrf=args.hrf)
-        else:
-            plugin = CoresensePlugin4.defaultConfig()
         try:
+            if args.hrf:
+                plugin = CoresensePlugin4(hrf=args.hrf)
+            else:
+                plugin = CoresensePlugin4.defaultConfig()
             plugin.run()
-        except (KeyboardInterrupt, Exception):
-            pass
+        except (KeyboardInterrupt, SerialException, Exception) as ex:
+            print(str(ex))
         finally:
             plugin.close()
     else:
