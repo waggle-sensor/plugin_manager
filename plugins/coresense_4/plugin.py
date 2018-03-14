@@ -173,7 +173,7 @@ class CoresensePlugin4(Plugin):
         except:
             sensor_table = get_default_configuration()
             with open(sensor_config_file, 'w') as config:
-                config.write(json.dumps(sensor_table))
+                config.write(json.dumps(sensor_table, sort_keys=True, indent=4))
 
         return sensor_table
 
