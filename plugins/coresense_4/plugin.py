@@ -215,7 +215,7 @@ class CoresensePlugin4(Plugin):
         # Check firmware version and print
         try:
             check_firmware_request = [5, 255] # sensor_read, 0xFF
-            message = self.input_handler.request_data(requests)
+            message = self.input_handler.request_data(check_firmware_request)
             if message is None:
                 raise Exception('Version is null')
             else:
