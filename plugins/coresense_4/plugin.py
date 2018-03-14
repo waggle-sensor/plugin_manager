@@ -212,6 +212,24 @@ class CoresensePlugin4(Plugin):
 
 
     def run(self):
+        # Check firmware version and print
+        try:
+            check_firmware_request = [5, 255] # sensor_read, 0xFF
+            message = self.input_handler.request_data(requests)
+            if message is None:
+                raise Exception('Version is null')
+            else:
+                if self.hrf:
+                    self._print(message)
+                else:
+                    self.send(sensor='frame', data=message)
+        except SerialException:
+            print('Could not check firmware version due to serial error. Restarting...')
+            return
+        except Exception as ex:
+            print('Could not check firmware version %s' % (str(ex),))
+            return
+
         while True:
             requests = self._get_requests()
             if len(requests) > 0:
