@@ -175,12 +175,12 @@ class CoresensePlugin4(Plugin):
             'bus_write': 22
         }
         self.bus_type = {
-            0: 'i2c',
-            1: 'spi',
-            2: 'serial',
-            3: 'analog',
-            4: 'digital',
-            5: 'pwm'
+            'i2c': 0,
+            'spi': 1,
+            'serial': 2,
+            'analog': 3,
+            'digital': 4,
+            'pwm': 5
         }
 
     def close(self):
@@ -233,16 +233,15 @@ class CoresensePlugin4(Plugin):
             print('Error: Could not decode the packet %s' % (str(decoded),))
 
     def run(self):
-        # Check firmware version and print
+        # Check firmware version and MAC address of the Metsense
         try:
-            check_firmware_request = [5, 255]  # sensor_read, 0xFF
+            check_firmware_request = [5, 255, 5, 0]  # sensor_read, 0xFF, 0x00
             message = self.input_handler.request_data(check_firmware_request)
             if message is None:
                 raise Exception('Version is null')
             else:
-                if self.hrf:
-                    self._print(message)
-                else:
+                self._print(message)
+                if not self.hrf:
                     self.send(sensor='frame', data=message)
         except SerialException:
             print('Could not check firmware version due to serial error. Restarting...')
