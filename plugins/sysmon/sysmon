@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import re
 import time
 from waggle.pipeline import Plugin
 from waggle.protocol.v5.encoder import encode_frame
@@ -8,6 +9,7 @@ config = [
     # sensor_id, device, name
     (0x90, 'ppp0', 'broadband'),
     (0x91, 'eth0', 'lan'),
+    (0x92, 'enx.', 'usb'),
 ]
 
 
@@ -23,22 +25,32 @@ def read_device_stats(dev):
     ]
 
 
+def matching_devices(pattern):
+    return sorted([dev for dev in os.listdir('/sys/class/net') if re.match(pattern, dev)])
+
+
 class SysmonPlugin(Plugin):
 
     plugin_name = 'sysmon'
     plugin_version = '1'
 
     def read_values(self):
-        print('reading values')
+        print('reading values', flush=True)
 
         values = {}
 
-        for sensor_id, device, name in config:
+        for sensor_id, pattern, name in config:
+            try:
+                device = matching_devices(pattern)[0]
+            except IndexError:
+                print('no matching devices for {}'.format(pattern), flush=True)
+                continue
+
             try:
                 values[sensor_id] = read_device_stats(device)
-                print('{} rx={},tx={}'.format(name, *values[sensor_id]))
+                print('{} rx={},tx={}'.format(name, *values[sensor_id]), flush=True)
             except (FileNotFoundError, ValueError):
-                print('failed to read {}'.format(name))
+                print('failed to read {}'.format(name), flush=True)
 
         return values
 
