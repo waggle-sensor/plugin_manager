@@ -43,7 +43,8 @@ rm -f /etc/supervisor/conf.d/waggle_plugin_manager.conf
 cp ${current_dir}/etc/systemd/system/waggle-* /etc/systemd/system
 systemctl enable waggle-plugin-alphasense.service
 systemctl enable waggle-plugin-coresense.service
-systemctl enable waggle-plugin-gps.service
+systemctl enable waggle-plugin-sysmon.service
+systemctl diable waggle-plugin-gps.service
 systemctl disable waggle-plugin-facedetection.service
 
 
