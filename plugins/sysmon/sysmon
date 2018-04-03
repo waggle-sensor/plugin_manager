@@ -2,15 +2,9 @@
 import os
 import re
 import time
+import subprocess
 from waggle.pipeline import Plugin
 from waggle.protocol.v5.encoder import encode_frame
-
-config = [
-    # sensor_id, device, name
-    (0x90, 'ppp0', 'broadband'),
-    (0x91, 'eth0', 'lan'),
-    (0x92, 'enx.', 'usb'),
-]
 
 
 def read_file(filename):
@@ -18,15 +12,95 @@ def read_file(filename):
         return f.read()
 
 
-def read_device_stats(dev):
+network_devices = [
+    # sensor_id, device, name
+    (0x90, 'ppp0', 'broadband'),
+    (0x91, 'eth0', 'lan'),
+    (0x92, 'enx.', 'usb'),
+]
+
+
+def read_network_device_stats(dev):
     return [
         int(read_file(os.path.join('/sys/class/net', dev, 'statistics/rx_bytes'))),
         int(read_file(os.path.join('/sys/class/net', dev, 'statistics/tx_bytes'))),
     ]
 
 
-def matching_devices(pattern):
+def matching_network_devices(pattern):
     return sorted([dev for dev in os.listdir('/sys/class/net') if re.match(pattern, dev)])
+
+
+def read_network_stats():
+    values = {}
+
+    for sensor_id, pattern, name in network_devices:
+        try:
+            device = matching_network_devices(pattern)[0]
+        except IndexError:
+            print('no matching devices for {}'.format(pattern), flush=True)
+            continue
+
+        try:
+            values[sensor_id] = read_network_device_stats(device)
+            print('{} rx={},tx={}'.format(name, *values[sensor_id]), flush=True)
+        except (FileNotFoundError, ValueError):
+            print('failed to read {}'.format(name), flush=True)
+
+    return values
+
+
+def read_wagman_stats():
+    values = {}
+
+    output = subprocess.check_output('journalctl -u waggle-wagman-driver --since=-2m -o cat', shell=True).decode()
+
+    for line in output.splitlines():
+        m = re.search(':cu (\d+) (\d+) (\d+) (\d+) (\d+) (\d+)', line)
+
+        if m is not None:
+            values[0x5a] = list(map(int, m.groups()))
+
+        m = re.search(':th (\d+) (\d+) (\d+) (\d+) (\d+)', line)
+
+        if m is not None:
+            values[0x5b] = list(map(int, m.groups()))
+
+        m = re.search(':fails (\d+) (\d+) (\d+) (\d+) (\d+)', line)
+
+        if m is not None:
+            values[0x5f] = list(map(int, m.groups()))
+
+        m = re.search(':enabled (\d+) (\d+) (\d+) (\d+) (\d+)', line)
+
+        if m is not None:
+            values[0x60] = list(map(int, m.groups()))
+
+    return values
+
+
+def read_system_stats():
+    values = {}
+
+    uptime, idletime = list(map(float, read_file('/proc/uptime').split()))
+    values[0x76] = [round(uptime), round(idletime)]
+
+    return values
+
+
+def read_all_stats():
+    values = {}
+
+    print('reading network stats', flush=True)
+    values.update(read_network_stats())
+
+    print('reading wagman stats', flush=True)
+    values.update(read_wagman_stats())
+
+    print('reading system stats', flush=True)
+    values.update(read_system_stats())
+
+    return values
 
 
 class SysmonPlugin(Plugin):
@@ -34,37 +108,16 @@ class SysmonPlugin(Plugin):
     plugin_name = 'sysmon'
     plugin_version = '1'
 
-    def read_values(self):
-        print('reading values', flush=True)
-
-        values = {}
-
-        for sensor_id, pattern, name in config:
-            try:
-                device = matching_devices(pattern)[0]
-            except IndexError:
-                print('no matching devices for {}'.format(pattern), flush=True)
-                continue
-
-            try:
-                values[sensor_id] = read_device_stats(device)
-                print('{} rx={},tx={}'.format(name, *values[sensor_id]), flush=True)
-            except (FileNotFoundError, ValueError):
-                print('failed to read {}'.format(name), flush=True)
-
-        return values
-
-    def send_values(self, values):
-        if values:
-            print('sending values')
-            self.send(sensor='', data=encode_frame(values))
-        else:
-            print('no values to send')
-
     def run(self):
         while True:
-            values = self.read_values()
-            self.send_values(values)
+            values = read_all_stats()
+
+            if values:
+                print('sending values', flush=True)
+                self.send(sensor='', data=encode_frame(values))
+            else:
+                print('no values to send', flush=True)
+
             time.sleep(60)
 
 
