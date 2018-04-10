@@ -41,12 +41,30 @@ rm -f /etc/supervisor/conf.d/waggle_plugin_manager.conf
 
 # copy systemd scripts
 cp ${current_dir}/etc/systemd/system/waggle-* /etc/systemd/system
-systemctl enable waggle-plugin-alphasense.service
-systemctl enable waggle-plugin-coresense.service
-systemctl enable waggle-plugin-sysmon.service
-systemctl diable waggle-plugin-gps.service
+
+. /usr/lib/waggle/core/scripts/detect_odroid_model.sh
+# Blacklist
+systemctl disable waggle-plugin-gps.service
 systemctl disable waggle-plugin-facedetection.service
 
+# Whitelist
+nc_plugins=( 
+    waggle-plugin-alphasense.service \
+    waggle-plugin-coresense.service \
+    waggle-plugin-sysmon.service )
+ep_plugins=( 
+    waggle-plugin-audio-spl.service )
+
+if [ "${ODROID_MODEL}x" == "Cx" ]; then
+    systemctl enable ${nc_plugins[@]}
+    systemctl disable ${ep_plugins[@]}
+elif [ "${ODROID_MODEL}x" == "XU3x" ]; then
+    systemctl enable ${ep_plugins[@]}
+    systemctl disable ${nc_plugins[@]}
+else
+    echo "Unknown platform. Could not enable/disable plugins"
+    exit 1
+fi
 
 set +x
 echo "done"
