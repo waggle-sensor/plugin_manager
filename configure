@@ -53,7 +53,8 @@ nc_plugins=(
     waggle-plugin-coresense.service \
     waggle-plugin-sysmon.service )
 ep_plugins=( 
-    waggle-plugin-audio-spl.service )
+    waggle-plugin-audio-spl.service \
+    waggle-plugin-image-example.service)
 
 if [ "${ODROID_MODEL}x" == "Cx" ]; then
     systemctl enable ${nc_plugins[@]}

@@ -1,0 +1,13 @@
+[Unit]
+Description=Example image plugin
+After=waggle-platform.target
+ConditionPathExists=/root/fs_locked
+
+[Service]
+ExecStart=/usr/bin/python3 -u /usr/lib/waggle/plugin_manager/plugins/image_example/plugin.py
+
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=waggle-platform.target
