@@ -156,14 +156,11 @@ class SoundPressureLevel(Plugin):
                 print('%s%d %f' % (sensor_name, i + 1, db))
             print('%s_total %f' % (sensor_name, sdb))
         else:
-            print(type(avg_db))
             avg_db = np.append(avg_db, sdb)
             packet = {
                 0x93: avg_db.tolist()
             }
-            print(packet)
             binary_packet = encode_frame(packet)
-            print(binary_packet)
             self.send(sensor='', data=binary_packet)
 
     def run(self):
