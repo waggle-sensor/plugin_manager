@@ -269,6 +269,9 @@ class CoresensePlugin4(Plugin):
                 if message is None:
                     print('Errors or invalid crc')
                     time.sleep(5)
+                elif len(message) == 0:
+                    print('No packet received. Restarting...')
+                    break
                 else:
                     print('Received frame')
                     if self.hrf:

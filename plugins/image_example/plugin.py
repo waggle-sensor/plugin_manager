@@ -193,7 +193,10 @@ class ExampleImageProcessor(Plugin):
                 device_config = self.config[device]
                 if current_time - device_config['last_updated'] > device_config['interval']:
                     handler = device_config['handler']
+                    handler.open()
                     return_code, message = handler.read()
+                    handler.close()
+                    device_config['handler'] = handler
                     if return_code is True:
                         properties, frame = message
                         print('Received frame')
@@ -220,13 +223,9 @@ if __name__ == '__main__':
 
             # Set up a subscriber for the device
             reader = PipelineReader(routing_in=device)
-            result = reader.open()
-            if result is True:
-                device_config['handler'] = reader
-                device_config['last_updated'] = 0
-                valid_config[device] = device_config
-            else:
-                print('Could not open subscriber for %s. Skipping...' % (device,))
+            device_config['handler'] = reader
+            device_config['last_updated'] = 0
+            valid_config[device] = device_config
 
         if valid_config == {}:
             raise Exception('No valid configuration loaded. Exiting...')

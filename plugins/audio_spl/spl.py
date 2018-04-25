@@ -73,7 +73,7 @@ class SoundPressureLevel(Plugin):
 
         if device_index < 0:
             audio.terminate()
-            return None, 'Failed to find Waggle microphone'
+            return False, 'Failed to find Waggle microphone'
 
         stream = audio.open(
             format=self.audio_format,
