@@ -164,7 +164,7 @@ class CoresensePlugin4(Plugin):
             'sensor_init': 1,
             'sensor_config': 2,
             'sensor_enable': 3,
-            'sensor_diable': 4,
+            'sensor_disable': 4,
             'sensor_read': 5,
             'sensor_write': 6,
             'bus_init': 17,
