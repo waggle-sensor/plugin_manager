@@ -221,16 +221,20 @@ class CoresensePlugin4(Plugin):
                 self.sensors[sensor] = s
         return requests
 
-    def _print(self, packets):
+    def _decode(self, packets):
         decoded = decode_frame(packets)
-
-        if isinstance(decoded, dict):
-            for item in decoded:
-                converted_value = convert(decoded[item], item)
-                print(converted_value)
-
+        if decoded != {}:
+            return decoded
         else:
-            print('Error: Could not decode the packet %s' % (str(decoded),))
+            return None
+
+    def _print(self, decoded_dict):
+        for item in decoded_dict:
+            try:
+                converted_value = convert(decoded_dict[item], item)
+                print(converted_value)
+            except Exception as ex:
+                print('Coult not decode %s: %s' % (item, str(ex)))
 
     def run(self):
         # Check firmware version and MAC address of the Metsense
@@ -238,16 +242,19 @@ class CoresensePlugin4(Plugin):
             check_firmware_request = [5, 255, 5, 0]  # sensor_read, 0xFF, 0x00
             message = self.input_handler.request_data(check_firmware_request)
             if message is None:
-                raise Exception('Version is null')
+                raise Exception('Serial error')
             else:
-                self._print(message)
+                ver = self._decode(message)
+                if ver is None:
+                    raise Exception('No version information received')
+                self._print(ver)
                 if not self.hrf:
                     self.send(sensor='frame', data=message)
         except SerialException:
             print('Could not check firmware version due to serial error. Restarting...')
             return
         except Exception as ex:
-            print('Could not check firmware version %s' % (str(ex),))
+            print('Could not check firmware version %s ' % (str(ex),))
             return
 
         while True:
@@ -265,7 +272,8 @@ class CoresensePlugin4(Plugin):
                 else:
                     print('Received frame')
                     if self.hrf:
-                        self._print(message)
+                        decoded_message = self._decode(message)
+                        self._print(decoded_message)
                     else:
                         self.send(sensor='frame', data=message)
             else:
