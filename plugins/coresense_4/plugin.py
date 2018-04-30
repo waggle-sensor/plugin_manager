@@ -6,7 +6,8 @@ import argparse
 from serial import Serial, SerialException
 
 from waggle.pipeline import Plugin
-from waggle.protocol.v5.decoder import decode_frame, convert, check_crc, create_crc
+from waggle.checksum import crc8
+from waggle.protocol.v5.decoder import decode_frame, convert
 
 import json
 
@@ -95,14 +96,18 @@ class DeviceHandler(object):
                         if len(data) >= self.HEADER_SIZE + packet_length + self.FOOTER_SIZE:
                             packet = data[:self.HEADER_SIZE + packet_length + self.FOOTER_SIZE]
                             crc = packet[-2]
-                            if not check_crc(crc, packet[self.HEADER_SIZE:-2]):
+                            if crc != crc8(packet[self.HEADER_SIZE:-2]):
                                 return None
                             sequence = data[3]
                             packets.extend(packet)
                             del data[:len(packet)]
                             if (sequence & 0x80) == 0x80:
                                 return packets
+                        else:
+                            time.sleep(0.5)
+                            break
                     else:
+                        time.sleep(0.5)
                         break
             else:
                 time.sleep(0.5)
@@ -139,7 +144,7 @@ class DeviceHandler(object):
         buffer.extend(data)
 
         buffer[2] = len(data) + 1
-        buffer.append(create_crc(buffer[3:]))  # crc
+        buffer.append(crc8(buffer[3:]))  # crc
         buffer.append(0x55)  # postscript
         self.serial.write(bytes(buffer))
         return self.read_response()
