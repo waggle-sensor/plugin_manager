@@ -54,7 +54,7 @@ avg = []
 medium = [31, 64, 125, 250, 500, 1000, 2000, 4000, 8000, 16000] # Medium? of octave, hearable frequency
 
 for i in range(10):
-    octave[i] = [medium[i]]
+    octave[i] = []
 
 val = yf[0:N//2]
 
@@ -88,14 +88,16 @@ avgdb = 10*np.log10(np.abs(avg))
 ```
 
 The average dBm for each bin are used to calculate sound pressure level (SPL) of recorded sound with regards of 
-Adding acoustic levels of sound sources: http://www.sengpielaudio.com/calculator-spl.htm.
+Adding acoustic levels of sound sources: http://www.sengpielaudio.com/calculator-spl.htm, and http://www.sengpielaudio.com/calculator-spl30.htm.
+
+And upper frequency for octave cycle is refered: https://courses.physics.illinois.edu/phys406/sp2017/Lab_Handouts/Octave_Bands.pdf
 
 ```
 a = []
 b = 0,
 for ia in range(len(avg)):
-    a.append(((10**(avgdb[ia]/10))**(1/2)) * 0.00002)
-    b = b + (a[ia]/0.00002)**2
+    a.append(10**(avgdb[ia]/10))
+    b = b + a[ia]
 
 sdb = 10*np.log10(b)
 
@@ -105,3 +107,4 @@ sdb = 10*np.log10(b)
 ### Tesult values:
 avgdb (1x10 array) and sdb (single value) are the results of the calculation. Those values need to be return back to DBs 
 using image/audio pipeline.
+
