@@ -113,6 +113,9 @@ class PipelineReader(object):
         return True
 
     def close(self):
+        if self.channel is not None:
+            if self.channel.is_open:
+                self.channel.close()
         if self.connection is not None:
             if self.connection.is_open:
                 self.connection.close()
