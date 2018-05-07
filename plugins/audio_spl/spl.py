@@ -1,6 +1,5 @@
 #! /usr/bin/python3
 
-import os
 import time
 import json
 import argparse
@@ -13,8 +12,6 @@ import datetime
 
 from waggle.pipeline import Plugin
 from waggle.protocol.v5.encoder import encode_frame
-
-device = os.environ.get('WAGGLE_MICROPHONE', '/dev/waggle_microphone')
 
 
 def get_default_configuration():
@@ -248,10 +245,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--hrf', action='store_true', help='Print in human readable form')
     args = parser.parse_args()
-
-    if not os.path.exists(device):
-        print('No Waggle microphone detected')
-        exit(1)
 
     plugin = SoundPressureLevel.defaultConfig()
     plugin.hrf = args.hrf
