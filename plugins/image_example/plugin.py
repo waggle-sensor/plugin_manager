@@ -10,7 +10,7 @@ import pika
 import cv2
 import numpy as np
 
-from waggle.pipeline import Plugin
+from waggle.pipeline import Plugin, ImagePipelineHandler
 from waggle.protocol.v5.encoder import encode_frame_from_flat_string
 
 # Configuration of the pipeline
@@ -69,9 +69,9 @@ def get_histogram(image):
         for value in histogram:
             output.append(int(value))
         return binascii.hexlify(output).decode()
-    r_histo, bins = np.histogram(r, range(0, 256, 5))
-    g_histo, bins = np.histogram(g, range(0, 256, 5))
-    b_histo, bins = np.histogram(b, range(0, 256, 5))
+    r_histo, bins = np.histogram(r, range(0, 256, 15))
+    g_histo, bins = np.histogram(g, range(0, 256, 15))
+    b_histo, bins = np.histogram(b, range(0, 256, 15))
     ret = {
         'r': get_histogram_in_byte(r_histo),
         'g': get_histogram_in_byte(g_histo),
@@ -90,43 +90,6 @@ def print_plaintext(report, prefix='', delimiter='_', no_print_for_none=False):
                     yield '{}{} {}'.format(prefix, key, str(value))
             else:
                 yield '{}{} {}'.format(prefix, key, str(value))
-
-
-class PipelineReader(object):
-    def __init__(self, routing_in, exchange='image_pipeline'):
-        self.connection = None
-        self.channel = None
-        self.exchange = exchange
-        self.routing_in = routing_in
-
-    def open(self):
-        try:
-            self.connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-            self.channel = self.connection.channel()
-            self.channel.exchange_declare(exchange=self.exchange, exchange_type='direct')
-
-            result = self.channel.queue_declare(exclusive=True, arguments={'x-max-length': 1})
-            self.queue = result.method.queue
-            self.channel.queue_bind(queue=self.queue, exchange=self.exchange, routing_key=self.routing_in)
-        except Exception:
-            return False
-        return True
-
-    def close(self):
-        if self.channel is not None:
-            if self.channel.is_open:
-                self.channel.close()
-        if self.connection is not None:
-            if self.connection.is_open:
-                self.connection.close()
-
-    def read(self, timeout=5):
-        for i in range(timeout):
-            method, properties, body = self.channel.basic_get(queue=self.queue, no_ack=True)
-            if method is not None:
-                return True, (properties, body)
-            time.sleep(1)
-        return False, ''
 
 
 class ExampleImageProcessor(Plugin):
@@ -174,11 +137,13 @@ class ExampleImageProcessor(Plugin):
         # Obtain basic information of the image
         results['average_color'] = get_average_color(img)
         results['histogram'] = get_histogram(img)
+        print(results['histogram'])
 
         # Packetizing
         image = {'image': results}
         results_flat_string = print_plaintext(image)
         flat_string_data = '\n'.join(results_flat_string)
+        print(flat_string_data)
         encoded_data = encode_frame_from_flat_string(flat_string_data)
         return encoded_data
 
@@ -192,14 +157,10 @@ class ExampleImageProcessor(Plugin):
         while True:
             current_time = time.time()
 
-            for device in self.config:
-                device_config = self.config[device]
+            for device, device_config in self.config.items():
                 if current_time - device_config['last_updated'] > device_config['interval']:
                     handler = device_config['handler']
-                    handler.open()
                     return_code, message = handler.read()
-                    handler.close()
-                    device_config['handler'] = handler
                     if return_code is True:
                         properties, frame = message
                         print('Received frame')
@@ -207,6 +168,7 @@ class ExampleImageProcessor(Plugin):
                             frame,
                             properties.headers,
                             device_char=device[0])
+                        print(waggle_packet)
                         self.send(sensor='frame', data=waggle_packet)
                         device_config['last_updated'] = current_time
                         self.config[device] = device_config
@@ -225,7 +187,7 @@ if __name__ == '__main__':
             device_config = config[device]
 
             # Set up a subscriber for the device
-            reader = PipelineReader(routing_in=device)
+            reader = ImagePipelineHandler(routing_in=device)
             device_config['handler'] = reader
             device_config['last_updated'] = 0
             valid_config[device] = device_config
