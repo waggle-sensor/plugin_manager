@@ -182,7 +182,7 @@ class CarPedDetector(Plugin):
                         if current_time - self.config['last_sampled'] > self.config['sampling_interval']:
                             result = {
                                 'processing_software': os.path.basename(__file__),
-                                'results': detected_objects
+                                'results': json.dumps(detected_objects)
                             }
                             properties.headers.update(result)
                             self.input_handler.write(
@@ -205,9 +205,9 @@ if __name__ == '__main__':
 
     plugin = CarPedDetector.defaultConfig()
     plugin.hrf = args.hrf
-    # try:
-    plugin.run()
-    # except (KeyboardInterrupt, Exception) as ex:
-    #     print(str(ex))
-    # finally:
-    #     plugin.close()
+    try:
+        plugin.run()
+    except (KeyboardInterrupt, Exception) as ex:
+        print(str(ex))
+    finally:
+        plugin.close()
