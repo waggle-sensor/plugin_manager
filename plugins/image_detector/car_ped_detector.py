@@ -35,7 +35,7 @@ def get_default_configuration():
         'detection_interval': 1,  # every 5 mins
         'sampling_interval': -1,  # None, by default
         'detection_confidence': 0.3,  # least detection confidence
-       }
+    }
     return conf
 
 
@@ -66,7 +66,7 @@ class CarPedDetector(Plugin):
         cvOut = cvNet.forward()
 
         output = {}
-        for detection in cvOut[0,0,:,:]:
+        for detection in cvOut[0, 0, :, :]:
             score = float(detection[2])
             if score > confidence:
                 class_index = int(detection[1])
@@ -79,7 +79,7 @@ class CarPedDetector(Plugin):
                 top = int(detection[4] * img_rows)
                 right = int(detection[5] * img_cols)
                 bottom = int(detection[6] * img_rows)
-                
+
                 output[class_name][detection_index] = (
                     left, top, right, bottom
                 )
@@ -128,7 +128,7 @@ class CarPedDetector(Plugin):
 
         try:
             confidence = float(self.config['detection_confidence'])
-        except:
+        except Exception:
             confidence = 0.3
 
         self.config['last_updated'] = time.time() - self.config['detection_interval']
@@ -167,7 +167,7 @@ class CarPedDetector(Plugin):
                     else:
                         count_car = 0
                         count_person = 0
-                        
+
                         if 'car' in detected_objects:
                             count_car = len(detected_objects['car'].keys())
                         if 'person' in detected_objects:
@@ -177,12 +177,12 @@ class CarPedDetector(Plugin):
                         }
                         waggle_packet = encode_frame(packet)
                         self.send(sensor='', data=waggle_packet)
-                    
+
                         # Sampling the result
                         if current_time - self.config['last_sampled'] > self.config['sampling_interval']:
                             result = {
-                                    'processing_software': os.path.basename(__file__),
-                                    'results': detected_objects
+                                'processing_software': os.path.basename(__file__),
+                                'results': detected_objects
                             }
                             properties.headers.update(result)
                             self.input_handler.write(
@@ -191,7 +191,6 @@ class CarPedDetector(Plugin):
                                 properties.headers
                             )
                             self.config['last_sampled'] = current_time
-                        
                     self.config['last_updated'] = current_time
             else:
                 wait_time = current_time - self.config['last_updated']

@@ -112,7 +112,7 @@ class SoundPressureLevel(Plugin):
             stream.close()
             audio.terminate()
 
-        if self.recording == True:
+        if self.recording is True:
             file_name = "audio_{:%Y%m%dT%H%M%S}.wav".format(datetime.datetime.now())
             waveFile = wave.open(file_name, 'wb')
             waveFile.setnchannels(self.audio_channels)
@@ -133,23 +133,23 @@ class SoundPressureLevel(Plugin):
 
         center = []
         for i in reversed(range(n)):
-            c = 1000/2**((i+1)/octv)
+            c = 1000. / 2 ** ((i + 1) / octv)
             if c > 20:
                 center.append(round(c, 4))
         center.append(1000)
         for i in range(m):
-            c = 1000*2**((i+1)/octv)
+            c = 1000. * 2 ** ((i + 1) / octv)
             if c < 22000:
                 center.append(round(c, 4))
 
         upper = []
         for i in range(len(center)):
-            u = center[i]*2**(1/(octv*2))
+            u = center[i] * 2 ** (1 / (octv * 2))
             if len(upper) < (octv * 10):
                 upper.append(round(u, 4))
         lower = []
         for i in range(len(center)):
-            l = center[i]/2**(1/(octv*2))
+            l = center[i] / 2 ** (1 / (octv * 2))
             if len(lower) < (octv * 10):
                 lower.append(round(l, 4))
 
@@ -158,14 +158,14 @@ class SoundPressureLevel(Plugin):
     def match_length(self, avg_db):
         octave_db = []
         for i in range(10):
-            instance = 0.        
+            instance = 0.
             if i == 9:
-                left = len(avg_db) - self.octave_band*9
+                left = len(avg_db) - self.octave_band * 9
                 for j in range(left):
-                    instance = instance + 10 ** (avg_db[i*self.octave_band+j] / 10)
+                    instance = instance + 10 ** (avg_db[i * self.octave_band + j] / 10)
             else:
                 for j in range(self.octave_band):
-                    instance = instance + 10 ** (avg_db[i*self.octave_band+j] / 10)
+                    instance = instance + 10 ** (avg_db[i * self.octave_band + j] / 10)
             octave_db.append(10 * np.log10(instance))
 
         instance = 0.
@@ -218,7 +218,7 @@ class SoundPressureLevel(Plugin):
 
         sdb = 10 * np.log10(total)
 
-        ## if octave band > 1, so that the length of avg_db does not match with waggle protocol:
+        # if octave band > 1, so that the length of avg_db does not match with waggle protocol:
         if len(avg_db) > 10:
             avg_db = self.match_length(avg_db)
 

@@ -4,8 +4,6 @@ import time
 import binascii
 import json
 
-import pika
-
 # Import graphics functions
 import cv2
 import numpy as np
