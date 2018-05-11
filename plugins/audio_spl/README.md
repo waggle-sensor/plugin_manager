@@ -4,6 +4,12 @@
 - A knob for adjusting octave band is added (the 'octave_band' in config; if octave_band = 1, then it is 1/1 octave, if octave_band = 2, then it is 1/2 octave, and so on). However, Waggle protocol does not allow flexable data length, so that the length of output data will be one array for 10 float, and one another float data which are calculated dB for each bin and total dB for the octave from 20Hz - 20kHz (a function called 'match_length()' handles the length of the data).
 - Recording raw audio is added (the 'recording' in config; True - Yes recording or False - No recording). However, image pipeline cannot handle the wav form data to add metadata, and the size of the file is too big to send it through. Need to be figured out.
 
+## References:
+The average dBm for each bin are used to calculate sound pressure level (SPL) of recorded sound with regards of 
+Adding acoustic levels of sound sources: http://www.sengpielaudio.com/calculator-spl.htm, and http://www.sengpielaudio.com/calculator-spl30.htm.
+
+And upper frequency for octave cycle is refered: https://courses.physics.illinois.edu/phys406/sp2017/Lab_Handouts/Octave_Bands.pdf
+
 ## Base code for spl plugin:
 The python script samples 5 seconds of audio from a microphone attachend on edge-processor and calculate noise level in dBm.
 The script needs **pyaudio** to read audio data, and **numpy** to do further processes as shown below. The format of recorded sound is pyaudio.paInt16, the number of channel is 1, sampling rate is 44100, each chunk length is 1024, and it records 5 seconds.
@@ -200,11 +206,6 @@ def match_length(self, avg_db):
 
         return octave_db
 ```
-
-The average dBm for each bin are used to calculate sound pressure level (SPL) of recorded sound with regards of 
-Adding acoustic levels of sound sources: http://www.sengpielaudio.com/calculator-spl.htm, and http://www.sengpielaudio.com/calculator-spl30.htm.
-
-And upper frequency for octave cycle is refered: https://courses.physics.illinois.edu/phys406/sp2017/Lab_Handouts/Octave_Bands.pdf
 
 
 ### Result values:
