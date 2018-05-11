@@ -8,6 +8,9 @@ import argparse
 import pyaudio
 import numpy as np
 
+import wave
+import datetime
+
 from waggle.pipeline import Plugin
 from waggle.protocol.v5.encoder import encode_frame
 
@@ -23,6 +26,8 @@ def get_default_configuration():
         'audio_chunk': 1024,
         'sampling_period': 5,  # in Second
         'interval': 60,  # 1 minute
+        'octave_band': 3,
+        'recording': False,
     }
     return default_config
 
@@ -42,6 +47,8 @@ class SoundPressureLevel(Plugin):
         self.audio_chunk = self.config['audio_chunk']
         self.audio_sampling_seconds = self.config['sampling_period']
         self.total_count = int(self.audio_rate / self.audio_chunk * self.audio_sampling_seconds)
+        self.octave_band = self.config['octave_band']
+        self.recording = self.config['recording']
 
     def _get_config_table(self):
         config_file = '/wagglerw/waggle/audio_spl.conf'
@@ -104,11 +111,71 @@ class SoundPressureLevel(Plugin):
             stream.stop_stream()
             stream.close()
             audio.terminate()
-        len(self.frames)
+
+        if self.recording is True:
+            base_dir = '/wagglerw/files/audio'
+            if not os.path.exists(base_dir):
+                os.makedirs(base_dir)
+            file_name = os.path.join(base_dir, 'audio_{:%Y%m%dT%H%M%S}.wav'.format(datetime.datetime.now()))
+            waveFile = wave.open(file_name, 'wb')
+            waveFile.setnchannels(self.audio_channels)
+            waveFile.setsampwidth(audio.get_sample_size(self.audio_format))
+            waveFile.setframerate(self.audio_rate)
+            waveFile.writeframes(b''.join(self.frames))
+            waveFile.close()
+
         if error_code == 0:
             return True, self.frames
         else:
             return False, 'Timeout on data collection'
+
+    def cal_freq_range(self):
+        octv = self.octave_band
+        n = 5 * octv + (octv - 1) + 10
+        m = 4 * octv + 10
+
+        center = []
+        for i in reversed(range(n)):
+            c = 1000. / 2 ** ((i + 1) / octv)
+            if c > 20:
+                center.append(round(c, 4))
+        center.append(1000)
+        for i in range(m):
+            c = 1000. * 2 ** ((i + 1) / octv)
+            if c < 22000:
+                center.append(round(c, 4))
+
+        upper = []
+        for i in range(len(center)):
+            u = center[i] * 2 ** (1 / (octv * 2))
+            if len(upper) < (octv * 10):
+                upper.append(round(u, 4))
+        lower = []
+        for i in range(len(center)):
+            l = center[i] / 2 ** (1 / (octv * 2))
+            if len(lower) < (octv * 10):
+                lower.append(round(l, 4))
+
+        return lower, center, upper
+
+    def match_length(self, avg_db):
+        octave_db = []
+        for i in range(10):
+            instance = 0.
+            if i == 9:
+                left = len(avg_db) - self.octave_band * 9
+                for j in range(left):
+                    instance = instance + 10 ** (avg_db[i * self.octave_band + j] / 10)
+            else:
+                for j in range(self.octave_band):
+                    instance = instance + 10 ** (avg_db[i * self.octave_band + j] / 10)
+            octave_db.append(10 * np.log10(instance))
+
+        instance = 0.
+        for i in range(10):
+            instance = instance + 10 ** (octave_db[i] / 10)
+
+        return octave_db
 
     def close(self):
         pass
@@ -126,18 +193,19 @@ class SoundPressureLevel(Plugin):
         yf = np.fft.fftn(numpydata)  # the n-dimensional FFT
         xf = np.linspace(0.0, 1.0 / (2.0 * time_per_sample), number_of_samples // 2)  # 1.0/(2.0*T) = RATE / 2
 
+        val = yf[0:number_of_samples // 2]
+        octaves_lower_hz, octaves_center_hz, octaves_upper_hz = self.cal_freq_range()
+
         octave = {}
         avg = []
-        for i in range(10):
+        for i in range(len(octaves_upper_hz)):
             octave[i] = []
 
-        val = yf[0:number_of_samples // 2]
-        octaves_upper_hz = [44, 88, 176, 353, 707, 1414, 2825, 5650, 11300, 22000]
         for hz, magnitude in zip(xf, val):
             if hz < 20:
                 continue
             index = np.searchsorted(octaves_upper_hz, hz, side="left")
-            if index >= 10:
+            if index >= len(octaves_upper_hz):
                 continue
             octave[index].append(magnitude)
 
@@ -152,6 +220,10 @@ class SoundPressureLevel(Plugin):
             total = total + 10 ** (avg_db[ia] / 10)
 
         sdb = 10 * np.log10(total)
+
+        # if octave band > 1, so that the length of avg_db does not match with waggle protocol:
+        if len(avg_db) > 10:
+            avg_db = self.match_length(avg_db)
 
         if self.hrf:
             sensor_name = 'audio_spl_octave'

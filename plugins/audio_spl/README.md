@@ -1,5 +1,10 @@
 # Python Script for Noise Level Calculation
 
+## Log (May 7, 2018):
+- A knob for adjusting octave band is added (the 'octave_band' in config; if octave_band = 1, then it is 1/1 octave, if octave_band = 2, then it is 1/2 octave, and so on). However, Waggle protocol does not allow flexable data length, so that the length of output data will be one array for 10 float, and one another float data which are calculated dB for each bin and total dB for the octave from 20Hz - 20kHz (a function called 'match_length()' handles the length of the data).
+- Recording raw audio is added (the 'recording' in config; True - Yes recording or False - No recording). However, image pipeline cannot handle the wav form data to add metadata, and the size of the file is too big to send it through. Need to be figured out.
+
+## Base code for spl plugin:
 The python script samples 5 seconds of audio from a microphone attachend on edge-processor and calculate noise level in dBm.
 The script needs pyaudio to read audio data, and numpy to do further processes as shown below. The format of recorded sound is
 pyaudio.paInt16, the number of channel is 1, sampling rate is 44100, each chunk length is 1024, and it records 5 seconds.
@@ -54,7 +59,7 @@ avg = []
 medium = [31, 64, 125, 250, 500, 1000, 2000, 4000, 8000, 16000] # Medium? of octave, hearable frequency
 
 for i in range(10):
-    octave[i] = [medium[i]]
+    octave[i] = []
 
 val = yf[0:N//2]
 
@@ -88,14 +93,16 @@ avgdb = 10*np.log10(np.abs(avg))
 ```
 
 The average dBm for each bin are used to calculate sound pressure level (SPL) of recorded sound with regards of 
-Adding acoustic levels of sound sources: http://www.sengpielaudio.com/calculator-spl.htm.
+Adding acoustic levels of sound sources: http://www.sengpielaudio.com/calculator-spl.htm, and http://www.sengpielaudio.com/calculator-spl30.htm.
+
+And upper frequency for octave cycle is refered: https://courses.physics.illinois.edu/phys406/sp2017/Lab_Handouts/Octave_Bands.pdf
 
 ```
 a = []
 b = 0,
 for ia in range(len(avg)):
-    a.append(((10**(avgdb[ia]/10))**(1/2)) * 0.00002)
-    b = b + (a[ia]/0.00002)**2
+    a.append(10**(avgdb[ia]/10))
+    b = b + a[ia]
 
 sdb = 10*np.log10(b)
 
@@ -105,3 +112,4 @@ sdb = 10*np.log10(b)
 ### Tesult values:
 avgdb (1x10 array) and sdb (single value) are the results of the calculation. Those values need to be return back to DBs 
 using image/audio pipeline.
+
