@@ -222,9 +222,6 @@ class SoundPressureLevel(Plugin):
         if len(avg_db) > 10:
             avg_db = self.match_length(avg_db)
 
-        print("avg_db: ", avg_db)
-        print("sdb: ", sdb)
-
         if self.hrf:
             sensor_name = 'audio_spl_octave'
             for i, db in enumerate(avg_db):
