@@ -113,7 +113,10 @@ class SoundPressureLevel(Plugin):
             audio.terminate()
 
         if self.recording is True:
-            file_name = "audio_{:%Y%m%dT%H%M%S}.wav".format(datetime.datetime.now())
+            base_dir = '/wagglerw/files/audio'
+            if not os.path.exists(base_dir):
+                os.makedirs(base_dir)
+            file_name = os.path.join(base_dir, 'audio_{:%Y%m%dT%H%M%S}.wav'.format(datetime.datetime.now()))
             waveFile = wave.open(file_name, 'wb')
             waveFile.setnchannels(self.audio_channels)
             waveFile.setsampwidth(audio.get_sample_size(self.audio_format))
