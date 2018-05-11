@@ -119,6 +119,12 @@ class CarPedDetector(Plugin):
             print('Model extension not recognized: %s' % (ext,))
             return
 
+        # NOTE: Did not work in Waggle 2.9.0; needs investigation
+        # Use OpenCL
+        # cvNet.setPreferableBackend(cv2.dnn.DNN_BACKEND_DEFAULT)
+        # cvNet.setPreferableTarget(cv2.dnn.DNN_TARGET_OPENCL)
+
+
         # Load classes
         classes = {}
         with open(self.config['classes'], 'r') as file:
