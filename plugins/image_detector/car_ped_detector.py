@@ -32,7 +32,7 @@ def get_default_configuration():
         'input_size': (300, 300),
         'input_mean_subtraction': (127.5, 127.5, 127.5),
         'input_channel_order': 'RGB',
-        'detection_interval': 1,  # every 5 mins
+        'detection_interval': 300,  # every 5 mins
         'sampling_interval': -1,  # None, by default
         'detection_confidence': 0.3,  # least detection confidence
     }
