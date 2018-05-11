@@ -166,6 +166,9 @@ def main(octv, xf, yf, N):
 
     sdb = 10*np.log10(b)
 
+    if len(avg_db) > 10:
+        avg_db = match_length(avg_db)
+
     print(low, '\n')
     print(center, '\n')
     print(upper_octave_cycle, '\n')
@@ -173,9 +176,29 @@ def main(octv, xf, yf, N):
     # print(len(avgdb), sdb)
 
     # sdb --> addtion of SPL, avgdb --> average of each octave
+```
 
+If the length of avg_db is longer than 10, the that does not match the length of spl data in waggle protocol. Then to match the length to waggle protocol, add spl of bins with regards to the octave band.
 
+```
+def match_length(self, avg_db):
+        octave_db = []
+        for i in range(10):
+            instance = 0.
+            if i == 9:
+                left = len(avg_db) - self.octave_band * 9
+                for j in range(left):
+                    instance = instance + 10 ** (avg_db[i * self.octave_band + j] / 10)
+            else:
+                for j in range(self.octave_band):
+                    instance = instance + 10 ** (avg_db[i * self.octave_band + j] / 10)
+            octave_db.append(10 * np.log10(instance))
 
+        instance = 0.
+        for i in range(10):
+            instance = instance + 10 ** (octave_db[i] / 10)
+
+        return octave_db
 ```
 
 The average dBm for each bin are used to calculate sound pressure level (SPL) of recorded sound with regards of 
