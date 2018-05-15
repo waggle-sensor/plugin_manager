@@ -46,4 +46,3 @@ http://adilmoujahid.com/posts/2016/06/introduction-deep-learning-python-caffe/
 https://software.intel.com/en-us/articles/training-and-deploying-deep-learning-networks-with-caffe-optimized-for-intel-architecture#
 
 http://shengshuyang.github.io/A-step-by-step-guide-to-Caffe.html
-

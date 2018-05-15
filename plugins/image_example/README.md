@@ -1,3 +1,9 @@
+<!--
+waggle_topic=Waggle/Node/Plugins
+-->
+
+# Image Processing Example
+
 ## Minimum Requirements for Waggle Image Processor
 
 * The pipeline is powered by RabbitMQ such that any processors will need RabbitMQ client library provided in their prefered programming language. We recommend the following tools (Note that JAVA is currently not supported by Waggle)

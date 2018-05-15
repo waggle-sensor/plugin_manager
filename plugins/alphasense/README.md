@@ -1,4 +1,8 @@
-# Overview
+<!--
+waggle_topic=Waggle/Node/Plugins
+-->
+
+# Alphasense Plugin (Old)
 
 The Alphasense is allowed to
 

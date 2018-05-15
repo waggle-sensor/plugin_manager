@@ -1,3 +1,7 @@
+<!--
+waggle_topic=IGNORE
+-->
+
 Plugin system based on Super Simple Python Plugins
 from https://github.com/samwyse/sspp
 

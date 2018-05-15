@@ -1,8 +1,8 @@
 Caffe installation instructions for Odroid XU4
 ===========================
-(Please note that this document details how to install the CPU-only version of Caffe. 
-Caffe is built on the CUDA library, which allows for GPU processing on NVIDIA GPUs only. 
-Because the XU4 is equipped with a Mali GPU, it is not CUDA compatible and is not able to perform GPU processing.) 
+(Please note that this document details how to install the CPU-only version of Caffe.
+Caffe is built on the CUDA library, which allows for GPU processing on NVIDIA GPUs only.
+Because the XU4 is equipped with a Mali GPU, it is not CUDA compatible and is not able to perform GPU processing.)
 
 
 1). Install the general dependencies:
@@ -31,7 +31,7 @@ cp Makefile.config.example Makefile.config
 (Note: The directories specified in this section may be different than the ones you have on your system.)
 
 1. Ensure that the line “CPU_ONLY := 1” (Line 8) is UNcommented.
-2. Ensure that the paths variables of various python files are correct. 
+2. Ensure that the paths variables of various python files are correct.
 
 PYTHON_INCLUDE and PYTHON_LIB will need to point to Python.h, numpy/arrayobject.h, and libPythonX.X.so (Lines 64/65 and 79).
 Verify that the following files exist in their respective directories before proceeding.
@@ -53,7 +53,7 @@ make install
 make runtest
 ```
 
-Make: 
+Make:
 
 ```
 make all -j8

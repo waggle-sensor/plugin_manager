@@ -1,3 +1,7 @@
+<!--
+waggle_topic=Waggle/Node/Plugins
+-->
+
 # Coresense 4.1 Plugin
 
 ## Behavior of the plugin
@@ -44,8 +48,8 @@ sensor_table = {
 
         # 'AlphaON': { 'sensor_id': 0x2B, 'function_call': 'sensor_read', 'interval': 1 },
         'AlphaFirmware': { 'sensor_id': 0x30, 'function_call': 'sensor_read', 'interval': 25 },
-        'AlphaSerial': { 'sensor_id': 0x29, 'function_call': 'sensor_read', 'interval': 25 }, 
-        'AlphaHisto': { 'sensor_id': 0x28, 'function_call': 'sensor_read', 'interval': 25 }, 
+        'AlphaSerial': { 'sensor_id': 0x29, 'function_call': 'sensor_read', 'interval': 25 },
+        'AlphaHisto': { 'sensor_id': 0x28, 'function_call': 'sensor_read', 'interval': 25 },
         'AlphaConfig': { 'sensor_id': 0x31, 'function_call': 'sensor_read', 'interval': 1 },
     }
 ```
