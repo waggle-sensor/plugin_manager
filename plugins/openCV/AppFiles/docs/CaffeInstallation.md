@@ -1,5 +1,5 @@
-Caffe installation instructions for Odroid XU4
-===========================
+# Caffe installation instructions for Odroid XU4
+
 (Please note that this document details how to install the CPU-only version of Caffe.
 Caffe is built on the CUDA library, which allows for GPU processing on NVIDIA GPUs only.
 Because the XU4 is equipped with a Mali GPU, it is not CUDA compatible and is not able to perform GPU processing.)

@@ -1,5 +1,4 @@
-OpenCV Installation on ODROID XU4
-=======================
+# OpenCV Installation on ODROID XU4
 
 Easiest Installation method:
 
