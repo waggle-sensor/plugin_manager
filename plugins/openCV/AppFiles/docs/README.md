@@ -1,3 +1,7 @@
+<!--
+waggle_topic=Waggle/Node/Plugins,Cloud Detector
+-->
+
 # Waggle Cloud Detection Documentation
 
 1). CaffeInstallation.md:       Steps taken to install CPU only Caffe on ODROID XU4.

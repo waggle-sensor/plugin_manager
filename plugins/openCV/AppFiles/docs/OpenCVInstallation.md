@@ -1,3 +1,8 @@
+<!--
+waggle_topic=IGNORE
+waggle_topic=!Waggle/Node/Plugins,Cloud Detector
+-->
+
 # OpenCV Installation on ODROID XU4
 
 Easiest Installation method:

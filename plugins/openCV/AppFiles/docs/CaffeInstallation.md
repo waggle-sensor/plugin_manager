@@ -1,3 +1,8 @@
+<!--
+waggle_topic=IGNORE
+waggle_topic=!Waggle/Node/Plugins,Cloud Detector
+-->
+
 # Caffe installation instructions for Odroid XU4
 
 (Please note that this document details how to install the CPU-only version of Caffe.
