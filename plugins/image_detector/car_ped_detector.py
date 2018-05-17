@@ -139,6 +139,10 @@ class CarPedDetector(Plugin):
 
         self.config['last_updated'] = time.time() - self.config['detection_interval']
         self.config['last_sampled'] = time.time() - self.config['sampling_interval']
+        if self.config['sampling_interval'] < 1:
+            do_sampling = False
+        else:
+            do_sampling = True
 
         while True:
             current_time = time.time()
@@ -185,18 +189,19 @@ class CarPedDetector(Plugin):
                         self.send(sensor='', data=waggle_packet)
 
                         # Sampling the result
-                        if current_time - self.config['last_sampled'] > self.config['sampling_interval']:
-                            result = {
-                                'processing_software': os.path.basename(__file__),
-                                'results': json.dumps(detected_objects)
-                            }
-                            properties.headers.update(result)
-                            self.input_handler.write(
-                                ROUTING_KEY_EXPORT,
-                                frame,
-                                properties.headers
-                            )
-                            self.config['last_sampled'] = current_time
+                        if do_sampling:
+                            if current_time - self.config['last_sampled'] > self.config['sampling_interval']:
+                                result = {
+                                    'processing_software': os.path.basename(__file__),
+                                    'results': json.dumps(detected_objects)
+                                }
+                                properties.headers.update(result)
+                                self.input_handler.write(
+                                    ROUTING_KEY_EXPORT,
+                                    frame,
+                                    properties.headers
+                                )
+                                self.config['last_sampled'] = current_time
                     self.config['last_updated'] = current_time
             else:
                 wait_time = current_time - self.config['last_updated']
