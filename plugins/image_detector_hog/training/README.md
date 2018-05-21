@@ -1,3 +1,7 @@
+<!--
+waggle_topic=IGNORE
+-->
+
 # Trainer for pedestrian detection
 
 This document covers 1) collections of positive and negative images by cropping sample images, 2) training a classifier, and 3) performing hard-negative-mining for the classifier.
