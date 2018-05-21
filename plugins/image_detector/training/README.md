@@ -1,5 +1,5 @@
 <!--
-waggle_topic=Waggle/Node/Plugins
+waggle_topic=IGNORE
 -->
 
 # How to Train Object Detector with TensorFlow's Object Detection API
