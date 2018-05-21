@@ -31,8 +31,8 @@ We train the model to 50 objects, which are listed in a class in the demo.py,
 and then we use the generated bounding boxes, mask polygons, and labels to the objects.
 
 ## Prerequites for This Example:
-1. To run this code, You MUST download pre-trained COCO weights (mask_rcnn_coco.h5) from the [releases page](https://github.com/matterport/Mask_RCNN/releases).
-2. Before run this code, You MUST designate root directory of the project in the code ```demo.py```.
+1. To run this code, You **MUST** download pre-trained COCO weights (mask_rcnn_coco.h5) from the [releases page](https://github.com/matterport/Mask_RCNN/releases).
+2. Before run this code, You **MUST** designate root directory of the project in the code ```demo.py```.
 ```
 # Root directory of the project
 ROOT_DIR = os.getcwd()
