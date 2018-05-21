@@ -135,7 +135,6 @@ class ExampleImageProcessor(Plugin):
         # Obtain basic information of the image
         results['average_color'] = get_average_color(img)
         results['histogram'] = get_histogram(img)
-        print(results['histogram'])
 
         # Packetizing
         image = {'image': results}
@@ -166,7 +165,6 @@ class ExampleImageProcessor(Plugin):
                             frame,
                             properties.headers,
                             device_char=device[0])
-                        print(waggle_packet)
                         self.send(sensor='frame', data=waggle_packet)
                         device_config['last_updated'] = current_time
                         self.config[device] = device_config
