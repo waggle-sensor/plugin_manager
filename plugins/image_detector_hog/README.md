@@ -1,6 +1,12 @@
-# Pedestrian detector
+<!--
+waggle_topic=Waggle/Node/Plugins
+-->
 
-This processor captures any pedestrians in the captured scene. This is ```oneshot``` process that runs from start time to end time specified by the configuration file under ```/etc/waggle/image_pedestrian_detection.conf```. The processor requires a classifier trained previously. It also uses OpenCV 3.2.0 HOGDescriptor to detect pedestrian. Settings for HOGDescriptor are,
+# Pedestrian Detector Plugin using HOG Descriptor
+
+_WARNING: the plugin is outdated and no longer works in later Waggle (greater than 2.8.2). This needs update_
+
+This plugin captures any pedestrians in a captured scene. This is ```oneshot``` process that runs from start time to end time specified by the configuration file under ```/etc/waggle/image_pedestrian_detection.conf```. The processor requires a classifier trained previously. It also uses OpenCV 3.2.0 HOGDescriptor to detect pedestrian. Settings for HOGDescriptor are,
 
 ```bash
 block_size = (16, 16)
