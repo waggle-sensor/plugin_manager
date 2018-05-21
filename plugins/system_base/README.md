@@ -1,4 +1,10 @@
+<!--
+waggle_topic=IGNORE
+-->
+
 # System base plugin
+
+_WARNING: this plugin is deprecated and no longer used_
 
 This plugin monitors system information and activities such as boot and shutdown, and reports the information to the server. It also reports the current status of waggle services and whitelist of plugins.
 
