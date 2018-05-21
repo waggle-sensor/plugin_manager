@@ -21,6 +21,7 @@ The repository includes:
 * TensorFlow 1.3+
 * Keras 2.0.8+
 * Numpy, skimage, scipy, cython, h5py
+* [pycocotools](https://github.com/cocodataset/cocoapi) - PythonAPI
 
 
 # EP Example
