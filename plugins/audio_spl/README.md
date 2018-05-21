@@ -1,4 +1,8 @@
-# Python Script for Noise Level Calculation
+<!--
+waggle_topic=Waggle/Node/Plugins
+-->
+
+# Noise Level Calculation Plugin
 
 ## Log (May 7, 2018):
 - A knob for adjusting octave band is added (the 'octave_band' in config; if octave_band = 1, then it is 1/1 octave, if octave_band = 2, then it is 1/2 octave, and so on). However, Waggle protocol does not allow flexable data length, so that the length of output data will be one array for 10 float, and one another float data which are calculated dB for each bin and total dB for the octave from 20Hz - 20kHz (a function called 'match_length()' handles the length of the data).
