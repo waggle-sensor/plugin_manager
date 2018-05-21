@@ -1,4 +1,10 @@
+<!--
+waggle_topic=Waggle/Node/Plugins
+-->
+
 # Waggle Plugin Manager
+
+_WARNING: this document is __outdated__ and needs update_
 
 Plugins provide the functionality to read and preprocess raw sensor values from attached sensors (e.g. attached via USB or GPIOs) locally on the compute nodes.
 
