@@ -2,7 +2,7 @@
 waggle_topic=Waggle/Node/Plugins
 -->
 
-# Pedestrian Detector Plugin using Mask R-CNN
+# Pedestrian and Car Detector Plugin using Mask R-CNN
 
 _WARNING: this plugin requires packages that are not fully supported by Waggle and does not start by default_
 
