@@ -1,4 +1,10 @@
-# Mask R-CNN
+<!--
+waggle_topic=Waggle/Node/Plugins
+-->
+
+# Pedestrian Detector Plugin using Mask R-CNN
+
+_WARNING: this plugin requires packages that are not fully supported by Waggle and does not start by default_
 
 [Mask R-CNN is very latest released machine learning method for object detection and instance segmentation on Keras and TensorFlow](https://github.com/matterport/Mask_RCNN). The first version was released on Oct. 2017, and the developer managing https://github.com/matterport/Mask_RCNN keeps adding features. Demo code is based on the codes from the git repository, version 2.0 released on Nov. 2017.
 
