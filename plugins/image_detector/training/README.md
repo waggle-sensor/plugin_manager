@@ -78,7 +78,7 @@ python3 train.py \
 ```
 it will take few hours to days depends on specifications of the computer you are using for this training.
 
-To evaluate the trained model, you can use any of object detection code, but you can also use:
+To evaluate the trained model, you can use any of object detection code for example [this](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/image_detector/training/tf_test.py), but you can also use:
 ```# From the tensorflow/models/ directory
 python3 eval.py \
     --pipeline_config_path=/PATH/TO/faster_rcnn_resnet101_pets.config \
