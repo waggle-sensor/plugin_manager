@@ -10,8 +10,6 @@ with open('ssd_mobilenet_coco.classes', 'r') as file:
 
 # Read the graph.
 with tf.gfile.FastGFile('faster_rcnn_resnet101_pet.pb', 'rb') as f:
-# with tf.gfile.FastGFile('./pb_models/faster_inception_v2.pb', 'rb') as f:
-# with tf.gfile.FastGFile('./pb_models/frozen_inference_graph.pb', 'rb') as f:
     graph_def = tf.GraphDef()
     graph_def.ParseFromString(f.read())
 
@@ -59,5 +57,4 @@ resized_image = cv.resize(img, (1280, 960))
 # # Before resizing
 # cv.imshow('TensorFlow MobileNet-SSD', img)
 cv.imwrite('ex.png',img)
-# cv.waitKey()
 
