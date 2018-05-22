@@ -3,7 +3,7 @@ import tensorflow as tf
 import cv2 as cv
 
 classes = {}
-with open('ssd_mobilenet_coco.classes', 'r') as file:
+with open('../models/ssd_mobilenet_coco.classes', 'r') as file:
     for line in file:
         sp = line.strip().split(' ')
         classes[int(sp[0])] = sp[1]
