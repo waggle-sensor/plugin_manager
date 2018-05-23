@@ -89,15 +89,13 @@ python3 eval.py \
 You can see the train result and evaluation result through [tensorboard](https://www.tensorflow.org/programmers_guide/summaries_and_tensorboard).
 
 
-## Use your own dataset for training
+## Use your own dataset for training: Creating Dataset
 
 Ultimately, we need to use our own datasets for our own model. Then how to use our own set of data. From this, I have not done the processes explained below, but get the information from the [reference page 1](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/using_your_own_dataset.md), [reference page 2](https://towardsdatascience.com/how-to-train-your-own-object-detector-with-tensorflows-object-detector-api-bec72ecfe1d9), and [reference page 3](https://towardsdatascience.com/building-a-toy-detector-with-tensorflow-object-detection-api-63c0fdf2ac95).
 
-### Creating Dataset
-
 To train a tensorflow model, a dataset is necessary. You can download a dataset from several sources such as the [PASCAL VOC dataset](http://host.robots.ox.ac.uk/pascal/VOC/) or the [Oxford Pet dataset](http://www.robots.ox.ac.uk/~vgg/data/pets/), but you can [create your own](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/using_your_own_dataset.md). The dataset **MUST** follows [TFRecord file format](https://www.tensorflow.org/api_guides/python/python_io#tfrecords_format_details) because Tensorflow Object Detection API uses the TFRecord file format. So at the end you need to convert your dataset to this file format. For the PASCAL VOC dataset and Oxford Pet Dataset, they have [ready-made scripts](https://github.com/tensorflow/models/tree/master/research/object_detection/dataset_tools) to convert the images into TFRecord file formoat provided by tensorflow to train a model with the dataset.
 
-#### Collecting Data:
+### Collecting Data:
 
 If you will use your own dataset, you need to crop images and annotate them. 
 
@@ -105,13 +103,14 @@ You can use [crop image tool](https://github.com/waggle-sensor/plugin_manager/bl
 
 And for annotation, you can ues [LabelImag](https://github.com/tzutalin/labelImg). With the annotating tool, annotations are saved as XML files in PASCAL VOC format. The tool requires **Python 3** and **Qt5**.
 
-#### Creating TFRecord file:
+### Creating TFRecord file:
 
 Tensorflow API requests TFRecord file format dataset, that are ```.record``` files. There are some ready-made [TFRecord convert scripts](https://github.com/tensorflow/models/tree/master/research/object_detection/dataset_tools). If the images follow PASCAL VOC dataset format and you uses *LabelImg*, then with minimal edit of ```create_pascal_tf_record.py``` or ```create_pet_tf_record.py``` will work with your images.
 
 Also you need to create a [```label.pbtxt```](https://github.com/tensorflow/models/tree/master/research/object_detection/data) that is used to convert label name to a numeric id. The id does not need to be start from 1. If the model already has 90 classes, then the adding one could be 91. Or if you train the model with person that already in the list of classes, then you can use the id for person.
 
-
+### Training:
+With the image and TFRecord files, you can train models as explained [above](https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/image_detector/training#training).
 
 
 
