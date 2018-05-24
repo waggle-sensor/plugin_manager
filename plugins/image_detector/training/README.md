@@ -68,7 +68,7 @@ pet_train.record
 pet_label_map.pbtxt
 ```
 
-[Configuration files](https://github.com/tensorflow/models/tree/master/research/object_detection/samples/configs) for some base models are also provided by tensorflow. In this case, we will use [```faster_rcnn_resnet101_coco.config```](https://github.com/tensorflow/models/blob/master/research/object_detection/samples/configs/faster_rcnn_resnet101_coco.config) that is provided by tensorflow. You need to change path written in the configuration file as **PATH_TO_BE_CONFIGURED** to where the files are exist. Also you need to change the number of classes. Basically, faster_rnn_resnet101_coco.pb has 90 classes.
+[Configuration files](https://github.com/tensorflow/models/tree/master/research/object_detection/samples/configs) for some base models are also provided by tensorflow. In this case, we will use [```faster_rcnn_resnet101_coco.config```](https://github.com/tensorflow/models/blob/master/research/object_detection/samples/configs/faster_rcnn_resnet101_coco.config) that is provided by tensorflow. You need to change path written in the configuration file as **PATH_TO_BE_CONFIGURED** to where the files are exist.
 
 When you start train:
 ```
@@ -107,7 +107,7 @@ And for annotation, you can ues [LabelImag](https://github.com/tzutalin/labelImg
 
 Tensorflow API requests TFRecord file format dataset, that are ```.record``` files. There are some ready-made [TFRecord convert scripts](https://github.com/tensorflow/models/tree/master/research/object_detection/dataset_tools). If the images follow PASCAL VOC dataset format and you uses *LabelImg*, then with minimal edit of ```create_pascal_tf_record.py``` or ```create_pet_tf_record.py``` will work with your images.
 
-Also you need to create a [```label.pbtxt```](https://github.com/tensorflow/models/tree/master/research/object_detection/data) that is used to convert label name to a numeric id. The id does not need to be start from 1. If the model already has 90 classes, then the adding one could be 91. Or if you train the model with person that already in the list of classes, then you can use the id for person.
+Also you need to create a [```label.pbtxt```](https://github.com/tensorflow/models/tree/master/research/object_detection/data) that is used to convert label name to a numeric id. 
 
 ### Training:
 With the image and TFRecord files, you can train models as explained [above](https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/image_detector/training#training).
