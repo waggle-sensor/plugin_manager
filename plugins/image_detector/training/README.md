@@ -113,7 +113,7 @@ Also you need to create a [```label.pbtxt```](https://github.com/tensorflow/mode
 With the image and TFRecord files, you can train models as explained [above](https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/image_detector/training#training). And for more example code, refer [tensorflow/model repo](https://github.com/tensorflow/models)
 
 ## Things we can try..
-* Total number of classes of Faster R-CNN resnet101 coco model is 90. But id 78-81 are microware, over, toaster, and sink what we will never target to detect. So we can try overload other classes, such as cloud, sun, or moon. Not tested if the previous classes can be weakened and new on be strengthened.
+* Total number of classes of Faster R-CNN resnet101 coco model is 90. But id 78-81 are microware, over, toaster, and sink what we will never target to detect. So we can try overload new classes, such as cloud, sun, or moon. Not yet tested if the previous classes can be weakened and new on be strengthened.
 * It is really time consumming, and no tensorflow user recommand, but we can remove all classes and weights and start training from scratch.
 
 
