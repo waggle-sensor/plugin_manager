@@ -110,7 +110,7 @@ Tensorflow API requests TFRecord file format dataset, that are ```.record``` fil
 Also you need to create a [```label.pbtxt```](https://github.com/tensorflow/models/tree/master/research/object_detection/data) that is used to convert label name to a numeric id. 
 
 ### Training:
-With the image and TFRecord files, you can train models as explained [above](https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/image_detector/training#training).
+With the image and TFRecord files, you can train models as explained [above](https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/image_detector/training#training). And for more example code, refer [tensorflow/model repo](https://github.com/tensorflow/models)
 
 
 
