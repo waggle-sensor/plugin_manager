@@ -1,6 +1,5 @@
 <!--
 waggle_topic=IGNORE
-waggle_topic=!Waggle/Node/Plugins,Cloud Detector
 -->
 
 # Caffe installation instructions for Odroid XU4
