@@ -112,7 +112,13 @@ You can use [LabelImg](https://github.com/tzutalin/labelImg). With the annotatin
 With your dataset, you can generate your own TFRecord file through TFRecord convert scripts. There are some ready-made [TFRecord convert scripts](https://github.com/tensorflow/models/tree/master/research/object_detection/dataset_tools). If the images follow PASCAL VOC dataset format, then **you can follow [create_tf_record.md](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/image_detector/training/create_tf_record.md).**
 
 ### Training:
-With the image and TFRecord file, you can train models as explained [above](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/image_detector/training/README.md#training-example). And for more example code, refer [tensorflow/model repo](https://github.com/tensorflow/models)
+With the image and TFRecord file, you can train models by 
+```
+python3 train.py \
+    --pipeline_config_path=/PATH/TO/CONFIGURATION/FILE \
+    --train_dir=train_result
+```
+as explained [above](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/image_detector/training/README.md#training-example). And for more example code, refer [tensorflow/model repo](https://github.com/tensorflow/models)
 
 ## Things we can try..
 * Total number of classes of Faster R-CNN resnet101 coco model is 90. But id 78-81 are microware, over, toaster, and sink what we will never target to detect. So we can try overload new classes, such as cloud, sun, or moon. Not yet tested if the previous classes can be weakened and new on be strengthened.
