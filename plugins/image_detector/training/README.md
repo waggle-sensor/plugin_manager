@@ -122,6 +122,6 @@ as explained [above](https://github.com/waggle-sensor/plugin_manager/blob/master
 
 ## Things we can try..
 * Total number of classes of Faster R-CNN resnet101 coco model is 90. But id 78-81 are microware, over, toaster, and sink what we will never target to detect. So we can try overload new classes, such as cloud, sun, or moon. Not yet tested if the previous classes can be weakened and new on be strengthened.
-* It is really time consumming, and no tensorflow user recommand, but we can remove all classes and weights and start training from scratch.
+* It is really time consumming and none of tensorflow users recommands, but we can remove all classes and weights and start training from scratch.
 
 
