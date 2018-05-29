@@ -4,7 +4,7 @@ waggle_topic=/plugins_and_code
 
 # Alphasense Plugin
 
-* Note: This plugin is deprecated. Alphasense logic has been integrated into the Coresense 4.
+*Note: This plugin is deprecated. Alphasense logic has been integrated into the Coresense 4.*
 
 The Alphasense is allowed to
 
