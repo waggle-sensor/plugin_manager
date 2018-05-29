@@ -1,8 +1,10 @@
 <!--
-waggle_topic=Waggle/Node/Plugins
+waggle_topic=/plugins_and_code
 -->
 
-# Alphasense Plugin (Old)
+# Alphasense Plugin
+
+* Note: This plugin is deprecated. Alphasense logic has been integrated into the Coresense 4.
 
 The Alphasense is allowed to
 
