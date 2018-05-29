@@ -4,9 +4,9 @@ waggle_topic=Waggle/Node/Plugins,Cloud Detector
 
 # Waggle Cloud Detection Documentation
 
-1). CaffeInstallation.md:       Steps taken to install CPU only Caffe on ODROID XU4.
+1). [CaffeInstallation.md](https://github.com/waggle-sensor/plugin_manager/edit/master/plugins/openCV/AppFiles/docs/CaffeInstallation.md):       Steps taken to install CPU only Caffe on ODROID XU4.
 
-2). OpenCVInstallation.md:      Steps taken to install OpenCV 3 on ODROID XU4
+2). [OpenCVInstallation.md](https://github.com/waggle-sensor/plugin_manager/edit/master/plugins/openCV/AppFiles/docs/OpenCVInstallation.md):      Steps taken to install OpenCV 3 on ODROID XU4
 
 3). AppFiles:                   CloudApp.py executable, sample images, required files
         -.caffemodel, mean.npy, synset_words.txt, and deploy.prototxt must be in same directory as CloudApp.py
