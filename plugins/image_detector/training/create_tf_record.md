@@ -28,7 +28,7 @@ iten {
 }
 ```
 
-## Train a model with the record
+# Then, Train a model with the record
 * Refer [README.md](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/image_detector/training/README.md) and do train, for example:
 ```
 python3 train.py \
