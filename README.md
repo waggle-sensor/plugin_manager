@@ -1,5 +1,5 @@
 <!--
-waggle_topic=Waggle/Node/Plugins
+waggle_topic=/plugins_and_code
 -->
 
 # Waggle Plugin Manager
