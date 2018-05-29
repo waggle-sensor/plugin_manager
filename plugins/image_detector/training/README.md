@@ -107,7 +107,7 @@ Basically, your dataset **MUST** follows [TFRecord file format](https://www.tens
 
 If you will use your own dataset, you need to crop images and annotate them. 
 
-You can use [LabelImag](https://github.com/tzutalin/labelImg). With the annotating tool, annotations are saved in XML files as PASCAL VOC format. The tool requires **Python 3** and **Qt5**.
+You can use [LabelImg](https://github.com/tzutalin/labelImg). With the annotating tool, annotations are saved in XML files as PASCAL VOC format. The tool requires **Python 3** and **Qt5**.
 
 With your dataset, you can generate your own TFRecord file through TFRecord convert scripts. There are some ready-made [TFRecord convert scripts](https://github.com/tensorflow/models/tree/master/research/object_detection/dataset_tools). If the images follow PASCAL VOC dataset format and you uses *LabelImg*, then you can follow [create_tf_record.md](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/image_detector/training/create_tf_record.md).
 
