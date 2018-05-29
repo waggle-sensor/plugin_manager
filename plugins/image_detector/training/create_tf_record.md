@@ -1,8 +1,8 @@
 # Create tensorflow record (TFRecord)
 
 ## Crop images and annotate them
-* Use [LabelImg](https://github.com/tzutalin/labelImg).
-* You will have an ```.xml``` file for *each image* when you use [LabelImg](https://github.com/tzutalin/labelImg).
+* Use [LabelImg](https://github.com/tzutalin/labelImg). Minimal codes to excute the program is in **LabelImg** folder.
+* You will have an ```.xml``` file for *each image* when you use [LabelImg](https://github.com/tzutalin/labelImg) by ```python3 labelImg.py```.
 * The results are Pascal VOC dataset format.
 
 ## Create TFRecord
