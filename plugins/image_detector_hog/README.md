@@ -1,5 +1,5 @@
 <!--
-waggle_topic=Waggle/Node/Plugins
+waggle_topic=/plugins_and_code
 -->
 
 # Pedestrian Detector Plugin using HOG Descriptor
