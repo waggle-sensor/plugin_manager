@@ -1,5 +1,5 @@
 <!--
-waggle_topic=Waggle/Node/Plugins,Cloud Detector
+waggle_topic=/plugins_and_code,Cloud Detector
 -->
 
 # Waggle Cloud Detection Documentation
