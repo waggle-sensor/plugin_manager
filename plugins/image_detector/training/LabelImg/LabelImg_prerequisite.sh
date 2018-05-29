@@ -23,11 +23,20 @@ else
     echo protobuf version: $protobuf is installed
 fi
 
-    echo qt5 and lxml are installing..
+pyqt5=$(sudo apt-cache policy pyqt5-dev-tools)
+
+if [[ $pyqt5 = *none* ]]
+then
+    echo pyqt5 is already installed
+else
+    echo qt5 is installing..
 
     sudo apt-get install pyqt5-dev-tools
-    sudo pip3 install lxml
     pyrcc5 -o resources.py resources.qrc
+fi
+
+    echo lxml is installing..
+    sudo pip3 install lxml
 
 
 ## Excute labeling program
