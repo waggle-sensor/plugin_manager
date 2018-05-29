@@ -109,7 +109,7 @@ If you will use your own dataset, you need to crop images and annotate them.
 
 You can use [LabelImg](https://github.com/tzutalin/labelImg). With the annotating tool, annotations are saved in XML files as PASCAL VOC format. The tool requires **Python 3** and **Qt5**.
 
-With your dataset, you can generate your own TFRecord file through TFRecord convert scripts. There are some ready-made [TFRecord convert scripts](https://github.com/tensorflow/models/tree/master/research/object_detection/dataset_tools). If the images follow PASCAL VOC dataset format and you uses *LabelImg*, then **you can follow [create_tf_record.md](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/image_detector/training/create_tf_record.md).**
+With your dataset, you can generate your own TFRecord file through TFRecord convert scripts. There are some ready-made [TFRecord convert scripts](https://github.com/tensorflow/models/tree/master/research/object_detection/dataset_tools). If the images follow PASCAL VOC dataset format, then **you can follow [create_tf_record.md](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/image_detector/training/create_tf_record.md).**
 
 ### Training:
 With the image and TFRecord file, you can train models as explained [above](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/image_detector/training/README.md#training-example). And for more example code, refer [tensorflow/model repo](https://github.com/tensorflow/models)
