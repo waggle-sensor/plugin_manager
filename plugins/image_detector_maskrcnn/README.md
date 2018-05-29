@@ -56,3 +56,6 @@ The author of the [git repository](https://github.com/matterport/Mask_RCNN) keep
 For now, it takes time about 12-14 seconds to detect objects, and 3-12 seconds to mask objects depends on the number of segmented objects in an image.
 
 
+## Mask R-CNN on EP
+Because it requires more then 1.5 GB memories, it cannot be loaded on XU4 (May 2018).
+
