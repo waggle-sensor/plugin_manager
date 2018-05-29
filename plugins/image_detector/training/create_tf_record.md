@@ -29,7 +29,7 @@ iten {
 ```
 
 # Then, Train a model with the record
-* Refer [README.md](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/image_detector/training/README.md) and do train, for example:
+* Refer [README.md](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/image_detector/training/README.md), modify ```.config``` file and do train, for example:
 ```
 python3 train.py \
     --pipeline_config_path=/PATH/TO/faster_rcnn_resnet101_test.config \
