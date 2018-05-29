@@ -1,3 +1,7 @@
+<!--
+waggle_topic=IGNORE
+-->
+
 # Create tensorflow record (TFRecord)
 
 ## Crop images and annotate them
