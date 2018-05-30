@@ -120,8 +120,9 @@ python3 train.py \
 as explained [above](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/image_detector/training/README.md#training-example). And for more example code, refer [tensorflow/model repo](https://github.com/tensorflow/models)
 
 ## Things we can try..
-* Total number of classes of Faster R-CNN resnet101 coco model is 90. But id 78-81 are microware, over, toaster, and sink what we will never target to detect. So we can try overload new classes, such as cloud, sun, or moon. Not yet tested if the previous classes can be weakened and new on be strengthened.
-* It is really time consumming and none of tensorflow users recommands, but we can remove all classes and weights and start training from scratch.
+* Total number of classes of Faster R-CNN resnet101 coco model is 90. But id 78-81 are microwave, oven, toaster, and sink what we will never target to detect. So we can try overload new classes, such as cloud, sun, or moon. Not yet tested if the previous classes can be weakened and new on be strengthened if a model is trained with big number of new images.
+* It is really time consuming and none of tensorflow users recommends, but we can remove all classes and weights and start training from scratch.
+
 
 ## Warning and future work:
 To use **Mask R-CNN**, you need to use [LabelMe](https://github.com/wkentaro/labelme), and save images and annotations as COCO dataset format because Mask R-CNN provides pixel level segmentation. And this pixel level segmentation is not provided by LableImg. With these COCO like dataset, you need to modify [create_coco_tf_record.py](https://github.com/tensorflow/models/blob/master/research/object_detection/dataset_tools/create_coco_tf_record.py) provided by tensorflow.
