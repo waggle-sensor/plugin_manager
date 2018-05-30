@@ -99,17 +99,14 @@ You can see the train result and evaluation result through [tensorboard](https:/
 
 ## Use your own dataset for training: Creating Dataset
 
+<img src="./training_flowchart.png" width=800 />
+
 Ultimately, we need to use our own datasets for our own model. Then how to use our own set of data? You can get detailed information from the [tensorflow git repo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/using_your_own_dataset.md).
 
 When you select your dataset, crop images, and annotate the cropped images, your dataset **MUST** follows [TFRecord file format](https://www.tensorflow.org/api_guides/python/python_io#tfrecords_format_details) because Tensorflow Object Detection API requires it. For the PASCAL VOC dataset and Oxford Pet Dataset, tensorflow have [ready-made scripts](https://github.com/tensorflow/models/tree/master/research/object_detection/dataset_tools) to convert the images into TFRecord file formoat.
 
 ### Collecting Data and Creating TFRecord file:
-
-<img src="./training_flowchart.png" width=800 />
-
-When you have selected your own dataset, you need to crop images and annotate them. 
-
-You can use [LabelImg](https://github.com/tzutalin/labelImg). With the annotating tool, annotations are saved in XML files as PASCAL VOC format. The tool requires **Python 3** and **Qt5**.
+When you have selected your own dataset, you need to crop images and annotate them. You can use [LabelImg](https://github.com/tzutalin/labelImg). With the annotating tool, annotations are saved in XML files as PASCAL VOC format. The tool requires **Python 3** and **Qt5**.
 
 With your dataset, you can generate your own TFRecord file through TFRecord convert scripts. There are some ready-made [TFRecord convert scripts](https://github.com/tensorflow/models/tree/master/research/object_detection/dataset_tools). **You can follow [create_tf_record.md](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/image_detector/training/create_tf_record.md).**
 
