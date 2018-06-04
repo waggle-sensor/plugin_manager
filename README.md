@@ -1,5 +1,5 @@
 <!--
-waggle_topic=/plugins_and_code
+waggle_topic=ignore
 -->
 
 # Waggle Plugin Manager
