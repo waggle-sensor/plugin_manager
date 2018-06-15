@@ -84,16 +84,21 @@ class CoresensePlugin4(Plugin):
 
         with Serial(device, baudrate=9600, timeout=3) as file:
             while True:
+                print('flush input buffer')
                 flush_device(file)
                 time.sleep(1)
 
                 # write command
+                print('write command')
                 data_out = bytes([7, 0, 0, 7, radiometrics, 0, 0])
                 file.write(data_out)
                 time.sleep(1)
 
                 header_data = file.read(header_struct.size)
+                print('header data:', header_data)
+
                 content_data = file.read(content_struct.size)
+                print('content_data:', content_data)
 
                 header = header_struct.unpack(header_data)
                 content = content_struct.unpack(content_data)
