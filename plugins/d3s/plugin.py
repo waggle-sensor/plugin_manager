@@ -122,6 +122,8 @@ class CoresensePlugin4(Plugin):
                 message = encode_frame({d3s_sensor_id: [content_data]})
                 self.send(sensor='content', data=message)
 
+                time.sleep(30)
+
 
 if __name__ == '__main__':
     plugin = CoresensePlugin4.defaultConfig()
