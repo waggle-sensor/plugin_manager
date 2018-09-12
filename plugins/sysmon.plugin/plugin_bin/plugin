@@ -1,0 +1,119 @@
+#!/usr/bin/env python3
+import os
+import re
+import time
+import subprocess
+import waggle.plugin
+
+
+def read_file(filename):
+    with open(filename) as f:
+        return f.read()
+
+
+network_devices = [
+    # sensor_id, device, name
+    (0x90, 'ppp0', 'broadband'),
+    (0x91, 'eth0', 'lan'),
+    (0x92, 'enx.', 'usb'),
+]
+
+def read_rx_bytes(dev):
+    return int(read_file(os.path.join('/sys/class/net', dev, 'statistics/rx_bytes')))
+
+
+def read_tx_bytes(dev):
+    return int(read_file(os.path.join('/sys/class/net', dev, 'statistics/tx_bytes')))
+
+
+def matching_network_devices(pattern):
+    return sorted([dev for dev in os.listdir('/sys/class/net') if re.match(pattern, dev)])
+
+
+def read_network_stats():
+    for sensor_id, pattern, name in network_devices:
+        try:
+            device = matching_network_devices(pattern)[0]
+        except IndexError:
+            print('no matching devices for {}'.format(pattern), flush=True)
+            continue
+
+        try:
+            measurement = {
+                'sensor_id': sensor_id,
+                'parameter_id':1,
+                'value':read_rx_bytes(device),
+            }
+
+            plugin.add_measurement(measurement)
+
+            measurement = {
+                'sensor_id': sensor_id,
+                'parameter_id':2,
+                'value':read_tx_bytes(device),
+            }
+
+            plugin.add_measurement(measurement)
+
+        except (FileNotFoundError, ValueError):
+            print('failed to read {}'.format(name), flush=True)
+
+
+def read_wagman_stats():
+
+    output = subprocess.check_output('journalctl -u waggle-wagman-driver --since=-2m -o cat', shell=True).decode()
+
+    for line in output.splitlines():
+        m = re.search(':cu (\d+) (\d+) (\d+) (\d+) (\d+) (\d+)', line)
+
+        if m is not None:
+            measurement = {'sensor_id': 0x5a,'parameter_id':1,'value':list(map(int, m.groups())),}
+            plugin.add_measurement(measurement)
+
+        m = re.search(':th (\d+) (\d+) (\d+) (\d+) (\d+)', line)
+
+        if m is not None:
+            measurement = {'sensor_id': 0x5b,'parameter_id':1,'value':list(map(int, m.groups())),}
+            plugin.add_measurement(measurement)
+
+        m = re.search(':fails (\d+) (\d+) (\d+) (\d+) (\d+)', line)
+
+        if m is not None:
+            measurement = {'sensor_id': 0x5f,'parameter_id':1,'value':list(map(int, m.groups())),}
+            plugin.add_measurement(measurement)
+
+        m = re.search(':enabled (\d+) (\d+) (\d+) (\d+) (\d+)', line)
+
+        if m is not None:
+            measurement = {'sensor_id': 0x60,'parameter_id':1,'value':list(map(int, m.groups())),}
+            plugin.add_measurement(measurement)
+
+
+def read_system_stats():
+
+    uptime, idletime = list(map(float, read_file('/proc/uptime').split()))
+
+    measurement = {'sensor_id': 0x76,'parameter_id':1,'value': round(uptime, 2)}
+    plugin.add_measurement(measurement)
+
+    measurement = {'sensor_id': 0x76,'parameter_id':2,'value':round(idletime, 2)}
+    plugin.add_measurement(measurement)
+
+
+def read_all_stats():
+    print('reading network stats', flush=True)
+    read_network_stats()
+
+    print('reading wagman stats', flush=True)
+    read_wagman_stats()
+
+    print('reading system stats', flush=True)
+    read_system_stats()
+
+
+plugin = waggle.plugin.Plugin()
+
+while True:
+   read_all_stats()
+   plugin.publish_measurements()
+   time.sleep(30)

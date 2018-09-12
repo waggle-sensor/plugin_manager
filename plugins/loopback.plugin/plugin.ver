@@ -1,0 +1,8 @@
+[PARAMETERS]
+plugin_id = 101
+plugin_name = Loopback Plugin
+description = A simple example plugin.
+reference = https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/sysmon
+plugin_maj = 0
+plugin_min = 0
+plugin_build = 0

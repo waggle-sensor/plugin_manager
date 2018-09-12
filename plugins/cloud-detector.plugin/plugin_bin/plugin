@@ -1,0 +1,459 @@
+#!/usr/bin/python3
+import argparse
+import json
+import pika
+import time
+import io
+import piexif
+import pickle
+import numpy as np
+import cv2
+from skimage import color
+import waggle.plugin
+import logging
+
+
+logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger('cloud-detector')
+logger.setLevel(logging.INFO)
+
+
+null_exif = {
+    '0th': {},
+    'Exif': {},
+    'GPS': {},
+    'Interop': {},
+    '1st': {},
+    'thumbnail': None
+}
+
+copy_right = 'Waggle (http://wa8.gl) and Array of Things (https://arrayofthings.github.io). Do not use without explicit permission'
+datetime_format = '%Y-%m-%d %H:%M:%S'
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--print', action='store_true')
+args = parser.parse_args()
+
+if args.print:
+    plugin = waggle.plugin.PrintPlugin()
+else:
+    plugin = waggle.plugin.Plugin()
+
+
+def generate_meta_data(meta_data, results):
+    exif_dict = null_exif.copy()
+    oth = exif_dict['0th']
+    if 'image_width' in meta_data:
+        oth[piexif.ImageIFD.ImageWidth] = int(meta_data['image_width'])
+    if 'image_height' in meta_data:
+        oth[piexif.ImageIFD.ImageLength] = int(meta_data['image_height'])
+    if 'node_id' in meta_data:
+        oth[piexif.ImageIFD.Make] = meta_data['node_id']
+    if 'device' in meta_data:
+        oth[piexif.ImageIFD.Artist] = meta_data['device']
+    if 'producer' in meta_data:
+        oth[piexif.ImageIFD.Software] = meta_data['producer']
+    if 'timestamp' in meta_data:
+        timestamp = meta_data['timestamp']
+        if isinstance(timestamp, str):
+            timestamp = float(timestamp)
+        oth[piexif.ImageIFD.DateTime] = time.strftime(datetime_format, time.gmtime(timestamp))
+    if 'processing_software' in meta_data:
+        oth[piexif.ImageIFD.ProcessingSoftware] = meta_data['processing_software']
+        oth[piexif.ImageIFD.Copyright] = copy_right
+    exif_dict['0th'] = oth
+
+    exif = exif_dict['Exif']
+    if results != []:
+        exif[piexif.ExifIFD.UserComment] = json.dumps({'results': results}).encode()
+    exif_dict['Exif'] = exif
+
+    return exif_dict
+
+
+def convert_image_to_jpg(image, pixelformat='MJPG'):
+    jpeg_binary = None
+    if 'MJPG' in pixelformat:
+        nparr = np.fromstring(image, np.uint8)
+        np_image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        jpeg_binary = cv2.imencode('.jpg', np_image)[1].tostring()
+    else:
+        raise Exception('Unsupported image format %s' % (pixelformat,))
+    return jpeg_binary
+
+
+def make_image_bytes(meta_data, additional_info, image):
+    ret = io.BytesIO()
+
+    try:
+        exif = generate_meta_data(meta_data, additional_info)
+        image_format = meta_data['image_format'].upper()
+        if image_format != 'JPEG' or image_format != 'JPG':
+            image = convert_image_to_jpg(image, image_format)
+        exif_bytes = piexif.dump(exif)
+        piexif.insert(exif_bytes, image, ret)
+        return ret.read()
+    except Exception:
+        software = meta_data.get('processing_software')
+        logger.exception('Could not process the image from %s', software)
+    return None
+
+
+def process_image(channel, method, properties, body):
+    logger.info('process image - image received')
+
+    if not properties.headers:
+        logger.warning('process image - the message does not have header to parse...')
+        return
+
+    headers = properties.headers
+    processed_data = headers.get('results', [])
+
+    jpeg_binary = make_image_bytes(headers, processed_data, body)
+
+    if jpeg_binary is None:
+        logger.warning('process image - got empty image.')
+        return
+
+    logger.info('process image - publish')
+
+    channel.basic_publish(
+        exchange='image_pipeline',
+        routing_key='exporter',
+        body=jpeg_binary,
+        properties=pika.BasicProperties(
+            headers=headers,
+            delivery_mode=2,
+            timestamp=int(time.time() * 1000),
+            content_type='b',
+            type='jpeg',
+            app_id='image_exporter:0:0',
+        )
+    )
+
+# Functions for Cloudy App Image
+def Generate_Features(Input_Image):
+    # Input_Image = cv2.imread(input_path)
+    Input_Image_RGB = cv2.cvtColor(Input_Image, cv2.COLOR_BGR2RGBA)
+    Input_Image_HSV = cv2.cvtColor(Input_Image, cv2.COLOR_BGR2HSV)
+
+    RGB_for_LAB = Input_Image_RGB[:, :, 0:3]
+
+    Input_Image_LAB = color.rgb2lab(RGB_for_LAB)
+    # Input_Image_LAB = cv2.cvtColor(Input_Image, cv2.COLOR_BGR2LAB)
+
+    Image_Array_RGB = np.array(Input_Image_RGB)
+    Image_Array_HSV = np.array(Input_Image_HSV)
+    Image_Array_LAB = np.array(Input_Image_LAB)
+
+    # Record the original shape
+    Image_Shape = Image_Array_RGB.shape
+
+    # Make a 1-dimensional view of arrays
+
+    One_D_Image_Red = np.transpose(np.matrix(Image_Array_RGB[:, :, 0].ravel()))
+    One_D_Image_Green = np.transpose(np.matrix(Image_Array_RGB[:, :, 1].ravel()))
+    One_D_Image_Blue = np.transpose(np.matrix(Image_Array_RGB[:, :, 2].ravel()))
+
+    # Recasting to support negative integers
+
+    One_D_Image_Red = One_D_Image_Red.astype(np.int16)
+    One_D_Image_Green = One_D_Image_Green.astype(np.int16)
+    One_D_Image_Blue = One_D_Image_Blue.astype(np.int16)
+
+    One_D_Image_B = np.transpose(np.matrix(Image_Array_LAB[:, :, 2].ravel()))
+
+    # Getting the Chroma Values for each pixel
+
+    One_D_RGB_Only = np.hstack((One_D_Image_Red, One_D_Image_Green, One_D_Image_Blue))
+    Max_RGB = One_D_RGB_Only.max(1)
+    Min_RGB = One_D_RGB_Only.min(1)
+    One_D_Chroma = Max_RGB - Min_RGB
+    # One_D_Image_Red, One_D_Image_Green,One_D_Image_H, One_D_Image_S, One_D_Image_V, \One_D_Image_L, One_D_Image_A,
+    One_D_Image = np.hstack((One_D_Image_Blue, \
+                             One_D_Image_B, \
+                             One_D_Image_Red / (One_D_Image_Blue + 1), np.subtract(One_D_Image_Red, One_D_Image_Blue), \
+                             (One_D_Image_Blue - One_D_Image_Red) / ((One_D_Image_Blue + One_D_Image_Red) + 1), \
+                             One_D_Chroma
+                             ))
+    logger.info("One D Image Stack: %s", One_D_Image[0, :])
+
+    return One_D_Image, Image_Shape
+
+
+def Generate_Targets(input_path):
+    # Genarates a 1D vector for each target Image
+    Input_Image_Binary = cv2.imread(input_path)
+    Image_Array_Binary = np.array(Input_Image_Binary)
+    Image_Shape = Image_Array_Binary.shape
+    One_D_Binary = np.transpose(np.matrix(Image_Array_Binary[:, :, 1].ravel()))
+    One_D_Binary = One_D_Binary.astype(float) / 255
+    return One_D_Binary, Image_Shape
+
+
+def Binary_Image_Writer(Pixel_Row, Image_Shape):
+    # Designed to return a binary image and write the said image to a given path
+    Image_Reshaped = []
+    Pixel_Row_255 = Pixel_Row.astype(float) * 255
+    Pixel_Row_Transpose = np.transpose(Pixel_Row_255)
+    Image_Reshaped_Pre = np.asarray(Pixel_Row_Transpose.reshape((Image_Shape[0], Image_Shape[1])))
+    Image_Reshaped = np.zeros((Image_Shape[0], Image_Shape[1], 3))
+
+    Image_Reshaped[:, :, 0] = Image_Reshaped_Pre
+    Image_Reshaped[:, :, 1] = Image_Reshaped_Pre
+    Image_Reshaped[:, :, 2] = Image_Reshaped_Pre
+    # cv2.imwrite(Des_Path, Image_Reshaped)
+
+    return Image_Reshaped
+
+
+def Cloud_Only_Image_Writer(Original_Image_Object, Binary_Image_Object):
+    #  Designed to return a image with only the Clouds and rest Black
+    Cloud_Pixels_Normalized = Binary_Image_Object.astype(float) / 255
+    Original_Image_float = Original_Image_Object.astype(float)
+    # Multiplying Images
+    Only_Clouds = cv2.multiply(Original_Image_float, Cloud_Pixels_Normalized)
+    # cv2.imwrite(Des_Path, Only_Clouds)
+    return Only_Clouds
+
+
+def Sky_Only_Image_Writer(Original_Image_Object, Binary_Image_Object):
+    #  Designed to return a image with only the Sky and rest Black
+    #
+    Sky_Pixels_Binary = np.asarray(Binary_Image_Object, dtype='float32')
+
+    ret, Sky_Pixels_Binary = cv2.threshold(Sky_Pixels_Binary, 10, 255, cv2.THRESH_BINARY_INV)
+
+    Sky_Pixels_Binary = np.asarray(Sky_Pixels_Binary, dtype='float')
+
+    # Recognizing the Sky Pixes and normalizing the sky pixels binary (for multiplication)
+    Sky_Pixels_Normalized = Sky_Pixels_Binary / 255
+    Original_Image_float = Original_Image_Object.astype(float)
+
+    # Multiplying Images
+    Only_Sky = cv2.multiply(Original_Image_float, Sky_Pixels_Normalized)
+    # cv2.imwrite(Des_Path, Only_Sky)
+    return Only_Sky
+
+
+def cloud_detection(Input_Image):
+
+    Features = Generate_Features(Input_Image)[0]
+    Shape = Generate_Features(Input_Image)[1]
+
+    # Load the model from disk
+
+    logger.info("Loading the NB Model")
+    Model_Save_File_Name = 'Naive_Baised_Classifier_Model.sav'
+    loaded_Random_Tree = pickle.load(open(Model_Save_File_Name, 'rb'))
+    logger.info("Done Loading")
+
+    # Gaining The Prediction
+    logger.info("Gaining the Prediction...")
+    Prediction = loaded_Random_Tree.predict(Features)
+    Prediction = np.transpose(np.matrix(np.array(Prediction)))
+
+    Prediction[Prediction < 0.5] = 0
+    Prediction[Prediction >= 0.5] = 1
+
+    ## Now the Focus will be to get back the Predicted Binary Image
+    logger.info("Writing Resulting Images ...")
+
+    # Des_Binary = os.path.splitext(path_src)[0]+"_Classified_Binary_Image_NB" + ".jpeg"
+    Des_Binary = "Classified_Binary_Image_NB" + ".jpeg"
+    # Des_Cloud = os.path.splitext(path_src)[0]+"_Classified_Cloud_Only_Image_NB" + ".png"
+    # Des_Sky = os.path.splitext(path_src)[0]+"_Classsified_GT_Sky_Only_NB" + ".png"
+
+    Binary_Image = Binary_Image_Writer(Prediction, (Shape[0], Shape[1]))
+    #cv2.imwrite("Pipeine_" + path_src, Binary_Image)
+
+    # Original_Image = cv2.imread(path_src)
+    Only_Cloud = Cloud_Only_Image_Writer(Input_Image, Binary_Image)
+
+    Only_Sky = Sky_Only_Image_Writer(Input_Image, Binary_Image)
+
+    # Arranging the Outputs
+    Cloud_Percentage = (sum(Prediction) / len(Prediction)) * 100
+
+    # Summing up the pixel values for each Palette
+    Color_Sum_Blue_Sky = Only_Sky[:, :, 0].sum()
+    Color_Sum_Green_Sky = Only_Sky[:, :, 1].sum()
+    Color_Sum_Red_Sky = Only_Sky[:, :, 2].sum()
+
+    Color_Sum_Blue_Cloud = Only_Cloud[:, :, 0].sum()
+    Color_Sum_Green_Cloud = Only_Cloud[:, :, 1].sum()
+    Color_Sum_Red_Cloud = Only_Cloud[:, :, 2].sum()
+
+    Cloud_Pixel_Count = np.sum(Binary_Image[:, :, 0] == 255)
+    Sky_Pixel_Clount = np.sum(Binary_Image[:, :, 0] == 0)
+
+    logger.info("Percentage of Clouds: %f", Cloud_Percentage[0, 0])
+
+    if Cloud_Percentage != 100:
+        # Gaining the Average Pixel values for each Color
+        Average_Pixel_Value_Blue_Sky = Color_Sum_Blue_Sky / Sky_Pixel_Clount
+        Average_Pixel_Value_Green_Sky = Color_Sum_Green_Sky / Sky_Pixel_Clount
+        Average_Pixel_Value_Red_Sky = Color_Sum_Red_Sky / Sky_Pixel_Clount
+    else:
+        Average_Pixel_Value_Blue_Sky = -1  # Denoting 0% of Sky
+        Average_Pixel_Value_Green_Sky = -1  # Denoting 0% of Sky
+        Average_Pixel_Value_Red_Sky = -1  # Denoting 0% of Sky
+
+    # Printing the Average Pixel values for each Color
+
+    logger.info('Average Pixel Value in Blue for the Sky: %s', Average_Pixel_Value_Blue_Sky)
+    logger.info('Average Pixel Value in Green for the Sky: %s', Average_Pixel_Value_Green_Sky)
+    logger.info('Average Pixel Value in Red for the Sky: %s', Average_Pixel_Value_Red_Sky)
+
+    if Cloud_Percentage != 0:
+        # Gaining the Average Pixel values for each Color
+        Average_Pixel_Value_Blue_Cloud = Color_Sum_Blue_Cloud / Cloud_Pixel_Count
+        Average_Pixel_Value_Green_Cloud = Color_Sum_Green_Cloud / Cloud_Pixel_Count
+        Average_Pixel_Value_Red_Cloud = Color_Sum_Red_Cloud / Cloud_Pixel_Count
+    else:
+        Average_Pixel_Value_Blue_Cloud = -1  # Denoting 0% of Sky
+        Average_Pixel_Value_Green_Cloud = -1  # Denoting 0% of Sky
+        Average_Pixel_Value_Red_Cloud = -1  # Denoting 0% of Sky
+
+    # Printing the Average Pixel values for each Color
+    logger.info('Average Pixel Value in Blue for the Clouds: %s', Average_Pixel_Value_Blue_Cloud)
+    logger.info('Average Pixel Value in Green for the Clouds: %s', Average_Pixel_Value_Green_Cloud)
+    logger.info('Average Pixel Value in Red for the Clouds: %s', Average_Pixel_Value_Red_Cloud)
+
+    Meta_Data = "CP:" + str(Cloud_Percentage) + \
+                "SPVB:" + str(Average_Pixel_Value_Blue_Sky), \
+                "SPVR:" + str(Average_Pixel_Value_Red_Sky), \
+                "SPVG:" + str(Average_Pixel_Value_Green_Sky), \
+                "CPVR:" + str(Average_Pixel_Value_Red_Cloud), \
+                "CPVG:" + str(Average_Pixel_Value_Green_Cloud), \
+                "CPVB:" + str(Average_Pixel_Value_Blue_Cloud)
+
+    return Binary_Image, Meta_Data
+
+
+def cloud_app_generate_meta_data(meta_data, results, cloud_app_meta_data):
+    exif_dict = null_exif.copy()
+    oth = exif_dict['0th']
+    if 'image_width' in meta_data:
+        oth[piexif.ImageIFD.ImageWidth] = int(meta_data['image_width'])
+    if 'image_height' in meta_data:
+        oth[piexif.ImageIFD.ImageLength] = int(meta_data['image_height'])
+    if 'node_id' in meta_data:
+        oth[piexif.ImageIFD.Make] = meta_data['node_id']
+    if 'device' in meta_data:
+        oth[piexif.ImageIFD.Artist] = meta_data['device']
+    if 'producer' in meta_data:
+        oth[piexif.ImageIFD.Software] = meta_data['producer']
+    if 'timestamp' in meta_data:
+        timestamp = meta_data['timestamp']
+        if isinstance(timestamp, str):
+            timestamp = float(timestamp)
+        oth[piexif.ImageIFD.DateTime] = time.strftime(datetime_format, time.gmtime(timestamp))
+    if 'processing_software' in meta_data:
+        oth[piexif.ImageIFD.ProcessingSoftware] = meta_data['processing_software']
+        oth[piexif.ImageIFD.Copyright] = copy_right
+    exif_dict['0th'] = oth
+
+    exif = exif_dict['Exif']
+    if results != []:
+        exif[piexif.ExifIFD.UserComment] = json.dumps({'results': results}).encode()
+    exif_dict['Exif'] = exif
+    exif_dict['Cloud_App_Results'] = cloud_app_meta_data
+    return exif_dict
+
+
+def convert_image_to_jpg_cloudy_app(image, pixelformat='MJPG'):
+    jpeg_binary = None
+    if 'MJPG' in pixelformat:
+        nparr = np.fromstring(image, np.uint8)
+        np_image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        cloud_sky_binary_image, cloud_app_meta_data = cloud_detection(np_image)
+
+        jpeg_binary = cv2.imencode('.jpg', cloud_sky_binary_image)[1].tostring()
+    else:
+        raise Exception('Unsupported image format %s' % (pixelformat,))
+    return cloud_app_meta_data, jpeg_binary
+
+
+def make_image_bytes_for_cloudy_app(meta_data, additional_info, image):
+    ret = io.BytesIO()
+    try:
+
+        image_format = meta_data['image_format'].upper()
+        if image_format != 'JPEG' or image_format != 'JPG':
+            cloud_app_meta_data, image = convert_image_to_jpg_cloudy_app(image, image_format)
+
+        exif = cloud_app_generate_meta_data(meta_data, additional_info, cloud_app_meta_data)
+        exif_bytes = piexif.dump(exif)
+        piexif.insert(exif_bytes, image, ret)
+        return ret.read()
+    except Exception as ex:
+        if 'processing_software' in meta_data:
+            software = meta_data['processing_software']
+            print('Could not process the image from %s: %s' % (software, str(ex)))
+        else:
+            print('Could not process image: %s' % (str(ex),))
+    return None
+
+
+def cloudy_app_image(channel, method, properties, body):
+    logger.info('cloud processor')
+
+    if not properties.headers:
+        logger.warning("The message does not have header to parse...")
+        return
+
+    headers = properties.headers
+
+    processed_data = headers.get('results', [])
+
+    logger.info('cloud processor - results %s', processed_data)
+
+    jpeg_binary_for_cloudy_app = make_image_bytes_for_cloudy_app(headers, processed_data, body)
+
+    if not jpeg_binary_for_cloudy_app:
+        logger.warning('cloud processor - no image')
+        return
+
+    logger.info('cloud processor - publishing')
+
+    properties = pika.BasicProperties(
+        headers=headers,
+        delivery_mode=2,
+        timestamp=int(time.time() * 1000),
+        content_type='b',
+        type='jpeg',
+        app_id='image_exporter:0:0',
+    )
+
+    channel.basic_publish(
+        exchange='',
+        routing_key='images',
+        body=jpeg_binary_for_cloudy_app,
+        properties=properties,
+    )
+
+    logger.info('cloud processor - published')
+
+
+def main():
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    channel = connection.channel()
+
+    queue = channel.queue_declare(exclusive=True)
+    channel.queue_bind(exchange='image_pipeline', queue=queue.method.queue, routing_key='top')
+    channel.basic_consume(process_image, queue=queue.method.queue, no_ack=True)
+
+    queue2 = channel.queue_declare(exclusive=True)
+    channel.queue_bind(exchange='image_pipeline', queue=queue2.method.queue, routing_key='top')
+    channel.basic_consume(cloudy_app_image, queue=queue2.method.queue, no_ack=True)
+
+    try:
+        channel.start_consuming()
+    except KeyboardInterrupt:
+        channel.stop_consuming()
+
+
+if __name__ == '__main__':
+    main()

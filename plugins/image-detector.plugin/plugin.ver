@@ -1,0 +1,8 @@
+[PARAMETERS]
+plugin_id = 50
+plugin_name = Image Detector
+description = Car and pedestraian counter plugin.
+reference = https://github.com/waggle-sensor/plugin_manager/tree/develop/plugins/d3s
+plugin_maj = 0
+plugin_min = 0
+plugin_build = 0

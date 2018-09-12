@@ -1,0 +1,228 @@
+#!/usr/bin/env python3
+import argparse
+import logging
+import time
+import os
+import struct
+from serial import Serial
+import waggle.plugin
+from pprint import pprint
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--print', action='store_true')
+parser.add_argument('--device', default='/dev/waggle_d3s')
+args = parser.parse_args()
+
+if args.print:
+    plugin = waggle.plugin.PrintPlugin()
+else:
+    plugin = waggle.plugin.Plugin()
+
+
+set_gain = 0x02
+get_gain = 0x82
+
+set_bias = 0x07
+get_bias = 0x87
+
+get_serial_no = 0x88
+set_hard_lld_channel_report = 0x09
+get_hard_lld_channel_report = 0x89
+get_fw_ver = 0x8a
+set_soft_lld_enable = 0x0c
+get_soft_lld_enable = 0x8c
+
+get_soft_lld_channel_report = 0x92
+set_soft_lld_channel_report = 0x12
+
+radiometrics = 0xc2
+spectrum_report = 0xc1
+extended_spectrum = 0xce
+
+d3s_sensor_id = 0xa3
+
+header_struct = struct.Struct('<HB')
+
+content_fields = [
+    ('compID', 'B'),
+    ('reportID', 'B'),
+
+    ('status', 'I'),
+
+    ('realTimeMs', 'I'),
+    ('realTimeOffsetMs', 'I'),
+
+    ('dose', 'f'),
+    ('doseRate', 'f'),
+    ('doseUserAccum', 'f'),
+
+    ('neutronLiveTime', 'I'),
+    ('neutronCount', 'I'),
+    ('neutronTemperature', 'h'),
+    ('neutronResv', 'f'),
+
+    ('gammaLiveTime', 'I'),
+    ('gammaCount', 'I'),
+    ('gammaTemperature', 'h'),
+    ('gammaResv', 'f'),
+
+    ('spectrumBitSize', 'B'),
+    ('spectrumResv', 'B'),
+]
+
+content_names = [name for name, _ in content_fields]
+content_struct = struct.Struct('<' + ''.join(type for _, type in content_fields))
+
+
+def main():
+    port = os.environ.get('D3S_DEVICE', args.device)
+
+    while True:
+        try:
+            start_reading_device(port)
+        except KeyboardInterrupt:
+            break
+        except Exception:
+            logging.exception('Stopped reading device. Will retry...')
+            time.sleep(5)
+
+
+def start_reading_device(port):
+    with Serial(port, baudrate=9600, timeout=3) as file:
+        while True:
+            flush_device(file)
+            time.sleep(1)
+            read_device(file)
+            time.sleep(30)
+
+
+def read_device(file):
+    data_out = bytes([7, 0, 0, 7, radiometrics, 0, 0])
+    file.write(data_out)
+    time.sleep(1)
+
+    header_data = file.read(header_struct.size)
+    header = header_struct.unpack(header_data)
+
+    content_data = file.read(content_struct.size)
+    content = content_struct.unpack(content_data)
+
+    measurements = dict(zip(content_names, content))
+
+    pprint(measurements)
+
+    plugin.add_measurement({
+            'sensor_id': 300,
+            'parameter_id': 0,
+            'value': content_data,
+    })
+
+    plugin.add_measurement({
+            'sensor_id': 300,
+            'parameter_id': 1,
+            'value': measurements['compID'],
+    })
+
+    plugin.add_measurement({
+            'sensor_id': 300,
+            'parameter_id': 2,
+            'value': measurements['reportID'],
+    })
+
+    plugin.add_measurement({
+            'sensor_id': 300,
+            'parameter_id': 3,
+            'value': measurements['status'],
+    })
+
+    plugin.add_measurement({
+            'sensor_id': 300,
+            'parameter_id': 4,
+            'value': measurements['realTimeMs'],
+    })
+
+    plugin.add_measurement({
+            'sensor_id': 300,
+            'parameter_id': 5,
+            'value': measurements['realTimeOffsetMs'],
+    })
+
+    plugin.add_measurement({
+            'sensor_id': 300,
+            'parameter_id': 6,
+            'value': measurements['dose'],
+    })
+
+    plugin.add_measurement({
+            'sensor_id': 300,
+            'parameter_id': 7,
+            'value': measurements['doseRate'],
+    })
+
+    plugin.add_measurement({
+            'sensor_id': 300,
+            'parameter_id': 8,
+            'value': measurements['doseUserAccum'],
+    })
+
+    plugin.add_measurement({
+            'sensor_id': 300,
+            'parameter_id': 9,
+            'value': measurements['neutronLiveTime'],
+    })
+
+    plugin.add_measurement({
+            'sensor_id': 300,
+            'parameter_id': 10,
+            'value': measurements['neutronCount'],
+    })
+
+    plugin.add_measurement({
+            'sensor_id': 300,
+            'parameter_id': 11,
+            'value': measurements['neutronTemperature'],
+    })
+
+    plugin.add_measurement({
+            'sensor_id': 300,
+            'parameter_id': 12,
+            'value': measurements['gammaLiveTime'],
+    })
+
+    plugin.add_measurement({
+            'sensor_id': 300,
+            'parameter_id': 13,
+            'value': measurements['gammaCount'],
+    })
+
+    plugin.add_measurement({
+            'sensor_id': 300,
+            'parameter_id': 14,
+            'value': measurements['gammaTemperature'],
+    })
+
+    plugin.add_measurement({
+            'sensor_id': 300,
+            'parameter_id': 15,
+            'value': measurements['gammaTemperature'],
+    })
+
+    plugin.add_measurement({
+            'sensor_id': 300,
+            'parameter_id': 16,
+            'value': measurements['spectrumBitSize'],
+    })
+
+    plugin.publish_measurements()
+
+
+def flush_device(file):
+    while True:
+        data = file.read(1)
+        if not data:
+            break
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,8 @@
+[PARAMETERS]
+plugin_id = 40
+plugin_name = D3S
+description = Retrieves readings from the Kromek D3S.
+reference = https://github.com/waggle-sensor/plugin_manager/tree/develop/plugins/d3s
+plugin_maj = 0
+plugin_min = 0
+plugin_build = 0

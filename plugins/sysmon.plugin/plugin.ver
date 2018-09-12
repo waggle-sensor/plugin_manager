@@ -1,0 +1,8 @@
+[PARAMETERS]
+plugin_id = 1
+plugin_name = Sysmon Plugin
+description = A system monitor plugin.
+reference = https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/sysmon
+plugin_maj = 0
+plugin_min = 1
+plugin_build = 0
