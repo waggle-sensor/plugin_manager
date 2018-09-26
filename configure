@@ -22,37 +22,22 @@ if [ ! -e /etc/waggle/node_id ] ; then
  source ${CRT_ND_SCR}
 fi
 
-
-ln -sf /usr/lib/waggle/plugin_manager/waggle-plugins.py /usr/bin/waggle-plugins
-
 # daemons
 mkdir -p /var/log/waggle
-
-# just in case:
-mkdir -p /etc/supervisor/conf.d/
-
-#upstart
-
-#ln -sf /usr/lib/waggle/plugin_manager/supervisor/waggle_plugin_manager.conf /etc/supervisor/conf.d/waggle_plugin_manager.conf
-rm -f /etc/supervisor/conf.d/waggle_plugin_manager.conf
-
-# copy upstart scripts
-#cp ./upstart/waggle-* /etc/init/
 
 # copy systemd scripts
 cp ${current_dir}/etc/systemd/system/waggle-* /etc/systemd/system
 
 . /usr/lib/waggle/core/scripts/detect_odroid_model.sh
+
 # Blacklist
-systemctl disable waggle-plugin-gps.service
 systemctl disable waggle-plugin-facedetection.service
 
 # Whitelist
-nc_plugins=( 
-    waggle-plugin-alphasense.service \
+nc_plugins=(
     waggle-plugin-coresense.service \
     waggle-plugin-sysmon.service )
-ep_plugins=( 
+ep_plugins=(
     waggle-plugin-audio-spl.service \
     waggle-plugin-image-example.service \
     waggle-plugin-image-detector.service)
