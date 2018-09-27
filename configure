@@ -5,11 +5,6 @@ set -e
 
 export current_dir="$(pwd)"
 
-# set node controller IP for "internal" network
-if [ ! -e /etc/waggle/node_controller_host ] ; then
-  echo "10.31.81.10" > /etc/waggle/node_controller_host
-fi
-
 if [ ! -e /etc/waggle/node_id ] ; then
  CRT_ND_SCR="/usr/lib/waggle/core/scripts/create_node_id.sh"
  if [ ! -e ${CRT_ND_SCR} ] ; then
@@ -30,27 +25,31 @@ cp ${current_dir}/etc/systemd/system/waggle-* /etc/systemd/system
 
 . /usr/lib/waggle/core/scripts/detect_odroid_model.sh
 
-# Blacklist
-systemctl disable waggle-plugin-facedetection.service
-
-# Whitelist
-nc_plugins=(
-    waggle-plugin-coresense.service \
-    waggle-plugin-sysmon.service )
-ep_plugins=(
+# Reconfigure plugins.
+systemctl disable --now \
+    waggle-plugin-alphasense.service \
     waggle-plugin-audio-spl.service \
+    waggle-plugin-coresense.service \
+    waggle-plugin-facedetection.service \
+    waggle-plugin-gps.service \
+    waggle-plugin-image-detector.service \
     waggle-plugin-image-example.service \
-    waggle-plugin-image-detector.service)
+    waggle-plugin-sysmon.service
 
 if [ "${ODROID_MODEL}x" == "Cx" ]; then
-    systemctl enable ${nc_plugins[@]}
-    systemctl disable ${ep_plugins[@]}
+    systemctl enable \
+        waggle-plugin-coresense.service \
+        waggle-plugin-sysmon.service
 elif [ "${ODROID_MODEL}x" == "XU3x" ]; then
-    systemctl enable ${ep_plugins[@]}
-    systemctl disable ${nc_plugins[@]}
+    systemctl enable \
+        waggle-plugin-audio-spl.service \
+        waggle-plugin-image-example.service \
+        waggle-plugin-image-detector.service
 else
-    echo "Unknown platform. Could not enable/disable plugins"
-    exit 1
+    echo "Warning: Unknown platform. Falling back to node controller plugins."
+    systemctl enable \
+        waggle-plugin-coresense.service \
+        waggle-plugin-sysmon.service
 fi
 
 set +x
