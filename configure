@@ -34,7 +34,7 @@ systemctl disable --now \
     waggle-plugin-image-example.service \
     waggle-plugin-sysmon.service
 
-. /usr/lib/waggle/core/scripts/detect_odroid_model.sh || true
+(. /usr/lib/waggle/core/scripts/detect_odroid_model.sh) || true
 
 if [ "${ODROID_MODEL}x" == "Cx" ]; then
     systemctl enable \
