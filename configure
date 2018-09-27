@@ -23,8 +23,6 @@ mkdir -p /var/log/waggle
 # copy systemd scripts
 cp ${current_dir}/etc/systemd/system/waggle-* /etc/systemd/system
 
-. /usr/lib/waggle/core/scripts/detect_odroid_model.sh
-
 # Reconfigure plugins.
 systemctl disable --now \
     waggle-plugin-alphasense.service \
@@ -35,6 +33,8 @@ systemctl disable --now \
     waggle-plugin-image-detector.service \
     waggle-plugin-image-example.service \
     waggle-plugin-sysmon.service
+
+. /usr/lib/waggle/core/scripts/detect_odroid_model.sh || true
 
 if [ "${ODROID_MODEL}x" == "Cx" ]; then
     systemctl enable \
