@@ -1,7 +1,0 @@
-system_send
-system_router
-system_receive
-system_base
-#coresense_3
-#example_sensor
-#fake_sensor

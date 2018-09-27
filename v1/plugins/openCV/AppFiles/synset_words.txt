@@ -1,6 +1,0 @@
-n09247410 cirrus cloud
-n09445910 rain
-n09261960 clear sky
-n09245833 overcast
-n09255519 dirt
-n09261772 night

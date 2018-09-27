@@ -1,1 +1,0 @@
-from .facedetection import register
