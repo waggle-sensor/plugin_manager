@@ -1,2 +1,2 @@
-[PARAMETERS]
-plugin_instance = 1
+[plugin]
+instance=1
