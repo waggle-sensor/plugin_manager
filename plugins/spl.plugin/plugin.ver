@@ -1,8 +1,6 @@
-[PARAMETERS]
-plugin_id = 51
-plugin_name = "audio_spl"
-description = "Noise Level Calculation Plugin"
-reference = "https://github.com/waggle-sensor/summer2018/tree/master/chen/plugins/audio_spl"
-plugin_maj = 0
-plugin_min = 0
-plugin_build = 0
+[plugin]
+id=51
+version=0.0.0
+name=Audio SPL
+description=Noise Level Calculation Plugin
+reference=https://github.com/waggle-sensor/summer2018/tree/master/chen/plugins/audio_spl

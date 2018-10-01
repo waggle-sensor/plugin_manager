@@ -1,6 +1,6 @@
 [plugin]
 id=1
 name=Sysmon Plugin
-description=A system monitor plugin.
+description=System monitor plugin.
 reference=https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/sysmon
 version=0.1.0
