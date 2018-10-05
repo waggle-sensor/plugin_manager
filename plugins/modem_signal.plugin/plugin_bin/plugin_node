@@ -4,6 +4,7 @@ import re
 from serial import Serial
 import time
 import logging
+import waggle.plugin
 
 logger = logging.getLogger('modem-signal')
 
@@ -41,6 +42,9 @@ rssi_to_dbm = {
 }
 
 
+plugin = waggle.plugin.Plugin()
+
+
 def read_signal(port):
     logger.info('Reading signal on %s.', port)
 
@@ -75,6 +79,14 @@ def read_signal(port):
 
         logger.info('Signal %s dBm on %s.', signal_strength, port)
 
+        plugin.add_measurement({
+            'sensor_id': 100,
+            'parameter_id': 1,
+            'value': signal_strength,
+        })
+
+        plugin.publish_measurements()
+
 
 def main():
     while True:
@@ -82,6 +94,8 @@ def main():
 
         if len(detected) > 0:
             read_signal(detected[0])
+        else:
+            logger.warning('No supported modems found.')
 
         time.sleep(60)
 
