@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+import glob
+import re
+from serial import Serial
+import time
+import logging
+
+logger = logging.getLogger('modem-signal')
+
+
+rssi_to_dbm = {
+    2: -109,
+    3: -107,
+    4: -105,
+    5: -103,
+    6: -101,
+    7: -99,
+    8: -97,
+    9: -95,
+    10: -93,
+    11: -91,
+    12: -89,
+    13: -87,
+    14: -85,
+    15: -83,
+    16: -81,
+    17: -79,
+    18: -77,
+    19: -75,
+    20: -73,
+    21: -71,
+    22: -69,
+    23: -67,
+    24: -65,
+    25: -63,
+    26: -61,
+    27: -59,
+    28: -57,
+    29: -55,
+    30: -53,
+}
+
+
+def read_signal(port):
+    logger.info('Reading signal on %s.', port)
+
+    with Serial(port, 57600, timeout=1.0) as ser:
+        ser.write(b'AT+CSQ\r')
+
+        rssi = None
+
+        while True:
+            try:
+                s = ser.readline().decode()
+            except UnicodeDecodeError:
+                continue
+
+            if len(s) == 0:
+                logger.warning('Timeout on %s.', port)
+                return
+
+            if s.startswith('OK'):
+                break
+
+            m = re.match(r'\+CSQ:\s*(\d+),(\d+)', s)
+
+            if m is not None:
+                rssi = int(m.group(1))
+
+        try:
+            signal_strength = rssi_to_dbm[rssi]
+        except KeyError:
+            logger.warning('Unknown signal level %s on %s.', rssi, port)
+            return
+
+        logger.info('Signal %s dBm on %s.', signal_strength, port)
+
+
+def main():
+    while True:
+        detected = glob.glob('/dev/serial/by-id/*Telit*if06')
+
+        if len(detected) > 0:
+            read_signal(detected[0])
+
+        time.sleep(60)
+
+
+if __name__ == '__main__':
+    main()

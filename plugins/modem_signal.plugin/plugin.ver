@@ -1,0 +1,6 @@
+[plugin]
+id=11
+version=0.0.1
+name=Modem Signal Strength Monitor
+description=Monitors modem signal strength.
+reference=https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/modem_signal.plugin
