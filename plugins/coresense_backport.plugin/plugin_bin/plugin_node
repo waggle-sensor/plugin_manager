@@ -1,15 +1,11 @@
 #! /usr/bin/env python3
 import time
 import os
-import argparse
 from serial import Serial, SerialException
-
-from waggle.pipeline import Plugin
 from waggle.checksum import crc8
-from waggle.protocol.v5.decoder import decode_frame, convert
+from waggle.protocol.v5.decoder import decode_frame
 import waggle.plugin
 from protocol_mapper import map_v1_to_v2
-
 import json
 
 device = os.environ.get('CORESENSE_DEVICE', '/dev/waggle_coresense')
@@ -54,10 +50,17 @@ def get_default_configuration():
             }
         }
         sensor_table.update(sensor_to_be_added)
+
     return sensor_table
 
 
+def read_json_file(path):
+    with open(path) as file:
+        return json.load(file)
+
+
 class DeviceHandler:
+
     def __init__(self, device):
         self.serial = None
         self.device = device
@@ -155,20 +158,18 @@ class DeviceHandler:
         return self.read_response()
 
 
-class CoresensePlugin4(Plugin):
-    plugin_name = 'coresense'
-    plugin_version = '4'
+class CoresensePlugin4:
 
-    def __init__(self, hrf=False):
-        super().__init__()
+    def __init__(self):
         self.sensors = self._get_config_table()
+
         for sensor in self.sensors:
             s = self.sensors[sensor]
             s['last_updated'] = time.time()
             self.sensors[sensor] = s
+
         self.input_handler = DeviceHandler(device)
         self.input_handler.open()
-        self.hrf = hrf
 
         self.function_type = {
             'sensor_init': 1,
@@ -184,6 +185,7 @@ class CoresensePlugin4(Plugin):
             'bus_read': 21,
             'bus_write': 22
         }
+
         self.bus_type = {
             'i2c': 0,
             'spi': 1,
@@ -197,17 +199,10 @@ class CoresensePlugin4(Plugin):
         self.input_handler.close()
 
     def _get_config_table(self):
-        sensor_config_file = '/tmp/waggle/sensor_table.conf'
-        sensor_table = None
         try:
-            with open(sensor_config_file) as config:
-                sensor_table = json.loads(config.read())
-        except Exception:
-            sensor_table = get_default_configuration()
-            with open(sensor_config_file, 'w') as config:
-                config.write(json.dumps(sensor_table, sort_keys=True, indent=4))
-
-        return sensor_table
+            return read_json_file('/wagglerw/waggle/sensor_table.conf')
+        except FileNotFoundError:
+            return get_default_configuration()
 
     def _get_requests(self):
         requests = []
@@ -229,6 +224,7 @@ class CoresensePlugin4(Plugin):
 
                 s['last_updated'] = current_time
                 self.sensors[sensor] = s
+
         return requests
 
     def _decode(self, packets):
@@ -237,14 +233,6 @@ class CoresensePlugin4(Plugin):
             return decoded
         else:
             return None
-
-    def _print(self, decoded_dict):
-        for item in decoded_dict:
-            try:
-                converted_value = convert(decoded_dict[item], item)
-                print(converted_value)
-            except Exception as ex:
-                print('Coult not decode %s: %s' % (item, str(ex)))
 
     def run(self):
         # Check firmware version and MAC address of the Metsense
@@ -259,8 +247,6 @@ class CoresensePlugin4(Plugin):
 
             if ver is None:
                 raise ValueError('No version information received.')
-
-            self._print(ver)
         except SerialException:
             print('Could not check firmware version due to serial error. Restarting...')
             return
@@ -297,24 +283,4 @@ class CoresensePlugin4(Plugin):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--input-sensor', action='store_true', help='Data from the sensor board')
-    parser.add_argument('--hrf', action='store_true', help='Print in human readable form')
-    args = parser.parse_args()
-
-    if args.input_sensor:
-        if not os.path.exists(device):
-            exit(1)
-
-        try:
-            if args.hrf:
-                plugin = CoresensePlugin4(hrf=args.hrf)
-            else:
-                plugin = CoresensePlugin4.defaultConfig()
-            plugin.run()
-        except (KeyboardInterrupt, SerialException, Exception) as ex:
-            print(str(ex))
-        finally:
-            plugin.close()
-    else:
-        parser.print_help()
+    CoresensePlugin4().run()
