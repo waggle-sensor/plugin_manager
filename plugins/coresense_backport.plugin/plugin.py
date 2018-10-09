@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-
 import time
 import os
 import argparse
@@ -42,7 +41,9 @@ def get_default_configuration():
         ('Chemsense', 0x2A),
         ('AlphaHisto', 0x28)
     ]
+
     sensor_table = {}
+
     for item in default_sensor_list:
         sensor_name, sensor_id = item
         sensor_to_be_added = {
@@ -56,7 +57,7 @@ def get_default_configuration():
     return sensor_table
 
 
-class DeviceHandler(object):
+class DeviceHandler:
     def __init__(self, device):
         self.serial = None
         self.device = device
@@ -260,9 +261,6 @@ class CoresensePlugin4(Plugin):
                 raise ValueError('No version information received.')
 
             self._print(ver)
-
-            if not self.hrf:
-                self.send(sensor='frame', data=message)
         except SerialException:
             print('Could not check firmware version due to serial error. Restarting...')
             return
@@ -296,7 +294,6 @@ class CoresensePlugin4(Plugin):
                     new_plugin.add_measurement(sensorgram)
 
                 new_plugin.publish_measurements()
-                # self.send(sensor='frame', data=message)
 
 
 if __name__ == '__main__':
