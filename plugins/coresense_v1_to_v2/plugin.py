@@ -8,10 +8,14 @@ from serial import Serial, SerialException
 from waggle.pipeline import Plugin
 from waggle.checksum import crc8
 from waggle.protocol.v5.decoder import decode_frame, convert
+import waggle.plugin
+from protocol_mapper import map_v1_to_v2
 
 import json
 
 device = os.environ.get('CORESENSE_DEVICE', '/dev/waggle_coresense')
+
+new_plugin = waggle.plugin.PrintPlugin(id=1, version='0.0.1')
 
 
 def get_default_configuration():
@@ -246,15 +250,19 @@ class CoresensePlugin4(Plugin):
         try:
             check_firmware_request = [5, 255, 5, 0]  # sensor_read, 0xFF, 0x00
             message = self.input_handler.request_data(check_firmware_request)
+
             if message is None:
                 raise Exception('Serial error')
-            else:
-                ver = self._decode(message)
-                if ver is None:
-                    raise Exception('No version information received')
-                self._print(ver)
-                if not self.hrf:
-                    self.send(sensor='frame', data=message)
+
+            ver = self._decode(message)
+
+            if ver is None:
+                raise ValueError('No version information received.')
+
+            self._print(ver)
+
+            if not self.hrf:
+                self.send(sensor='frame', data=message)
         except SerialException:
             print('Could not check firmware version due to serial error. Restarting...')
             return
@@ -264,28 +272,31 @@ class CoresensePlugin4(Plugin):
 
         while True:
             requests = self._get_requests()
-            if len(requests) > 0:
-                try:
-                    message = self.input_handler.request_data(requests)
-                except SerialException:
-                    print('Error in serial connection. Restarting...')
-                    break
 
-                if message is None:
-                    print('Errors or invalid crc')
-                    time.sleep(5)
-                elif len(message) == 0:
-                    print('No packet received. Restarting...')
-                    break
-                else:
-                    print('Received frame')
-                    if self.hrf:
-                        decoded_message = self._decode(message)
-                        self._print(decoded_message)
-                    else:
-                        self.send(sensor='frame', data=message)
-            else:
+            if not requests:
                 time.sleep(1)
+                continue
+
+            try:
+                message = self.input_handler.request_data(requests)
+            except SerialException:
+                print('Error in serial connection. Restarting...')
+                break
+
+            if message is None:
+                print('Errors or invalid crc')
+                time.sleep(5)
+            elif len(message) == 0:
+                print('No packet received. Restarting...')
+                break
+            else:
+                print('Received frame')
+
+                for sensorgram in map_v1_to_v2(message):
+                    new_plugin.add_measurement(sensorgram)
+
+                new_plugin.publish_measurements()
+                # self.send(sensor='frame', data=message)
 
 
 if __name__ == '__main__':
