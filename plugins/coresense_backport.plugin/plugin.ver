@@ -1,0 +1,6 @@
+[plugin]
+id=2
+version=0.0.1
+name=Coresense Backport
+description=Converts and publishes data from old coresense firmware in new format.
+reference=https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/coresense_backport
