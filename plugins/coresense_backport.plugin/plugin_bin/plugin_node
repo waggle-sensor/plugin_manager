@@ -9,6 +9,9 @@ from protocol_mapper import map_v1_to_v2
 import json
 
 
+plugin = waggle.plugin.Plugin()
+
+
 def get_default_configuration():
     default_sensor_list = [
         # SENSOR_NAME SENSOR_ID
@@ -153,7 +156,6 @@ class DeviceHandler:
 class CoresensePlugin4:
 
     def __init__(self, device):
-        self.plugin = waggle.plugin.PrintPlugin(id=1, version='0.0.1')
         self.sensors = self._get_config_table()
 
         for sensor in self.sensors:
@@ -270,9 +272,9 @@ class CoresensePlugin4:
                 print('Received frame')
 
                 for sensorgram in map_v1_to_v2(message):
-                    self.plugin.add_measurement(sensorgram)
+                    plugin.add_measurement(sensorgram)
 
-                self.plugin.publish_measurements()
+                plugin.publish_measurements()
 
 
 def main():
