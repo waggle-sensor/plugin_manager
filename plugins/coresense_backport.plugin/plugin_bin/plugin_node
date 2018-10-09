@@ -1,16 +1,12 @@
 #! /usr/bin/env python3
+import argparse
 import time
-import os
 from serial import Serial, SerialException
 from waggle.checksum import crc8
 from waggle.protocol.v5.decoder import decode_frame
 import waggle.plugin
 from protocol_mapper import map_v1_to_v2
 import json
-
-device = os.environ.get('CORESENSE_DEVICE', '/dev/waggle_coresense')
-
-new_plugin = waggle.plugin.PrintPlugin(id=1, version='0.0.1')
 
 
 def get_default_configuration():
@@ -40,16 +36,12 @@ def get_default_configuration():
 
     sensor_table = {}
 
-    for item in default_sensor_list:
-        sensor_name, sensor_id = item
-        sensor_to_be_added = {
-            sensor_name: {
-                'sensor_id': sensor_id,
-                'function_call': 'sensor_read',
-                'interval': 25  # seconds
-            }
+    for sensor_name, sensor_id in default_sensor_list:
+        sensor_table[sensor_name] = {
+            'sensor_id': sensor_id,
+            'function_call': 'sensor_read',
+            'interval': 25  # seconds
         }
-        sensor_table.update(sensor_to_be_added)
 
     return sensor_table
 
@@ -160,7 +152,8 @@ class DeviceHandler:
 
 class CoresensePlugin4:
 
-    def __init__(self):
+    def __init__(self, device):
+        self.plugin = waggle.plugin.PrintPlugin(id=1, version='0.0.1')
         self.sensors = self._get_config_table()
 
         for sensor in self.sensors:
@@ -277,10 +270,18 @@ class CoresensePlugin4:
                 print('Received frame')
 
                 for sensorgram in map_v1_to_v2(message):
-                    new_plugin.add_measurement(sensorgram)
+                    self.plugin.add_measurement(sensorgram)
 
-                new_plugin.publish_measurements()
+                self.plugin.publish_measurements()
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--device', default='/dev/waggle_coresense')
+    args = parser.parse_args()
+
+    CoresensePlugin4(args.device).run()
 
 
 if __name__ == '__main__':
-    CoresensePlugin4().run()
+    main()
