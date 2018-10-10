@@ -9,10 +9,6 @@ from protocol_mapper import map_v1_to_v2
 import json
 
 
-# plugin = waggle.plugin.Plugin()
-plugin = waggle.plugin.PrintPlugin()
-
-
 default_sensor_list = [
     ('MetMAC', 0x00),
     ('TMP112', 0x01),
@@ -154,9 +150,10 @@ class DeviceHandler:
         return self.read_response()
 
 
-class CoresensePlugin4:
+class CoresenseRunner:
 
-    def __init__(self, device):
+    def __init__(self, plugin, device):
+        self.plugin = plugin
         self.sensors = self._get_config_table()
 
         for sensor in self.sensors:
@@ -273,17 +270,23 @@ class CoresensePlugin4:
                 print('Received frame')
 
                 for sensorgram in map_v1_to_v2(message):
-                    plugin.add_measurement(sensorgram)
+                    self.plugin.add_measurement(sensorgram)
 
-                plugin.publish_measurements()
+                self.plugin.publish_measurements()
 
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--debug', action='store_true')
     parser.add_argument('--device', default='/dev/waggle_coresense')
     args = parser.parse_args()
 
-    CoresensePlugin4(args.device).run()
+    if args.debug:
+        plugin = waggle.plugin.PrintPlugin()
+    else:
+        plugin = waggle.plugin.Plugin()
+
+    CoresenseRunner(plugin, args.device).run()
 
 
 if __name__ == '__main__':
