@@ -9,34 +9,35 @@ from protocol_mapper import map_v1_to_v2
 import json
 
 
-plugin = waggle.plugin.Plugin()
+# plugin = waggle.plugin.Plugin()
+plugin = waggle.plugin.PrintPlugin()
+
+
+default_sensor_list = [
+    ('MetMAC', 0x00),
+    ('TMP112', 0x01),
+    ('HTU21D', 0x02),
+    ('HIH4030', 0x03),
+    ('BMP180', 0x04),
+    ('PR103J2', 0x05),
+    ('TSL250RDMS', 0x06),
+    ('MMA8452Q', 0x07),
+    ('SPV1840LR5H-B', 0x08),
+    ('TSYS01', 0x09),
+    ('HMC5883L', 0x0A),
+    ('HIH6130', 0x0B),
+    ('APDS_9006_020', 0x0C),
+    ('TSL260', 0x0D),
+    ('TSL250RDLS', 0x0E),
+    ('MLX75305', 0x0F),
+    ('ML8511', 0x10),
+    ('TMP421', 0x13),
+    ('Chemsense', 0x2A),
+    ('AlphaHisto', 0x28)
+]
 
 
 def get_default_configuration():
-    default_sensor_list = [
-        # SENSOR_NAME SENSOR_ID
-        ('MetMAC', 0x00),
-        ('TMP112', 0x01),
-        ('HTU21D', 0x02),
-        ('HIH4030', 0x03),
-        ('BMP180', 0x04),
-        ('PR103J2', 0x05),
-        ('TSL250RDMS', 0x06),
-        ('MMA8452Q', 0x07),
-        ('SPV1840LR5H-B', 0x08),
-        ('TSYS01', 0x09),
-        ('HMC5883L', 0x0A),
-        ('HIH6130', 0x0B),
-        ('APDS_9006_020', 0x0C),
-        ('TSL260', 0x0D),
-        ('TSL250RDLS', 0x0E),
-        ('MLX75305', 0x0F),
-        ('ML8511', 0x10),
-        ('TMP421', 0x13),
-        ('Chemsense', 0x2A),
-        ('AlphaHisto', 0x28)
-    ]
-
     sensor_table = {}
 
     for sensor_name, sensor_id in default_sensor_list:
