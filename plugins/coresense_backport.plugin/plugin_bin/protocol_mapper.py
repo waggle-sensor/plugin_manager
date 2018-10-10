@@ -57,6 +57,8 @@ table = {
 
 
 def map_v1_to_v2(datagram_v1):
+    sensorgrams = []
+
     decoded_message = decode_frame(datagram_v1)
 
     for values in decoded_message.values():
@@ -67,8 +69,10 @@ def map_v1_to_v2(datagram_v1):
                 print('unmatched measurement', key)
                 continue
 
-            yield {
+            sensorgrams.append({
                 'sensor_id': sensor_id,
                 'parameter_id': parameter_id,
                 'value': value,
-            }
+            })
+
+    return sensorgrams
