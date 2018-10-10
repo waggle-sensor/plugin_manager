@@ -257,21 +257,23 @@ class CoresenseRunner:
             try:
                 message = self.input_handler.request_data(requests)
             except SerialException:
-                print('Error in serial connection. Restarting...')
+                print('Error in serial connection. Restarting...', flush=True)
                 break
 
             if message is None:
-                print('Errors or invalid crc')
+                print('Errors or invalid crc', flush=True)
                 time.sleep(5)
             elif len(message) == 0:
-                print('No packet received. Restarting...')
+                print('No packet received. Restarting...', flush=True)
                 break
             else:
-                print('Received frame')
+                print('Adding measurements.', flush=True)
 
                 for sensorgram in map_v1_to_v2(message):
+                    print(sensorgram, flush=True)
                     self.plugin.add_measurement(sensorgram)
 
+                print('Publishing message.', flush=True)
                 self.plugin.publish_measurements()
 
 
