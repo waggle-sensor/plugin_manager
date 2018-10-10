@@ -20,37 +20,27 @@ fi
 # daemons
 mkdir -p /var/log/waggle
 
-# copy systemd scripts
-cp ${current_dir}/etc/systemd/system/waggle-* /etc/systemd/system
-
-# Reconfigure plugins.
-systemctl disable --now \
-    waggle-plugin-alphasense.service \
-    waggle-plugin-audio-spl.service \
-    waggle-plugin-coresense.service \
-    waggle-plugin-facedetection.service \
-    waggle-plugin-gps.service \
-    waggle-plugin-image-detector.service \
-    waggle-plugin-image-example.service \
-    waggle-plugin-sysmon.service
-
-(. /usr/lib/waggle/core/scripts/detect_odroid_model.sh) || true
-
-if [ "${ODROID_MODEL}x" == "Cx" ]; then
-    systemctl enable \
-        waggle-plugin-coresense.service \
-        waggle-plugin-sysmon.service
-elif [ "${ODROID_MODEL}x" == "XU3x" ]; then
-    systemctl enable \
-        waggle-plugin-audio-spl.service \
-        waggle-plugin-image-example.service \
-        waggle-plugin-image-detector.service
-else
-    echo "Warning: Unknown platform. Falling back to node controller plugins."
-    systemctl enable \
-        waggle-plugin-coresense.service \
-        waggle-plugin-sysmon.service
-fi
+#
+# # copy systemd scripts
+# cp ${current_dir}/etc/systemd/system/waggle-* /etc/systemd/system
+#
+# (. /usr/lib/waggle/core/scripts/detect_odroid_model.sh) || true
+#
+# if [ "${ODROID_MODEL}x" == "Cx" ]; then
+#     systemctl enable \
+#         waggle-plugin-coresense.service \
+#         waggle-plugin-sysmon.service
+# elif [ "${ODROID_MODEL}x" == "XU3x" ]; then
+#     systemctl enable \
+#         waggle-plugin-audio-spl.service \
+#         waggle-plugin-image-example.service \
+#         waggle-plugin-image-detector.service
+# else
+#     echo "Warning: Unknown platform. Falling back to node controller plugins."
+#     systemctl enable \
+#         waggle-plugin-coresense.service \
+#         waggle-plugin-sysmon.service
+# fi
 
 set +x
 echo "done"
