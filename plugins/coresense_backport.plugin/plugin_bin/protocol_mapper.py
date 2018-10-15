@@ -32,7 +32,7 @@ table = {
     '5te_soil_dielectric': None,
     '5te_soil_conductivity': None,
     '5te_soil_temperature': None,
-    'alpha_histo': None,
+    'alpha_histo': (0x0028, 0x01),
     'alpha_serial': None,
     'alpha_firmware': None,
     'alpha_config': None,
