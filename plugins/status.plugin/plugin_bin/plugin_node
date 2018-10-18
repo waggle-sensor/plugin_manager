@@ -15,6 +15,7 @@ while True:
     ])
 
     status = json.loads(output.decode())
+    print(status, flush=True)
 
     # plugin.publish_measurements()
     time.sleep(900)
