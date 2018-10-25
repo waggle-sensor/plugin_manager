@@ -5,17 +5,42 @@ import time
 import waggle.plugin
 
 
-plugin = waggle.plugin.Plugin()
+mapping = [
+    (['nc', 'uptime'], (0x0001, 0x01)),
+    (['ep', 'uptime'], (0x0001, 0x02)),
+]
 
-while True:
+
+def get_status():
     output = subprocess.check_output([
         'python3',
         '/usr/lib/waggle/core/scripts/status-service',
         '--json',
     ])
 
-    status = json.loads(output.decode())
-    print(status, flush=True)
+    return json.loads(output.decode())
+
+
+def get_value(obj, path):
+    if not path:
+        return obj
+    head, *tail = path
+    return get_value(obj[head], tail)
+
+
+plugin = waggle.plugin.Plugin()
+
+while True:
+    status = get_status()
+
+    for path, name in mapping:
+        try:
+            value = get_value(status, path)
+        except KeyError:
+            print('failed to get', path, flush=True)
+            continue
+
+        print(name, value, flush=True)
 
     # plugin.publish_measurements()
     time.sleep(900)

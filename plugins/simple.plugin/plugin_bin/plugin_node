@@ -6,9 +6,6 @@ import time
 plugin = waggle.plugin.Plugin()
 
 while True:
-    for msg in plugin.get_waiting_messages():
-        print('Got message:', msg, flush=True)
-
     plugin.add_measurement({
         'sensor_id': 1,
         'parameter_id': 1,

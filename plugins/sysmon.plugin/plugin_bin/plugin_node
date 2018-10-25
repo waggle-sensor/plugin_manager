@@ -18,6 +18,7 @@ network_devices = [
     (0x92, 'enx.', 'usb'),
 ]
 
+
 def read_rx_bytes(dev):
     return int(read_file(os.path.join('/sys/class/net', dev, 'statistics/rx_bytes')))
 
