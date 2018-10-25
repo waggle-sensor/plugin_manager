@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+import waggle.plugin
+
+
+def process_measurements(sensorgram):
+    return [sensorgram]
+
+
+if __name__ == '__main__':
+    waggle.plugin.start_processing_measurements(process_measurements)
