@@ -20,27 +20,22 @@ fi
 # daemons
 mkdir -p /var/log/waggle
 
-#
-# # copy systemd scripts
-# cp ${current_dir}/etc/systemd/system/waggle-* /etc/systemd/system
-#
-# (. /usr/lib/waggle/core/scripts/detect_odroid_model.sh) || true
-#
-# if [ "${ODROID_MODEL}x" == "Cx" ]; then
-#     systemctl enable \
-#         waggle-plugin-coresense.service \
-#         waggle-plugin-sysmon.service
-# elif [ "${ODROID_MODEL}x" == "XU3x" ]; then
-#     systemctl enable \
-#         waggle-plugin-audio-spl.service \
-#         waggle-plugin-image-example.service \
-#         waggle-plugin-image-detector.service
-# else
-#     echo "Warning: Unknown platform. Falling back to node controller plugins."
-#     systemctl enable \
-#         waggle-plugin-coresense.service \
-#         waggle-plugin-sysmon.service
-# fi
+
+# copy systemd scripts
+cp ${current_dir}/etc/systemd/system/waggle-* /etc/systemd/system
+
+(. /usr/lib/waggle/core/scripts/detect_odroid_model.sh) || true
+
+if [ "${ODROID_MODEL}x" == "Cx" ]; then
+    systemctl enable \
+        waggle-plugin-coresense.service \
+elif [ "${ODROID_MODEL}x" == "XU4x" ]; then
+    systemctl enable \
+    waggle-image-exporter.service \
+    waggle-image-producer.service
+else
+    echo "Warning: Unknown platform. Falling back to node controller plugins."
+fi
 
 set +x
 echo "done"
