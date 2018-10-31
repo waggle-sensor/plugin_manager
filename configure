@@ -24,7 +24,7 @@ mkdir -p /var/log/waggle
 # copy systemd scripts
 cp ${current_dir}/etc/systemd/system/waggle-* /etc/systemd/system
 
-(. /usr/lib/waggle/core/scripts/detect_odroid_model.sh) || true
+. /usr/lib/waggle/core/scripts/detect_odroid_model.sh || true
 
 if [ "${ODROID_MODEL}x" == "Cx" ]; then
     systemctl enable \
@@ -37,5 +37,4 @@ else
     echo "Warning: Unknown platform. Falling back to node controller plugins."
 fi
 
-set +x
 echo "done"
