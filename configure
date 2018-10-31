@@ -28,7 +28,7 @@ cp ${current_dir}/etc/systemd/system/waggle-* /etc/systemd/system
 
 if [ "${ODROID_MODEL}x" == "Cx" ]; then
     systemctl enable \
-        waggle-plugin-coresense.service \
+        waggle-plugin-coresense.service
 elif [ "${ODROID_MODEL}x" == "XU4x" ]; then
     systemctl enable \
     waggle-image-exporter.service \
