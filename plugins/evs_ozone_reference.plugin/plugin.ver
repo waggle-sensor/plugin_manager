@@ -1,6 +1,6 @@
 [plugin]
 id=200
-version=0.0.1
+version=0.0.0
 name=EVS Ozone Reference Plugin
 description=Reads ozone reference values from EVS field.
 reference=https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/evs_ozone_reference.plugin
