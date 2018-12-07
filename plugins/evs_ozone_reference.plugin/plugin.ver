@@ -1,0 +1,6 @@
+[plugin]
+id=200
+version=0.0.1
+name=EVS Ozone Reference Plugin
+description=Reads ozone reference values from EVS field.
+reference=
