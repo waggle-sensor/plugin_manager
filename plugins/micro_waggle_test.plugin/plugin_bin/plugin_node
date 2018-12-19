@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+import waggle.plugin
+from serial import Serial
+
+plugin = waggle.plugin.Plugin()
+
+with Serial('/dev/waggle_coresense', 115200) as ser:
+    values = []
+
+    while True:
+        line = ser.readline().decode()
+
+        if line.startswith('Ozone:'):
+            fields = line.split()
+
+            value = int(fields[1])
+            values.append(value)
+            print('read', value, flush=True)
+
+        if len(values) >= 30:
+            value = values[-1]
+            values = []
+
+            print('publish', value, flush=True)
+
+            plugin.add_measurement({
+                'sensor_id': 1,
+                'parameter_id': 1,
+                'value': value,
+            })
+
+            plugin.publish_measurements()

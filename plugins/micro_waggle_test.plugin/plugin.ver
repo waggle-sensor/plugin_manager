@@ -1,0 +1,6 @@
+[plugin]
+id=100
+version=0.0.0
+name=Micro Waggle Test Plugin
+description=Generates test value for micro waggle nodes.
+reference=https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/evs_ozone_reference.plugin
