@@ -4,6 +4,7 @@ import os
 
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--confidence', type=float, default=0.3)
 parser.add_argument('results_dir')
 parser.add_argument('images', nargs='*')
 args = parser.parse_args()
@@ -43,14 +44,12 @@ for image_path in args.images:
     model.setInput(image_blob)
     output = model.forward()
 
-    confidence = 0.3
-
     results = {}
 
     for detection in output[0, 0, :, :]:
         score = float(detection[2])
 
-        if score > confidence:
+        if score > args.confidence:
             class_index = int(detection[1])
             class_name = classes[class_index]
             if class_name not in results:
