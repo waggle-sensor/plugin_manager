@@ -67,7 +67,7 @@ for image_path in args.images:
             })
 
             cv2.rectangle(image, (left, top), (right, bottom), (0, 255, 0))
-            cv2.putText(image, class_name, (left, bottom), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 1)
+            cv2.putText(image, '{} {}'.format(class_name, round(score, 3)), (left, bottom), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 1)
 
     results_path = os.path.join(results_dir, os.path.basename(image_path))
     cv2.imwrite(results_path, image)
