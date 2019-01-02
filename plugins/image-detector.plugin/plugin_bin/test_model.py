@@ -5,6 +5,7 @@ import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--confidence', type=float, default=0.3)
+parser.add_argument('--rotate', type=float, default=0.0)
 parser.add_argument('results_dir')
 parser.add_argument('images', nargs='*')
 args = parser.parse_args()
@@ -31,6 +32,10 @@ for image_path in args.images:
     image = cv2.imread(os.path.abspath(image_path))
     image_cols = image.shape[1]
     image_rows = image.shape[0]
+
+    # if rotation needed. should do this ahead of time in the image proc pipeline.
+    M = cv2.getRotationMatrix2D((image_cols/2, image_rows/2), args.rotate, 1)
+    image = cv2.warpAffine(image, M, (image_cols, image_rows))
 
     image_blob = cv2.dnn.blobFromImage(
         image,

@@ -5,10 +5,13 @@ import time
 import json
 import cv2
 import numpy as np
+import sys
 
 from waggle.pipeline import Plugin, ImagePipelineHandler
 import waggle.plugin
 
+# change working directory to plugin dir
+os.chdir(os.path.dirname(sys.argv[0]))
 
 EXCHANGE = 'image_pipeline'
 ROUTING_KEY_EXPORT = 'exporter'
@@ -61,7 +64,8 @@ class CarPedDetector(Plugin):
     def __init__(self):
         super().__init__()
         self.config = self._get_config_table()
-        self.input_handler = ImagePipelineHandler(routing_in=self.config['source'])
+        self.input_handler = ImagePipelineHandler(
+            routing_in=self.config['source'])
 
     def _get_config_table(self):
         try:
@@ -101,7 +105,8 @@ class CarPedDetector(Plugin):
                 x = left + ((right - left) / 2.)
                 y = top + ((bottom - top) / 2.)
                 print('    x:%5d, y:%5d' % (x, y))
-            print('Total: %s %d' % (detected_object, len(detected_objects[detected_object].keys())))
+            print('Total: %s %d' % (detected_object, len(
+                detected_objects[detected_object].keys())))
 
     def close(self):
         self.input_handler.close()
@@ -132,8 +137,10 @@ class CarPedDetector(Plugin):
         except Exception:
             confidence = 0.3
 
-        self.config['last_updated'] = time.time() - self.config['detection_interval']
-        self.config['last_sampled'] = time.time() - self.config['sampling_interval']
+        self.config['last_updated'] = time.time(
+        ) - self.config['detection_interval']
+        self.config['last_sampled'] = time.time(
+        ) - self.config['sampling_interval']
 
         if self.config['sampling_interval'] < 1:
             do_sampling = False
@@ -160,10 +167,11 @@ class CarPedDetector(Plugin):
                             self.config['input_scale'],
                             tuple(self.config['input_size']),
                             tuple(self.config['input_mean_subtraction']),
-                            swapRB=True if 'RGB' in self.config['input_channel_order'].upper() else False,
+                            swapRB=True if 'RGB' in self.config['input_channel_order'].upper(
+                            ) else False,
                             crop=False
                         )
-                        print("So far %d exceptions" % counter);
+                        print("So far %d exceptions" % counter)
                         detected_objects = self._detect(
                             img_blob,
                             cvNet,
@@ -174,7 +182,7 @@ class CarPedDetector(Plugin):
                         )
                     except Exception:
                         counter = counter + 1
-                        print("Exception occurred, caught and continuing");
+                        print("Exception occurred, caught and continuing")
                         pass
 
                     cars = detected_objects.get('car', {})
@@ -183,7 +191,8 @@ class CarPedDetector(Plugin):
                     count_car = len(cars)
                     count_person = len(people)
 
-                    print('cars={} pedestrians={}'.format(count_car, count_person))
+                    print('cars={} pedestrians={}'.format(
+                        count_car, count_person))
 
                     plugin.add_measurement({
                         'sensor_id': 1000,
