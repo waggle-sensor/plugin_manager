@@ -158,8 +158,14 @@ class CarPedDetector(Plugin):
                     print(time.asctime())
                     print('Received frame')
                     properties, frame = message
+                    metadata = properties.headers
                     nparr_img = np.fromstring(frame, np.uint8)
                     img = cv2.imdecode(nparr_img, cv2.IMREAD_COLOR)
+
+                    rows, cols, _ = img.shape
+                    M = cv2.getRotationMatrix2D((cols / 2, rows / 2), metadata['image_rotate'], 1)
+                    img = cv2.warpAffine(img, M, (cols, rows))
+
                     counter = 0
                     try:
                         img_blob = cv2.dnn.blobFromImage(
