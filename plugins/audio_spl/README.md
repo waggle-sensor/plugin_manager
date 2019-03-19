@@ -19,7 +19,7 @@ Octave band can be adjusted before the plugin is loaded on nodes (the argument `
 
 The frequency-intensity data are averaged for each octave band bins with accordance of configuration and the average intesnity of each bin is translated into sound pressure level in dBm. Additionally, total sound pressure level in dBm is calculated.
 
-With the given waggle protocol for this plugin (May 2018), the length of output data is one array containing 10 float data for 1/1 octave bins in dBm and one additional float data for total sound pressure level in dBm. Therefore, even if the input argument of octave band is set as 3, the result will be shown as 1/1 octave band. When the data protocol of waggle for this sound pressure level is developed to support flexible length data array, the any length of octave band can be accepted and delivered.
+With the given waggle protocol for this plugin (May 2018), the length of output data is one array containing 10 float data for 1/1 octave bins in dBm and one additional float data for total sound pressure level in dBm. Therefore, even if the input argument of octave band is set as 3 or other values (1/3 octave band or other octave band), the result will be the same, 1/1 octave band. Any length of octave band can be accepted and delivered as the waggle protocol supports this feature in the furture.
 
 ### References
 To calculate average dBm for each bin and total sound pressure level, resources of [Adding acoustic levels of sound sources](http://www.sengpielaudio.com/calculator-spl.htm), [Combining Decibels − up to 30 s](http://www.sengpielaudio.com/calculator-spl30.htm), and [Adding decibels of one-third octave bands
