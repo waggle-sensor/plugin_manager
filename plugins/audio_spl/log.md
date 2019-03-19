@@ -1,6 +1,3 @@
-<!--
-waggle_topic=/plugins_and_code
--->
 
 # Noise Level Calculation Plugin
 
