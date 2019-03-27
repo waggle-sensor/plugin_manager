@@ -1,218 +1,232 @@
+
 <!--
 waggle_topic=/plugins_and_code
 -->
 
-# Noise Level Calculation Plugin
+## Sound Pressure Level Calculation Plugin
 
-## Log (May 7, 2018):
-- A knob for adjusting octave band is added (the 'octave_band' in config; if octave_band = 1, then it is 1/1 octave, if octave_band = 2, then it is 1/2 octave, and so on). However, Waggle protocol does not allow flexable data length, so that the length of output data will be one array for 10 float, and one another float data which are calculated dB for each bin and total dB for the octave from 20Hz - 20kHz (a function called 'match_length()' handles the length of the data).
-- Recording raw audio is added (the 'recording' in config; True - Yes recording or False - No recording). However, image pipeline cannot handle the wav form data to add metadata, and the size of the file is too big to send it through. Need to be figured out.
+The sound pressure level calcuation plugin reports surrounding noise level every 65 second *(1 minute interval, 5 seconds sampling)*. It samples audio data for 5 seconds from a microphone connected on edge-processor and calculates noise level in dBm. 
 
-## References:
-The average dBm for each bin are used to calculate sound pressure level (SPL) of recorded sound with regards of 
-Adding acoustic levels of sound sources: http://www.sengpielaudio.com/calculator-spl.htm, and http://www.sengpielaudio.com/calculator-spl30.htm.
+The sampled data (raw audio data collected through a microphone) can be recored (the argument ``'recording'`` in the default configuration; ``True`` - Yes recording or ``False`` - No recording), but default is ``not recording``. When the audio sample is recorded, the format is pyaudio.paInt16, the number of channel is 1, sampling rate is 44100, each chunk length is 1024.
 
-And upper frequency for octave cycle is refered: https://courses.physics.illinois.edu/phys406/sp2017/Lab_Handouts/Octave_Bands.pdf
+The sound pressure level estimation is based on Fourier Transformation. The data collected by the microphone is translated into frequency-intensity domain data through Fourier Transformation. Among the frequency-intensity domain data, data from 22 Hz to 22 kHz are seletected to calculate average dBm with given octave band. The full code is abailable from [here](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/audio_spl/spl.py).
 
-## Base code for spl plugin:
-The python script samples 5 seconds of audio from a microphone attachend on edge-processor and calculate noise level in dBm.
-The script needs **pyaudio** to read audio data, and **numpy** to do further processes as shown below. The format of recorded sound is pyaudio.paInt16, the number of channel is 1, sampling rate is 44100, each chunk length is 1024, and it records 5 seconds.
+### Octave band
 
-The code can get two arguments: do you want to record the raw sound from the mic (--record), and what octave band do you want (--octave; 1 octave, 1/2 octave, or 1/3 octave band). If you do not put any of the arguments, the default is 1/9 octave band, and not recording the raw. **However** waggle protocol for this spl just does not allow flexible length, so that the result is fixed to 11 values (one 10th array and a total dBm; May 2018). Also, this data uses image pipeline, the recorded wav cannot be send to beehive server. Additionally, the recorded file size is so much big, so thses issues need to be solved before send the wav to beehive.
+Octave band can be adjusted before the plugin is loaded on nodes (the argument ``'octave_band'`` in the default configuration of the plugin; if octave_band = 1, then it is 1/1 octave, if octave_band = 3, then it is 1/3 octave, and so on). The plugin follows **Standard frequencies for acoustic measurements according to EN ISO 266** for 1/1 octave band and 1/3 octave band as showing in table at bottom. The plugin also supports other octave bands (such as 1/12 or 1/24).
 
-```
-if __name__ == '__main__':
-    import argparse
+### Result values
 
-    # Parse command line arguments
-    parser = argparse.ArgumentParser(
-        description='Sound Pressure Level calculation.')
-    parser.add_argument('--octave', required=False,
-                        default=9,
-                        metavar="selected octave cycle",
-                        help='Integer numer of octave cycle: \
-                        [1: octave cycle, 2: 1/2 octave cycle, 3: 1/3 octave cycle, and so on..')
-    parser.add_argument('--record', required=False,
-                        metavar="True or False to send raw audio",
-                        help='Send raw audio by packing it in image shape')
-    args = parser.parse_args()
+The frequency-intensity data are averaged for each octave band bins with accordance of configuration and the average intesnity of each bin is translated into sound pressure level in dBm. Additionally, total sound pressure level in dBm is calculated.
 
-    xf, yf, N = record(args.record)
-    main(args.octave, xf, yf, N)
-```
+With the given waggle protocol for this plugin (May 2018), the length of output data is one array containing 10 float data for 1/1 octave bins in dBm and one additional float data for total sound pressure level in dBm. Therefore, even if the input argument of octave band is set as 3 or other values (1/3 octave band or other octave band), the result will be the same, 1/1 octave band. Any length of octave band can be accepted and delivered as the waggle protocol supports this feature in the furture.
 
-When I tested the mic personally in my laptop, ```input_device_index``` was 9. But it must be specifically defined with regard
-to the device index in edge-processor (the script is tested in ubuntu and mac os). The recorded sound is stored in an array.
-
-```
-import pyaudio
-import numpy as np
-
-import datetime
-
-import wave
-import time
-
-# constants for audio recording
-FORMAT = pyaudio.paInt16
-CHANNELS = 1
-RATE = 44100
-CHUNK = 1024
-RECORD_SECONDS = 5
-
-audio = pyaudio.PyAudio()
-
-# start Recording
-stream = audio.open(format=FORMAT, channels=CHANNELS,rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=9)
-#stream = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
-
-def record(r):
-    if r == None:
-        r = False
-
-    frames = []
-
-    # Recording audio from the input device
-    for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
-        data = stream.read(CHUNK)
-        frames.append(np.frombuffer(data, dtype=np.int16))
-    
-    if bool(r) == True:
-        file_name = "audio_{:%Y%m%dT%H%M%S}.wav".format(datetime.datetime.now())
-        waveFile = wave.open(file_name, 'wb')
-        waveFile.setnchannels(CHANNELS)
-        waveFile.setsampwidth(audio.get_sample_size(FORMAT))
-        waveFile.setframerate(RATE)
-        waveFile.writeframes(b''.join(frames))
-        waveFile.close()
-
-    print("format: ", audio.get_sample_size(FORMAT))
-    print("chunk: ", CHUNK)
-
-    # Change data format from audio to np.array
-    numpydata = np.hstack(frames)
-    times = np.arange(len(numpydata))/float(RATE)
-
-    N = numpydata.shape[0] # the total number of samples: 10 sec * 44100 sampling rate
-    T = 1.0 / RATE # a unit time for each sample: 44100 samples per a second
-
-    yf = np.fft.fftn(numpydata) # the n-dimensional FFT
-    xf = np.linspace(0.0, 1.0/(2.0*T), N//2) # 1.0/(2.0*T) = RATE / 2
-
-    return xf, yf, N
-
-```
-According to the input argument --octave, upper octave cycle, which are an array of upper octave frequency is determined. 
-
-```
-def cal_upper_oct(octv):
-    n = 5 * octv + (octv - 1) + 10
-    m = 4 * octv + 10
-
-    center = []
-    for i in reversed(range(n)):
-        c = 1000/2**((i+1)/octv)
-        if c > 20:
-            center.append(round(c, 4))
-    center.append(1000)
-    for i in range(m):
-        c = 1000*2**((i+1)/octv)
-        if c < 22000:
-            center.append(round(c, 4))
-
-    upper_octave_cycle = []
-    for i in range(len(center)):
-        u = center[i]*2**(1/(octv*2))
-        if len(upper_octave_cycle) < (octv * 10):
-            upper_octave_cycle.append(round(u, 4))
-    lower_octave_cycle = []
-    for i in range(len(center)):
-        l = center[i]/2**(1/(octv*2))
-        if len(lower_octave_cycle) < (octv * 10):
-            lower_octave_cycle.append(round(l, 4))
-
-    return lower_octave_cycle, center, upper_octave_cycle
-```
-
-After the upper octave cycle is calculated and the recorded data is fft processed, real numbers of fft result are sorted out with regards to the frequency range. Each bins of data are averaged, calculated into dBm, and saved into avg_db. With the avg_db, total dBm of sound pressure level is calculated. 
-```
-def main(octv, xf, yf, N):
-    if octv == None:
-        octv = 1
-    else:
-        octv = int(octv)
-
-    low, center, upper_octave_cycle = cal_upper_oct(octv)
-
-    octave = {}
-    avg = []
-    for i in range(len(upper_octave_cycle)):
-        octave[i] = []
-
-    val = yf[0:N//2]
-    
-    for hz, magnitude in zip(xf, val):
-        if hz < 20:
-            continue
-        index = np.searchsorted(upper_octave_cycle, hz, side="left")
-        if index >= len(upper_octave_cycle):
-            continue
-        octave[index].append(magnitude)
-
-    for di in range(len(octave)):
-        if len(octave[di]) == 0:
-            avg.append(1)
-            continue
-        avg.append(sum(octave[di])/len(octave[di]))
-
-    avg = np.asarray(avg)
-    avgdb = 10*np.log10(np.abs(avg))
-
-    a = []
-    b = 0
-    for ia in range(len(avg)):
-        a.append(10**(avgdb[ia]/10))
-        b = b + a[ia]
-
-    sdb = 10*np.log10(b)
-
-    if len(avg_db) > 10:
-        avg_db = match_length(avg_db)
-
-    print(low, '\n')
-    print(center, '\n')
-    print(upper_octave_cycle, '\n')
-    print(avgdb, sdb)
-    # print(len(avgdb), sdb)
-
-    # sdb --> addtion of SPL, avgdb --> average of each octave
-```
-
-If the length of avg_db is longer than 10, the that does not match the length of spl data in waggle protocol. Then to match the length to waggle protocol, add spl of bins with regards to the octave band.
-
-```
-def match_length(self, avg_db):
-        octave_db = []
-        for i in range(10):
-            instance = 0.
-            if i == 9:
-                left = len(avg_db) - self.octave_band * 9
-                for j in range(left):
-                    instance = instance + 10 ** (avg_db[i * self.octave_band + j] / 10)
-            else:
-                for j in range(self.octave_band):
-                    instance = instance + 10 ** (avg_db[i * self.octave_band + j] / 10)
-            octave_db.append(10 * np.log10(instance))
-
-        instance = 0.
-        for i in range(10):
-            instance = instance + 10 ** (octave_db[i] / 10)
-
-        return octave_db
-```
+### References
+To calculate average dBm for each bin and total sound pressure level, resources of [Adding acoustic levels of sound sources](http://www.sengpielaudio.com/calculator-spl.htm), [Combining Decibels − up to 30 s](http://www.sengpielaudio.com/calculator-spl30.htm), and [Adding decibels of one-third octave bands
+to level of one octave band and vice versa](http://www.sengpielaudio.com/calculator-octave.htm) are used mostly. In addition, upper frequency for octave cycle is refered [here](https://courses.physics.illinois.edu/phys406/sp2017/Lab_Handouts/Octave_Bands.pdf).
 
 
-### Result values:
-avgdb (1x10 array) and sdb (single value) are the results of the calculation. Those values need to be return back to DBs 
-using image pipeline (May 2018).
-
+#### Center, lower, and upper frequencies for standard set of octave and 1/3 octave bands covering the audible frequency range.
+<table>
+  <tr>
+    <th colspan="3">Octave Band</th>
+    <th colspan="3">1/3 Octave Band</th>
+  </tr>
+  <tr> 	 	
+    <td>Lower Frequency f1 (Hz)</td>
+    <td>Center Frequency f0 (Hz)</td>
+    <td>Upper Frequency f2 (Hz)</td>
+    <td>Lower Frequency f1 (Hz)s</td>
+    <td>Center Frequency f0 (Hz)</td>
+    <td>Upper Frequency f2 (Hz)</td>
+  </tr>
+  <tr>
+    <th rowspan="3"><span style="font-weight:normal">22</span></th>
+    <th rowspan="3"><span style="font-weight:normal">31.5</span></th>
+    <th rowspan="3"><span style="font-weight:normal">44</span></th>
+    <td>22.4</td>
+    <td>25</td>
+    <td>28.2</td>
+  </tr>
+  <tr>
+    <td>28.2</td>
+    <td>31.5</td>
+    <td>35.5</td>
+  </tr>
+  <tr>
+    <td>35.5</td>
+    <td>40</td>
+    <td>44.7</td>
+  </tr>
+  
+  <tr>
+    <th rowspan="3"><span style="font-weight:normal">44</span></th>
+    <th rowspan="3"><span style="font-weight:normal">63</span></th>
+    <th rowspan="3"><span style="font-weight:normal">88</span></th>
+    <td>44.7</td>
+    <td>50</td>
+    <td>56.2</td>
+  </tr>
+  <tr>
+    <td>56.2</td>
+    <td>63</td>
+    <td>70.8</td>
+  </tr>
+  <tr>
+    <td>70.8</td>
+    <td>80</td>
+    <td>89.1</td>
+  </tr>
+  
+  <tr>
+    <th rowspan="3"><span style="font-weight:normal">88</span></th>
+    <th rowspan="3"><span style="font-weight:normal">125</span></th>
+    <th rowspan="3"><span style="font-weight:normal">177</span></th>
+    <td>89.1</td>
+    <td>100</td>
+    <td>112</td>
+  </tr>
+  <tr>
+    <td>112</td>
+    <td>125</td>
+    <td>141</td>
+  </tr>
+  <tr>
+    <td>141</td>
+    <td>160</td>
+    <td>178</td>
+  </tr>
+  
+  <tr>
+    <th rowspan="3"><span style="font-weight:normal">177</span></th>
+    <th rowspan="3"><span style="font-weight:normal">250</span></th>
+    <th rowspan="3"><span style="font-weight:normal">355</span></th>
+    <td>178</td>
+    <td>200</td>
+    <td>224</td>
+  </tr>
+  <tr>
+    <td>224</td>
+    <td>250</td>
+    <td>282</td>
+  </tr>
+  <tr>
+    <td>282</td>
+    <td>315</td>
+    <td>355</td>
+  </tr>
+  
+  <tr>
+    <th rowspan="3"><span style="font-weight:normal">355</span></th>
+    <th rowspan="3"><span style="font-weight:normal">500</span></th>
+    <th rowspan="3"><span style="font-weight:normal">710</span></th>
+    <td>355</td>
+    <td>400</td>
+    <td>447</td>
+  </tr>
+  <tr>
+    <td>447</td>
+    <td>500</td>
+    <td>562</td>
+  </tr>
+  <tr>
+    <td>562</td>
+    <td>630</td>
+    <td>708</td>
+  </tr>
+  
+  <tr>
+    <th rowspan="3"><span style="font-weight:normal">710</span></th>
+    <th rowspan="3"><span style="font-weight:normal">1,000</span></th>
+    <th rowspan="3"><span style="font-weight:normal">1,420</span></th>
+    <td>708</td>
+    <td>800</td>
+    <td>891</td>
+  </tr>
+  <tr>
+    <td>891</td>
+    <td>1,000</td>
+    <td>1,122</td>
+  </tr>
+  <tr>
+    <td>1,122</td>
+    <td>1,250</td>
+    <td>1,413</td>
+  </tr>
+  
+  <tr>
+    <th rowspan="3"><span style="font-weight:normal">1,420</span></th>
+    <th rowspan="3"><span style="font-weight:normal">2,000</span></th>
+    <th rowspan="3"><span style="font-weight:normal">2,840</span></th>
+    <td>1,413</td>
+    <td>1,600</td>
+    <td>1,778</td>
+  </tr>
+  <tr>
+    <td>1,778</td>
+    <td>2,000</td>
+    <td>2,239</td>
+  </tr>
+  <tr>
+    <td>2,239</td>
+    <td>2,500</td>
+    <td>2,818</td>
+  </tr>
+  
+  <tr>
+    <th rowspan="3"><span style="font-weight:normal">2,840</span></th>
+    <th rowspan="3"><span style="font-weight:normal">4,000</span></th>
+    <th rowspan="3"><span style="font-weight:normal">5,680</span></th>
+    <td>2,818</td>
+    <td>3,150</td>
+    <td>3,548</td>
+  </tr>
+  <tr>
+    <td>3,548</td>
+    <td>4,000</td>
+    <td>4,467</td>
+  </tr>
+  <tr>
+    <td>4,467</td>
+    <td>5,000</td>
+    <td>5,623</td>
+  </tr>
+  
+  <tr>
+    <th rowspan="3"><span style="font-weight:normal">5,680</span></th>
+    <th rowspan="3"><span style="font-weight:normal">8,000</span></th>
+    <th rowspan="3"><span style="font-weight:normal">11,360</span></th>
+    <td>5,623</td>
+    <td>6,300</td>
+    <td>7,079</td>
+  </tr>
+  <tr>
+    <td>7,079</td>
+    <td>8,000</td>
+    <td>8,913</td>
+  </tr>
+  <tr>
+    <td>8,913</td>
+    <td>10,000</td>
+    <td>11,220</td>
+  </tr>
+  
+  <tr>
+    <th rowspan="3"><span style="font-weight:normal">11,360</span></th>
+    <th rowspan="3"><span style="font-weight:normal">16,000</span></th>
+    <th rowspan="3"><span style="font-weight:normal">22,720</span></th>
+    <td>11,220</td>
+    <td>12,500</td>
+    <td>14,130</td>
+  </tr>
+  <tr>
+    <td>14,130</td>
+    <td>16,000</td>
+    <td>17,780</td>
+  </tr>
+  <tr>
+    <td>17,780</td>
+    <td>20,000</td>
+    <td>22,390</td>
+  </tr>
+</table>
