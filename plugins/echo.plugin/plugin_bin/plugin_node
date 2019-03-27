@@ -2,7 +2,7 @@ import waggle.plugin
 import time
 
 # Initialize our test plugin.
-plugin = waggle.plugin.PrintPlugin()
+plugin = waggle.plugin.Plugin()
 
 while True:
     for msg in plugin.get_waiting_messages():
