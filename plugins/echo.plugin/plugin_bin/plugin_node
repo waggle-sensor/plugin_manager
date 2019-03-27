@@ -1,0 +1,18 @@
+import waggle.plugin
+import time
+
+# Initialize our test plugin.
+plugin = waggle.plugin.PrintPlugin()
+
+while True:
+    for msg in plugin.get_waiting_messages():
+        print(msg)
+
+    # Add our three measurements to the batch.
+    plugin.add_measurement({'sensor_id': 1, 'parameter_id': 0, 'value': 100})
+
+    # Publish the batch.
+    plugin.publish_measurements()
+
+    # Wait five seconds before repeating.
+    time.sleep(5)
