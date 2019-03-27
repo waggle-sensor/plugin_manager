@@ -3,4 +3,4 @@ id=38
 version=0.0.1
 name=Echo Plugin
 description=A simple example showing a return message.
-reference=https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/simple.plugin
+reference=https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/echo.plugin
