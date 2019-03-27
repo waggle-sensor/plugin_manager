@@ -3,4 +3,4 @@ id=37
 version=0.1.0
 name=Simple Plugin
 description=A simple example plugin.
-reference=https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/sysmon
+reference=https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/simple.plugin
