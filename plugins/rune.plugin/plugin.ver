@@ -1,0 +1,6 @@
+[plugin]
+id=39
+version=0.0.1
+name=Rune Plugin
+description=Experimental integration of Rune data with the Waggle data pipeline.
+reference=https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/rune.plugin

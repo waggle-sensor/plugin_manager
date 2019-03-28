@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+import waggle.plugin
+import time
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('node_id')
+parser.add_argument('message')
+args = parser.parse_args()
+
+credentials = waggle.plugin.Credentials(
+    host='beehive1.mcs.anl.gov',
+    node_id='0000f00000000001',
+    sub_id='0000000000000000',
+    cacert='/Users/sean/test/cacert.pem',
+    cert='/Users/sean/test/cert.pem',
+    key='/Users/sean/test/key.pem')
+
+plugin = waggle.plugin.Plugin(credentials=credentials)
+
+plugin.publish_message(
+    receiver_id=args.node_id,
+    receiver_sub_id='0000000000000000',
+    body=args.message.encode())
