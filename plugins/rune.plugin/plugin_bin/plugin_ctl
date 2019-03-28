@@ -12,13 +12,15 @@ credentials = waggle.plugin.Credentials(
     host='beehive1.mcs.anl.gov',
     node_id='0000f00000000001',
     sub_id='0000000000000000',
-    cacert='/Users/sean/test/cacert.pem',
+    cacert='/Users/sean/test/cacert.pem', # will get you proper credentials for this..
     cert='/Users/sean/test/cert.pem',
     key='/Users/sean/test/key.pem')
 
 plugin = waggle.plugin.Plugin(credentials=credentials)
 
+# ... process csv data...
+
 plugin.publish_message(
     receiver_id=args.node_id,
-    receiver_sub_id='0000000000000000',
+    receiver_sub_id='0000000000000001',
     body=args.message.encode())

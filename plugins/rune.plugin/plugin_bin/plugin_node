@@ -1,26 +1,231 @@
 #!/usr/bin/env python3
+import json
+import sys
+import threading
+import time
+import queue as Queue
+import numpy
 import waggle.plugin
 import waggle.protocol
-import time
-from pprint import pprint
+import urllib.request
+import requests
+import struct
+import zlib
+import logging
 
-plugin = waggle.plugin.Plugin()
+class RadData(object):
 
-while True:
-    for data in plugin.get_waiting_messages():
-        message = waggle.protocol.unpack_message(data)
-        datagram = waggle.protocol.unpack_datagram(message['body'])
+    def __init__(self):
+        self.spectrum = []
+        self.live_time = 0.0
+        self.real_time = 0.0
+        self.in_alarm = False
 
-        print('--- recevied message')
-        pprint(message)
-        pprint(datagram)
-        print(flush=True)
 
-    # Add our three measurements to the batch.
-    plugin.add_measurement({'sensor_id': 1, 'parameter_id': 0, 'value': 100})
+class Status(object):
 
-    # Publish the batch.
-    plugin.publish_measurements()
+    def __init__(self):
+        self.unit_name = ""
+        self.system_time = ""
 
-    # Wait five seconds before repeating.
-    time.sleep(3)
+
+def compress_spectrum_data(spectrum):
+    return zlib.compress(struct.pack('2048H', *[int(x) for x in spectrum]))
+
+
+class PlugIn(object):
+
+    def __init__(self):
+        self._run_thread = True
+
+        self._plugin = waggle.plugin.Plugin()
+
+        # Queues for sending out the data
+        self._data_out_queue = Queue.Queue()
+
+        # Algorithm
+        self._simple_sigma = SimpleSigma()
+
+        self._tick = 0
+
+        self._data_collection_thread = threading.Thread(target=self._data_collection_loop, name="Data Collection Loop")
+        self._data_collection_thread.daemon = True
+        self._data_collection_thread.start()
+
+        self._data_out_thread = threading.Thread(target=self._data_out_loop, name="Data Out Loop")
+        self._data_out_thread.daemon = True
+        self._data_out_thread.start()
+
+        self._data_in_thread = threading.Thread(target=self._data_in_loop, name="Data In Loop")
+        self._data_in_thread.daemon = True
+        self._data_in_thread.start()
+
+        self.has_status = False
+
+    def exit(self):
+        self._run_thread = False
+
+    def _request(self, endpoint, method="GET", body=None, timeout=10, zipped=False):
+        headers = {"Content-type": "application/json"}
+        r = requests.get('http://127.0.0.1:8080' + endpoint, headers=headers)
+        return r.text
+    
+    def _data_in_loop(self):
+        while True:
+            print('checking messages', flush=True)
+
+            for message in self._plugin.get_waiting_messages():
+                print(message, flush=True)
+                message_data = waggle.protocol.unpack_message(message)
+                data = waggle.protocol.unpack_datagram(
+                    message_data['body'])
+                body = data['body']
+
+                print('handling message', body, flush=True)
+
+                if body == b"Reset":
+                    r = requests.post(
+                        "http://127.0.0.1:8080/api/v1/command/SimpleSigma/Reset_Background/True")
+                    print('reset', r.text, flush=True)
+
+            time.sleep(5)
+
+    def _data_collection_loop(self):
+        while self._run_thread:
+            try:
+                self._data_collection_loop_inner()
+            except Exception:
+                logging.exception()
+    
+    def _data_collection_loop_inner(self):
+        print('checking api', flush=True)
+        time.sleep(5)
+
+        # Every 100 milliseconds get the data
+        if self._tick % 1 == 0 and self.has_status:
+            payload = self._request("/api/v1/data/latest")
+
+            if payload is not None:
+                payload_dict = json.loads(payload)
+
+                # pull out the data
+                timestamp_data = payload_dict["Payload"]["LatestData"]
+                component_dict = timestamp_data[list(
+                    timestamp_data.keys())[0]]
+                for component_name in component_dict.keys():
+                    if "Spectrum" in component_dict[component_name]["data"]:
+                        rad_data = RadData()
+                        rad_data.spectrum = [
+                            float(x) for x in component_dict[component_name]["data"]["Spectrum"]]
+                        rad_data.live_time = component_dict[component_name]["data"]["Live_Time"]
+                        rad_data.real_time = component_dict[component_name]["data"]["Real_Time"]
+                        self._simple_sigma.process_spectrum(
+                            rad_data.spectrum)
+                        rad_data.in_alarm = self._simple_sigma.in_alarm
+                        self._data_out_queue.put_nowait(
+                            {"RadData": rad_data})
+                        break
+
+        # Get Status every second
+        if not self.has_status or self._tick % 10:
+            payload = self._request("/api/v1/data/status")
+
+            if payload is not None:
+                payload_dict = json.loads(payload)
+
+                status = payload_dict["Payload"]["Status"]
+                status_data = Status()
+                status_data.unit_name = status["Unit_Name"]
+                status_data.system_time = status["System_Time"]
+
+                self._data_out_queue.put_nowait(
+                    {"StatusData": status_data})
+
+                self.has_status = True
+
+        self._tick += 1
+
+    def _data_out_loop(self):
+        while self._run_thread:
+            try:
+                data_to_send = self._data_out_queue.get(timeout=1)
+                print('got data', flush=True)
+                self.publish_data_to_send(data_to_send)
+            except Queue.Empty:
+                print('no data', flush=True)
+    
+    def publish_data_to_send(self, data_to_send):
+        print('publish data', flush=True)
+        if 'RadData' in data_to_send:
+            self.publish_rad_data(data_to_send['RadData'])
+        if 'StatusData' in data_to_send:
+            self.publish_status_data(data_to_send['StatusData'])
+    
+    def publish_rad_data(self, data):
+        print('publish rad data', flush=True)
+        self._plugin.add_measurement({'sensor_id': 2000,
+                                      'parameter_id': 0,
+                                      'value': compress_spectrum_data(data.spectrum)})
+        # self._plugin.add_measurement({'sensor_id': 2000,
+        #                                 'parameter_id': 0,
+        #                                 'value': data.spectrum})
+        self._plugin.add_measurement({'sensor_id': 2000,
+                                        'parameter_id': 1,
+                                        'value': data.real_time})
+        self._plugin.add_measurement({'sensor_id': 2000,
+                                        'parameter_id': 2,
+                                        'value': data.live_time})
+        self._plugin.add_measurement({'sensor_id': 2000,
+                                        'parameter_id': 3,
+                                        'value': data.in_alarm})
+
+        self._plugin.publish_measurements()
+    
+    def publish_status_data(self, data):
+        print('publish status data', flush=True)
+        self._plugin.add_measurement({'sensor_id': 2000,
+                                        'parameter_id': 4,
+                                        'value': data.unit_name})
+        self._plugin.add_measurement({'sensor_id': 2000,
+                                        'parameter_id': 5,
+                                        'value': data.system_time})
+        self._plugin.publish_measurements()
+
+
+class SimpleSigma(object):
+
+    def __init__(self):
+        self._average = None
+        self._number_of_spectrum = 0
+        self._has_background = False
+        self.in_alarm = False
+
+    def process_spectrum(self, spectrum):
+
+        if self._has_background is False:
+            if self._average is None:
+                self._average = numpy.sum(numpy.array(spectrum))
+            else:
+                count_sum = numpy.sum(numpy.array(spectrum))
+                self._average = (self._average + count_sum)/2
+            self._number_of_spectrum += 1
+
+            if self._number_of_spectrum == 10:
+                self._has_background = True
+        else:
+            count_sum = numpy.sum(numpy.array(spectrum))
+            if count_sum > self._average * 1.5:
+                print('!!! alarm !!!', flush=True)
+                self.in_alarm = True
+            else:
+                self.in_alarm = False
+
+
+if __name__ == '__main__':
+    plug_in = PlugIn()
+
+    try:
+        while True:
+            time.sleep(1)
+    finally:
+        plug_in.exit()
