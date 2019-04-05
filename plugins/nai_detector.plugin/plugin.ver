@@ -1,0 +1,6 @@
+[plugin]
+id=40
+version=0.1.0
+name=NaI detector Plugin
+description=NaI detector using digibase plugin.
+reference=https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/nai_detector.plugin
