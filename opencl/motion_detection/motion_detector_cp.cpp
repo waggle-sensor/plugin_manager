@@ -1,3 +1,10 @@
+// ANL:waggle-license
+// This file is part of the Waggle Platform.  Please see the file
+// LICENSE.waggle.txt for the legal details of the copyright and software
+// license.  For more details on the Waggle project, visit:
+//          http://www.wa8.gl
+// ANL:waggle-license
+
  /**
  * Take a live camera feed and detects motion by differential images utilizing OpenCL
  * Details: Mali T-628 GPU is split into 2 devices: dev[0] has 4 cores, dev[1] has 2.

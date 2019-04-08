@@ -1,4 +1,10 @@
 # This python program uses openCV and skimage to detect the percentage of cloud coverage in a camera image and uses this data
+# ANL:waggle-license
+#  This file is part of the Waggle Platform.  Please see the file
+#  LICENSE.waggle.txt for the legal details of the copyright and software
+#  license.  For more details on the Waggle project, visit:
+#           http://www.wa8.gl
+# ANL:waggle-license
 # to make a prediction of the weather. It also uses Caffe to classify the type of cloud environment that is observed.
 #Usage: python CloudApp.py <image>.jpg
 from __future__ import division
