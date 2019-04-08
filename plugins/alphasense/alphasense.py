@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# ANL:waggle-license
+#  This file is part of the Waggle Platform.  Please see the file
+#  LICENSE.waggle.txt for the legal details of the copyright and software
+#  license.  For more details on the Waggle project, visit:
+#           http://www.wa8.gl
+# ANL:waggle-license
 '''
 Alphasense reader using the USB-ISS interface. The only real dependency
 is on the set_spi_mode and transfer_data functions. This could easily be

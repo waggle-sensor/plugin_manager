@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# ANL:waggle-license
+#  This file is part of the Waggle Platform.  Please see the file
+#  LICENSE.waggle.txt for the legal details of the copyright and software
+#  license.  For more details on the Waggle project, visit:
+#           http://www.wa8.gl
+# ANL:waggle-license
 import waggle.pipeline
 import time
 import sys
@@ -62,4 +68,4 @@ if os.path.exists(device):
     plugin = AlphasensePlugin.defaultConfig()
     plugin.run()
 else:
-    exit(1)
+    exit(1

@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+# ANL:waggle-license
+#  This file is part of the Waggle Platform.  Please see the file
+#  LICENSE.waggle.txt for the legal details of the copyright and software
+#  license.  For more details on the Waggle project, visit:
+#           http://www.wa8.gl
+# ANL:waggle-license
 from multiprocessing import Process, Queue
 import time, socket, sys, logging, argparse
 from msg_handler import msg_handler
