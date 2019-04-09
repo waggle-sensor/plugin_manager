@@ -4,8 +4,8 @@ waggle_topic=ignore
 
 # Node Stack - Plugin Manager
 
-This is currently undergoing significant redevelopment and will change in the future. Currently, this repo is
-primiarily a collection of plugins which we deploy to the nodes, but manage via systemd.
+The plugin management components are currently undergoing significant redevelopment and will change in the future. Currently, this repo is
+primiarily a collection of plugins which we deploy to the nodes.
 
 Example plugins can be found under the [plugins](https://github.com/waggle-sensor/plugin_manager/tree/master/plugins) directory.
 
