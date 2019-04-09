@@ -2,45 +2,17 @@
 waggle_topic=ignore
 -->
 
-# Waggle Plugin Manager
+# Node Stack - Plugin Manager
 
-_WARNING: this document is __outdated__ and needs update_
+This is currently undergoing significant redevelopment and will change in the future. Currently, this repo is
+primiarily a collection of plugins which we deploy to the nodes, but manage via systemd.
 
-Plugins provide the functionality to read and preprocess raw sensor values from attached sensors (e.g. attached via USB or GPIOs) locally on the compute nodes.
+Example plugins can be found under the [plugins](https://github.com/waggle-sensor/plugin_manager/tree/master/plugins) directory.
 
-## Installation
+## Setup
 
-```bash
-mkdir -p /usr/lib/waggle
-cd /usr/lib/waggle
-git clone https://github.com/waggle-sensor/waggle_image.git
-git clone --recursive https://github.com/waggle-sensor/plugin_manager.git
-cd plugin_manager
+Installation of some common plugin dependencies can be done by running:
+
+```sh
 ./configure
 ```
-
-## Monitoring
-The plugin manager will be executed by supervised. To see if the plugin manager is running:
-```
-supervisorctl status
-```
-
-The log files can be viewed like this:
-```
-tail -f /var/log/waggle/plugin_manager.log
-```
-
-## Managing plugins
-```
-cd /usr/lib/waggle/plugin_manager
-./waggle_plugins.py
-```
-This script can be used to list, start and stop plugins and the command line. It can also be used to view the messages that are beeing send by the plugins to the nodecontroller.
-
-## Script details
-
-* [Message handler](/lib/msg_handler.py)
-
-* [Plugin manager](plugin_manager.py)
-
-* [Waggle plugins](waggle-plugins.py)
