@@ -1,4 +1,10 @@
 // Message to store the mapping from class label strings to class id. Datasets
+// ANL:waggle-license
+// This file is part of the Waggle Platform.  Please see the file
+// LICENSE.waggle.txt for the legal details of the copyright and software
+// license.  For more details on the Waggle project, visit:
+//          http://www.wa8.gl
+// ANL:waggle-license
 // use string labels to represent classes while the object detection framework
 // works with class ids. This message maps them so they can be converted back
 // and forth as needed.

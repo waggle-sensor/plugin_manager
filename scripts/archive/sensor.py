@@ -1,3 +1,9 @@
+# ANL:waggle-license
+#  This file is part of the Waggle Platform.  Please see the file
+#  LICENSE.waggle.txt for the legal details of the copyright and software
+#  license.  For more details on the Waggle project, visit:
+#           http://www.wa8.gl
+# ANL:waggle-license
 '''
 This connects to a sensor board via a serial connection. It reads and parses
 the sensor data into meaningful information, packs, and sends the data packet
