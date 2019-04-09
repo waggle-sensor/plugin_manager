@@ -233,13 +233,13 @@ class SoundPressureLevel:
             print(int(time.time()), avg_db)
 
             measurement = {
-                'sensor_id': 0,
-                'parameter_id': 0,
+                'sensor_id': 900,
+                'parameter_id': 1,
                 'value': avg_db
             }
 
             plugin.add_measurement(measurement)
-        plugin.publish_measurements()
+            plugin.publish_measurements()
 
     def run(self):
         while True:
