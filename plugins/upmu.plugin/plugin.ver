@@ -1,0 +1,6 @@
+[plugin]
+id=52
+version=0.1.0
+name=uPMU measurement Plugin
+description=uPMU measurement plugin.
+reference=https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/upmu.plugin
