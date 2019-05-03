@@ -10,3 +10,4 @@ echo "## Sending" ${SETUP_INI_PATH} " to uPMU " ${UPMU_ADDRESS} " ##"
 
 code=$(curl -s -w "%{http_code}\n" -T ${SETUP_INI_PATH} ftp://ftp_config:${password}@${UPMU_ADDRESS})
 echo "## Operation done with http code: " ${code} " ##"
+echo "## Please allow at least 5 minutes for the device to reset ##"
