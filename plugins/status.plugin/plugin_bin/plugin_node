@@ -1,52 +1,108 @@
 #!/usr/bin/env python3
-# ANL:waggle-license
-#  This file is part of the Waggle Platform.  Please see the file
-#  LICENSE.waggle.txt for the legal details of the copyright and software
-#  license.  For more details on the Waggle project, visit:
-#           http://www.wa8.gl
-# ANL:waggle-license
-import json
-import subprocess
-import time
 import waggle.plugin
+import pprint
+import metrics
+import time
 
 
-mapping = [
-    (['nc', 'uptime'], (0x0001, 0x01)),
-    (['ep', 'uptime'], (0x0001, 0x02)),
-]
+# TODO Get real SDF deployed.
+sdf_table = {
+    'loadavg1': (0xff00, 1),
+    'loadavg5': (0xff00, 2),
+    'loadavg15': (0xff00, 3),
 
+    'mem_free': (0xff01, 1),
+    'mem_total': (0xff01, 2),
 
-def get_status():
-    output = subprocess.check_output([
-        'python3',
-        '/usr/lib/waggle/core/scripts/status-service',
-        '--json',
-    ])
+    'time': (0xff02, 1),
+    'uptime': (0xff03, 1),
 
-    return json.loads(output.decode())
+    'dev_up_wagman': (0xff04, 1),
+    'dev_up_coresense': (0xff04, 2),
+    'dev_up_modem': (0xff04, 3),
+    'dev_up_wwan': (0xff04, 4),
+    'dev_up_lan': (0xff04, 5),
+    'dev_up_mic': (0xff04, 6),
+    'dev_up_samba': (0xff04, 7),
+    'dev_up_bcam': (0xff04, 8),
+    'dev_up_tcam': (0xff04, 9),
 
+    'wagman_fc_nc': (0xff05, 1),
+    'wagman_fc_ep': (0xff05, 2),
+    'wagman_fc_cs': (0xff05, 3),
 
-def get_value(obj, path):
-    if not path:
-        return obj
-    head, *tail = path
-    return get_value(obj[head], tail)
+    'wagman_cu_wm': (0xff06, 1),
+    'wagman_cu_nc': (0xff06, 2),
+    'wagman_cu_ep': (0xff06, 3),
+    'wagman_cu_cs': (0xff06, 4),
 
+    'wagman_enabled_nc': (0xff07, 1),
+    'wagman_enabled_ep': (0xff07, 2),
+    'wagman_enabled_cs': (0xff07, 3),
+
+    'wagman_vdc_nc': (0xff08, 1),
+    'wagman_vdc_ep': (0xff08, 2),
+    'wagman_vdc_cs': (0xff08, 3),
+
+    'wagman_hb_nc': (0xff09, 1),
+    'wagman_hb_ep': (0xff09, 2),
+    'wagman_hb_cs': (0xff09, 3),
+
+    'wagman_stopping_nc': (0xff0a, 1),
+    'wagman_stopping_ep': (0xff0a, 2),
+    'wagman_stopping_cs': (0xff0a, 3),
+
+    'wagman_starting_nc': (0xff0b, 1),
+    'wagman_starting_ep': (0xff0b, 2),
+    'wagman_starting_cs': (0xff0b, 3),
+
+    'wagman_killing_nc': (0xff0c, 1),
+    'wagman_killing_ep': (0xff0c, 2),
+    'wagman_killing_cs': (0xff0c, 3),
+
+    'net_rx_lan': (0xff0d, 1),
+    'net_tx_lan': (0xff0d, 2),
+
+    'net_rx_wwan': (0xff0e, 1),
+    'net_tx_wwan': (0xff0e, 2),
+
+    'ping_beehive': (0xff0f, 1),
+    'ping_nc': (0xff0f, 2),
+    'ping_ep': (0xff0f, 3),
+
+    'wagman_th_0': (0xff10, 1),
+    'wagman_th_1': (0xff10, 2),
+    'wagman_th_2': (0xff10, 3),
+    'wagman_th_3': (0xff10, 4),
+    'wagman_th_4': (0xff10, 5),
+
+    'media': (0xff11, 1),
+}
+
+# OK...we'll start with new nodes to begin with then sort out the pipeline deployment stuff after.
+# Would be really nice to go ahead and unify all of this pipeline...
+
+config = metrics.read_config_file('/wagglerw/metrics.config')
 
 plugin = waggle.plugin.Plugin()
 
 while True:
-    status = get_status()
+    results = metrics.get_metrics_for_config(config)
+    pprint.pprint(results)
 
-    for path, name in mapping:
+    for k, v in results.items():
         try:
-            value = get_value(status, path)
+            sid, pid = sdf_table[k]
         except KeyError:
-            print('failed to get', path, flush=True)
             continue
 
-        print(name, value, flush=True)
+        plugin.add_measurement({
+            'sensor_id': sid,
+            'parameter_id': pid,
+            'value': v,
+        })
 
-    # plugin.publish_measurements()
-    time.sleep(900)
+    plugin.publish_measurements()
+
+    print(flush=True)
+    time.sleep(60)

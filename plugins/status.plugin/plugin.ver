@@ -1,6 +1,6 @@
 [plugin]
-id=255
-name=System Status Plugin
-description=Collects metrics across entire node including NC, EP, Wagman.
+id=2000
+version=0.0.1
+name=Status Plugin
+description=Status plugin
 reference=https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/status.plugin
-version=0.1.0
