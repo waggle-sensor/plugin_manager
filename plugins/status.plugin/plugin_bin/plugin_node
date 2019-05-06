@@ -77,6 +77,8 @@ sdf_table = {
     'wagman_th_4': (0xff10, 5),
 
     'media': (0xff11, 1),
+
+    'modem_dbm': (0xff12, 1),
 }
 
 # OK...we'll start with new nodes to begin with then sort out the pipeline deployment stuff after.
