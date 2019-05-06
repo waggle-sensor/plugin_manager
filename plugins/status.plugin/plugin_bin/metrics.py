@@ -1,3 +1,4 @@
+import socket
 import subprocess
 import os
 import re
@@ -136,10 +137,15 @@ def get_wagman_metrics(config, metrics):
     metrics['wagman_killing_cs'] = bool(re.search(r'wagman:cs killing', log))
 
 
-def check_ping(host):
+def check_ping(args):
+    host, port = args
+
     try:
-        subprocess.check_output(['ping', '-c', '4', host])
-        return True
+        s = socket.create_connection((host, port), timeout=10)
+        s.settimeout(5)
+        data = s.recv(32)
+        s.close()
+        return b'OpenSSH' in data
     except Exception:
         return False
 
@@ -219,9 +225,9 @@ def get_device_metrics(config, metrics):
 
 
 ping_table = {
-    'beehive': 'beehive',
-    'nc': '10.31.81.10',
-    'ep': '10.31.81.51',
+    'beehive': ('beehive', 20022),
+    'nc': ('10.31.81.10', 22),
+    'ep': ('10.31.81.51', 22),
 }
 
 
