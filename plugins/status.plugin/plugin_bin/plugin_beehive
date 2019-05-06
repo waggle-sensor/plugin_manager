@@ -13,13 +13,20 @@ subsystem_table = {
     '0000000000000001': 'ep',
 }
 
+
+def normalize_type(x):
+    if isinstance(x, bool):
+        return int(x)
+    return x
+
+
 def process_measurements(message, datagram, sensorgram):
     yield {
         'subsystem': subsystem_table[message['sender_sub_id']],
         'sensor': sensorgram['sensor_id'],
         'parameter': sensorgram['parameter_id'],
         'value_raw': 'NA',
-        'value_hrf': sensorgram['value'],
+        'value_hrf': normalize_type(sensorgram['value']),
     }
 
 
