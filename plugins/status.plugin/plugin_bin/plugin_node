@@ -81,6 +81,7 @@ sdf_table = {
     'modem_dbm': (0xff12, 1),
 
     'wagman_comm': (0xff13, 1),
+    'wagman_uptime': (0xff14, 1),
 }
 
 # OK...we'll start with new nodes to begin with then sort out the pipeline deployment stuff after.
