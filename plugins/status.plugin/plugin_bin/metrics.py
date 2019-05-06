@@ -1,3 +1,4 @@
+from serial import Serial
 import socket
 import subprocess
 import os
@@ -150,6 +151,78 @@ def check_ping(args):
         return False
 
 
+rssi_to_dbm = {
+    2: -109,
+    3: -107,
+    4: -105,
+    5: -103,
+    6: -101,
+    7: -99,
+    8: -97,
+    9: -95,
+    10: -93,
+    11: -91,
+    12: -89,
+    13: -87,
+    14: -85,
+    15: -83,
+    16: -81,
+    17: -79,
+    18: -77,
+    19: -75,
+    20: -73,
+    21: -71,
+    22: -69,
+    23: -67,
+    24: -65,
+    25: -63,
+    26: -61,
+    27: -59,
+    28: -57,
+    29: -55,
+    30: -53,
+}
+
+
+def get_modem_strength(config, metrics):
+    modems = glob('/dev/serial/by-id/*Telit*if06')
+
+    if not modems:
+        logger.warning('no modem detected - skipping')
+        return
+
+    with Serial(modems[0], 57600, timeout=1.0) as ser:
+        ser.write(b'AT+CSQ\r')
+
+        rssi = None
+
+        while True:
+            try:
+                s = ser.readline().decode()
+            except UnicodeDecodeError:
+                continue
+
+            if len(s) == 0:
+                logger.warning('modem closed unexpectedly')
+                return
+
+            if s.startswith('OK'):
+                break
+
+            m = re.match(r'\+CSQ:\s*(\d+),(\d+)', s)
+
+            if m is not None:
+                rssi = int(m.group(1))
+
+        try:
+            dbm = rssi_to_dbm[rssi]
+        except KeyError:
+            logger.warning('unknown modem strength')
+            return
+        
+        metrics['modem_dbm'] = dbm
+
+
 def get_loadavg_metrics(config, metrics):
     s = read_file('/proc/loadavg')
     fs = s.split()
@@ -271,18 +344,28 @@ def get_service_metrics(config, metrics):
         metrics['service_active_' + name] = get_service_status(service_table[name])
 
 
+def attempt_to_get_metrics(getter, config, metrics):
+    try:
+        getter(config, metrics)
+    except Exception:
+        logger.exception('metrics getter failed %s', getter)
+
+
 def get_metrics_for_config(config):
     metrics = {}
 
-    get_sys_metrics(config, metrics)
-    get_device_metrics(config, metrics)
+    attempt_to_get_metrics(get_sys_metrics, config, metrics)
+    attempt_to_get_metrics(get_device_metrics, config, metrics)
 
     if 'wagman' in config['devices']:
-        get_wagman_metrics(config, metrics)
+        attempt_to_get_metrics(get_wagman_metrics, config, metrics)
+    
+    if 'modem' in config['devices']:
+        attempt_to_get_metrics(get_modem_strength, config, metrics)
 
-    get_ping_metrics(config, metrics)
-    get_network_metrics(config, metrics)
-    get_service_metrics(config, metrics)
+    attempt_to_get_metrics(get_ping_metrics, config, metrics)
+    attempt_to_get_metrics(get_network_metrics, config, metrics)
+    attempt_to_get_metrics(get_service_metrics, config, metrics)
 
     return metrics
 
