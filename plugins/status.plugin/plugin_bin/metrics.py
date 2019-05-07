@@ -145,9 +145,7 @@ def get_wagman_metrics(config, metrics):
     metrics['wagman_killing_cs'] = bool(re.search(r'wagman:cs killing', log))
 
 
-def check_ping(args):
-    host, port = args
-
+def check_ping_sshmsg(host, port):
     try:
         s = socket.create_connection((host, port), timeout=10)
         s.settimeout(5)
@@ -156,6 +154,19 @@ def check_ping(args):
         return b'OpenSSH' in data
     except Exception:
         return False
+
+
+def check_ping_ping(host, port):
+    try:
+        subprocess.check_output(['ping', '-c', 4, host])
+        return True
+    except Exception:
+        return False
+
+
+def check_ping(args):
+    host, port, method = args
+    return method(host, port)
 
 
 rssi_to_dbm = {
@@ -305,9 +316,9 @@ def get_device_metrics(config, metrics):
 
 
 ping_table = {
-    'beehive': ('beehive', 20022),
-    'nc': ('10.31.81.10', 22),
-    'ep': ('10.31.81.51', 22),
+    'beehive': ('beehive', 20022, check_ping_sshmsg),
+    'nc': ('10.31.81.10', 22, check_ping_ping),
+    'ep': ('10.31.81.51', 22, check_ping_ping),
 }
 
 
