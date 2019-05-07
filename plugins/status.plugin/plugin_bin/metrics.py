@@ -145,30 +145,6 @@ def get_wagman_metrics(config, metrics):
     metrics['wagman_killing_cs'] = bool(re.search(r'wagman:cs killing', log))
 
 
-def check_ping_sshmsg(host, port):
-    try:
-        s = socket.create_connection((host, port), timeout=10)
-        s.settimeout(5)
-        data = s.recv(32)
-        s.close()
-        return b'OpenSSH' in data
-    except Exception:
-        return False
-
-
-def check_ping_ping(host, port):
-    try:
-        subprocess.check_output(['ping', '-c', 4, host])
-        return True
-    except Exception:
-        return False
-
-
-def check_ping(args):
-    host, port, method = args
-    return method(host, port)
-
-
 rssi_to_dbm = {
     2: -109,
     3: -107,
@@ -315,10 +291,29 @@ def get_device_metrics(config, metrics):
         metrics['dev_up_' + name] = get_dev_exists(device_table[name])
 
 
+def ping_sshmsg(host, port):
+    try:
+        s = socket.create_connection((host, port), timeout=10)
+        s.settimeout(5)
+        data = s.recv(32)
+        s.close()
+        return b'OpenSSH' in data
+    except Exception:
+        return False
+
+
+def ping_ping(host):
+    try:
+        subprocess.check_output(['ping', '-c', '4', host])
+        return True
+    except Exception:
+        return False
+
+
 ping_table = {
-    'beehive': ('beehive', 20022, check_ping_sshmsg),
-    'nc': ('10.31.81.10', 22, check_ping_ping),
-    'ep': ('10.31.81.51', 22, check_ping_ping),
+    'beehive': (ping_sshmsg, 'beehive', 20022),
+    'nc': (ping_ping, '10.31.81.10'),
+    'ep': (ping_ping, '10.31.81.51'),
 }
 
 
@@ -328,7 +323,8 @@ def get_ping_metrics(config, metrics):
             logger.warning('no ping host "%s"', name)
             continue
 
-        metrics['ping_' + name] = check_ping(ping_table[name])
+        method, *args = ping_table[name]
+        metrics['ping_' + name] = method(*args)
 
 
 network_table = {
