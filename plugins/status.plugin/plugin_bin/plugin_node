@@ -82,6 +82,14 @@ sdf_table = {
 
     'wagman_comm': (0xff13, 1),
     'wagman_uptime': (0xff14, 1),
+
+    'disk_used_boot': (0xff15, 1),
+    'disk_used_root': (0xff15, 2),
+    'disk_used_rw': (0xff15, 3),
+
+    'disk_size_boot': (0xff16, 1),
+    'disk_size_root': (0xff16, 2),
+    'disk_size_rw': (0xff16, 3),
 }
 
 # OK...we'll start with new nodes to begin with then sort out the pipeline deployment stuff after.
