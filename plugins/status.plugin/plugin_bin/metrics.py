@@ -67,23 +67,30 @@ def get_service_status(service):
         return False
 
 
-# can also have a log tail process watching all the wagman logs for events
-# maybe include lookback time in config?
+# HACK wagman_last_scan_time is used to track the last time we scanned the wagman logs
+wagman_last_scan_time = time.monotonic()
+
 def get_wagman_metrics(config, metrics):
+    global wagman_last_scan_time
+
     # optimization... doesn't bother with query if device missing.
     if not get_dev_exists('/dev/waggle_sysmon'):
         return
 
     with suppress(Exception):
         metrics['wagman_uptime'] = int(subprocess.check_output(['wagman-client', 'up']).decode())
+    
+    scan_duration = int(time.monotonic() - wagman_last_scan_time + 5)
 
     log = subprocess.check_output([
         'journalctl',                   # scan journal for
         '-u', 'waggle-wagman-driver',   # wagman driver logs
-        '--since', '-60',               # from last 60s
+        '--since', '-{}'.format(scan_duration),               # from last scan time
         '-b',                           # from this boot only
         '-o', 'cat',                    # in compact form
     ]).decode()
+
+    wagman_last_scan_time = time.monotonic()
 
     metrics['wagman_comm'] = ':wagman:' in log
 
