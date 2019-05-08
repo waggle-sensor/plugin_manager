@@ -13,6 +13,7 @@ sdf_table = {
 
     'mem_free': (0xff01, 1),
     'mem_total': (0xff01, 2),
+    'mem_free_ratio': (0xff01, 3),
 
     'time': (0xff02, 1),
     'uptime': (0xff03, 1),
@@ -93,6 +94,10 @@ sdf_table = {
 
     'service_rabbitmq': (0xff17, 1),
     'service_coresense': (0xff17, 2),
+
+    'disk_used_ratio_boot': (0xff18, 1),
+    'disk_used_ratio_root': (0xff18, 2),
+    'disk_used_ratio_rw': (0xff18, 3),
 }
 
 # OK...we'll start with new nodes to begin with then sort out the pipeline deployment stuff after.

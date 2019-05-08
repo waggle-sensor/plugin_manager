@@ -229,6 +229,7 @@ def get_mem_metrics(config, metrics):
     s = read_file('/proc/meminfo')
     metrics['mem_total'] = int(re.search(r'MemTotal:\s*(\d+)\s*kB', s).group(1)) * 1024
     metrics['mem_free'] = int(re.search(r'MemFree:\s*(\d+)\s*kB', s).group(1)) * 1024
+    metrics['mem_free_ratio'] = metrics['mem_free'] / metrics['mem_total']
 
 
 def get_disk_metrics(config, metrics):
@@ -242,16 +243,19 @@ def get_disk_metrics(config, metrics):
         used[mount] = int(fs[2])
 
     with suppress(KeyError):
-        metrics['disk_used_boot'] = used['/media/boot']
         metrics['disk_size_boot'] = size['/media/boot']
+        metrics['disk_used_boot'] = used['/media/boot']
+        metrics['disk_used_ratio_boot'] = used['/media/boot'] / size['/media/boot']
 
     with suppress(KeyError):
-        metrics['disk_used_root'] = used['/']
         metrics['disk_size_root'] = size['/']
+        metrics['disk_used_root'] = used['/']
+        metrics['disk_used_ratio_root'] = used['/media/root'] / size['/media/root']
 
     with suppress(KeyError):
-        metrics['disk_used_rw'] = used['/wagglerw']
         metrics['disk_size_rw'] = size['/wagglerw']
+        metrics['disk_used_rw'] = used['/wagglerw']
+        metrics['disk_used_ratio_rw'] = used['/wagglerw'] / size['/wagglerw']
 
 
 def get_sys_metrics(config, metrics):
