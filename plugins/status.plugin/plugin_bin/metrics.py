@@ -245,17 +245,17 @@ def get_disk_metrics(config, metrics):
     with suppress(KeyError):
         metrics['disk_size_boot'] = size['/media/boot']
         metrics['disk_used_boot'] = used['/media/boot']
-        metrics['disk_used_ratio_boot'] = used['/media/boot'] / size['/media/boot']
+        metrics['disk_used_ratio_boot'] = round(used['/media/boot'] / size['/media/boot'], 3)
 
     with suppress(KeyError):
         metrics['disk_size_root'] = size['/']
         metrics['disk_used_root'] = used['/']
-        metrics['disk_used_ratio_root'] = used['/media/root'] / size['/media/root']
+        metrics['disk_used_ratio_root'] = round(used['/'] / size['/'], 3)
 
     with suppress(KeyError):
         metrics['disk_size_rw'] = size['/wagglerw']
         metrics['disk_used_rw'] = used['/wagglerw']
-        metrics['disk_used_ratio_rw'] = used['/wagglerw'] / size['/wagglerw']
+        metrics['disk_used_ratio_rw'] = round(used['/wagglerw'] / size['/wagglerw'], 3)
 
 
 def get_sys_metrics(config, metrics):
