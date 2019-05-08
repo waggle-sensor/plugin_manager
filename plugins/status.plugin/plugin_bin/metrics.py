@@ -239,8 +239,8 @@ def get_disk_metrics(config, metrics):
     for line in subprocess.check_output(['df']).decode().splitlines()[1:]:
         fs = line.split()
         mount = fs[5]
-        size[mount] = int(fs[1]) * 1024
-        used[mount] = int(fs[2])
+        size[mount] = int(fs[1]) * 1024 # df reports 1K blocks
+        used[mount] = int(fs[2]) * 1024
 
     with suppress(KeyError):
         metrics['disk_size_boot'] = size['/media/boot']
