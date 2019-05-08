@@ -355,7 +355,7 @@ def get_service_metrics(config, metrics):
             logger.warning('no service "%s"', name)
             continue
 
-        metrics['service_active_' + name] = get_service_status(service_table[name])
+        metrics['service_' + name] = get_service_status(service_table[name])
 
 
 def attempt_to_get_metrics(getter, config, metrics):

@@ -90,6 +90,9 @@ sdf_table = {
     'disk_size_boot': (0xff16, 1),
     'disk_size_root': (0xff16, 2),
     'disk_size_rw': (0xff16, 3),
+
+    'service_rabbitmq': (0xff17, 1),
+    'service_coresense': (0xff17, 2),
 }
 
 # OK...we'll start with new nodes to begin with then sort out the pipeline deployment stuff after.
