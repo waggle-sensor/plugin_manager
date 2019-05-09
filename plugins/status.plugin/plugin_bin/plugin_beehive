@@ -17,6 +17,8 @@ subsystem_table = {
 def normalize_type(x):
     if isinstance(x, bool):
         return int(x)
+    if isinstance(x, float):
+        return round(x, 3)
     return x
 
 
