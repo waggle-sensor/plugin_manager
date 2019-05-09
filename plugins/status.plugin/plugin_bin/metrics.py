@@ -258,12 +258,32 @@ def get_disk_metrics(config, metrics):
         metrics['disk_used_ratio_rw'] = round(used['/wagglerw'] / size['/wagglerw'], 3)
 
 
+def get_plugin_metrics(config, metrics):
+    try:
+        plugins = [p for p in os.listdir('/wagglerw/systemd/system') if p.startswith('waggle-plugin')]
+    except FileNotFoundError:
+        plugins = []
+    
+    active_total = 0
+
+    for plugin in plugins:
+        try:
+            subprocess.check_output(['systemctl', 'is-active', plugin])
+            active_total += 1
+        except Exception:
+            pass
+
+    metrics['plugins_enabled'] = len(plugins)
+    metrics['plugins_active'] = active_total
+
+
 def get_sys_metrics(config, metrics):
     metrics['uptime'] = get_sys_uptime()
     metrics['time'] = int(time.time())
     get_loadavg_metrics(config, metrics)
     get_mem_metrics(config, metrics)
     get_disk_metrics(config, metrics)
+    get_plugin_metrics(config, metrics)
 
     hostname = subprocess.check_output(['hostname']).decode()
     if 'SD' in hostname:

@@ -98,6 +98,9 @@ sdf_table = {
     'disk_used_ratio_boot': (0xff18, 1),
     'disk_used_ratio_root': (0xff18, 2),
     'disk_used_ratio_rw': (0xff18, 3),
+
+    'plugins_enabled': (0xff19, 1),
+    'plugins_active': (0xff19, 2),
 }
 
 # OK...we'll start with new nodes to begin with then sort out the pipeline deployment stuff after.
