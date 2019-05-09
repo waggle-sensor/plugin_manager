@@ -21,16 +21,27 @@ def normalize_type(x):
         return round(x, 3)
     return x
 
+raw_sensors = {
+    0xff06, # cu
+    0xff08, # vdc
+    0xff10, # th
+}
 
 def process_measurements(message, datagram, sensorgram):
-    value = normalize_type(sensorgram['value'])
+    value_raw = normalize_type(sensorgram['value'])
+
+    if sensorgram['sensor_id'] not int raw_sensors:
+        value_hrf = value_raw
+    else:
+        value_hrf = 'NA'
+
 
     yield {
         'subsystem': subsystem_table[message['sender_sub_id']],
         'sensor': sensorgram['sensor_id'],
         'parameter': sensorgram['parameter_id'],
-        'value_raw': value,
-        'value_hrf': value,
+        'value_raw': value_raw,
+        'value_hrf': value_hrf,
     }
 
 
