@@ -6,6 +6,7 @@
 #           http://www.wa8.gl
 # ANL:waggle-license
 import waggle.plugin
+import math
 
 
 subsystem_table = {
@@ -36,8 +37,26 @@ def convert_cu(counts):
     return (counts - 144) * cu_amp_per_count
 
 
+def calcR(adc):
+    return 23000 * (2**12/adc - 1)
+
+
+def calcT(adc):
+    A = 0.00088570897
+    B = 0.00025163902
+    C = 0.00000019289731
+
+    R = calcR(adc)
+    logR = math.log(R)
+
+    T = 1 / (A + B * logR + C * logR**3)
+    TC = T - 273.15
+
+    return TC
+
+
 def convert_th(x):
-    return 'NA'
+    return calcT(x)
 
 
 adc_to_vdc_factor = 1.0 / (3.0 / (3.0 + 17.0) * (2**12 / 3.3))
