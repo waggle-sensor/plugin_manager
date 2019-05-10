@@ -29,7 +29,7 @@ mV = V * 1e-3
 muV = V * 1e-6
 count = 1.0
 
-cu_count_per_amp = (264.0/1.0 * mV/A) * (1.0/65.5 * count/muV) / 2**5
+cu_count_per_amp = (264.0/1.0 * mV/A) * (1.0/65.5 * count/muV) * 2**-5
 cu_amp_per_count = 1 / cu_count_per_amp
 
 def convert_cu(counts):
