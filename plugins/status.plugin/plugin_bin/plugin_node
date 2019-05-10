@@ -114,6 +114,9 @@ while True:
     results = metrics.get_metrics_for_config(config)
     pprint.pprint(results)
 
+    # clear measurements, just to be sure.
+    plugin.clear_measurements()
+
     for k, v in results.items():
         try:
             sid, pid = sdf_table[k]
