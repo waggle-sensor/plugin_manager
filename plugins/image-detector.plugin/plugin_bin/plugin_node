@@ -158,18 +158,19 @@ class CarPedDetector(Plugin):
 
             if current_time - self.config['last_updated'] > 3:
                 return_code, message = self.input_handler.read()
-                print('input handler return code', return_code)
+                print('Receive timeout', flush=True)
 
                 if return_code is True:
                     print(time.asctime())
-                    print('Received frame')
+                    print('Received frame', flush=True)
                     properties, frame = message
                     metadata = properties.headers
                     nparr_img = np.fromstring(frame, np.uint8)
                     img = cv2.imdecode(nparr_img, cv2.IMREAD_COLOR)
 
                     rows, cols, _ = img.shape
-                    M = cv2.getRotationMatrix2D((cols / 2, rows / 2), metadata['image_rotate'], 1)
+                    M = cv2.getRotationMatrix2D(
+                        (cols / 2, rows / 2), metadata['image_rotate'], 1)
                     img = cv2.warpAffine(img, M, (cols, rows))
 
                     counter = 0
