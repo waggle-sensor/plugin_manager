@@ -7,24 +7,28 @@ waggle_topic=/plugins_and_code
 
 The sound pressure level calcuation plugin reports surrounding noise level every 65 second *(1 minute interval, 5 seconds sampling)*. It samples audio data for 5 seconds from a microphone connected on edge-processor and calculates noise level in dBm. 
 
-The sampled data (raw audio data collected through a microphone) can be recored (the argument ``'recording'`` in the default configuration; ``True`` - Yes recording or ``False`` - No recording), but default is ``not recording``. When the audio sample is recorded, the format is pyaudio.paInt16, the number of channel is 1, sampling rate is 44100, each chunk length is 1024.
+The sampled data (raw audio data collected through a microphone) can be recored (the argument ``'recording'`` in the configuration; ``True`` - Yes recording or ``False`` - No recording), but default is ``False`` -- not recording. When the audio sample is recorded, the format is pyaudio.paInt16, the number of channel is 1, sampling rate is 44100, each chunk length is 1024.
 
-The sound pressure level estimation is based on Fourier Transformation. The data collected by the microphone is translated into frequency-intensity domain data through Fourier Transformation. Among the frequency-intensity domain data, data from 22 Hz to 22 kHz are seletected to calculate average dBm with given octave band. The full code is abailable from [here](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/audio_spl/spl.py).
+The sound pressure level estimation is based on Fourier Transformation. The data collected by the microphone is translated into frequency-intensity domain through Fourier Transformation. Among the frequency-intensity domain, frequency from 22 Hz to 22 kHz are seletected to calculate average dBm with given octave band. The full code is abailable from [here](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/audio_spl/spl.py).
 
 ### Octave band
 
-Octave band can be adjusted before the plugin is loaded on nodes (the argument ``'octave_band'`` in the default configuration of the plugin; if octave_band = 1, then it is 1/1 octave, if octave_band = 3, then it is 1/3 octave, and so on). The plugin follows **Standard frequencies for acoustic measurements according to EN ISO 266** for 1/1 octave band and 1/3 octave band as showing in table at bottom. The plugin also supports other octave bands (such as 1/12 or 1/24).
+Octave band can be adjusted before the plugin is loaded on nodes by modifying configuration file (the argument ``'octave_band'`` in the configuration of the plugin; if octave_band = 1, then it is 1/1 octave, if octave_band = 3, then it is 1/3 octave, and so on). However the default is 1/1 octave. The plugin follows **Standard frequencies for acoustic measurements according to EN ISO 266** for 1/1 octave band and 1/3 octave band as showing in table at bottom. The plugin also supports other octave bands (such as 1/12 or 1/24).
 
 ### Result values
 
-The frequency-intensity data are averaged for each octave band bins with accordance of configuration and the average intesnity of each bin is translated into sound pressure level in dBm. Additionally, total sound pressure level in dBm is calculated.
-
-With the given waggle protocol for this plugin (May 2018), the length of output data is one array containing 10 float data for 1/1 octave bins in dBm and one additional float data for total sound pressure level in dBm. Therefore, even if the input argument of octave band is set as 3 or other values (1/3 octave band or other octave band), the result will be the same, 1/1 octave band. Any length of octave band can be accepted and delivered as the waggle protocol supports this feature in the furture.
+The frequency-intensity data are averaged for each octave band bins with accordance of configuration, and the average intesnity of each bin is translated into sound pressure level in dBm. Because default configuration of the plugin is 1/1 octave, it sends 10 values for each bin.
 
 ### References
 To calculate average dBm for each bin and total sound pressure level, resources of [Adding acoustic levels of sound sources](http://www.sengpielaudio.com/calculator-spl.htm), [Combining Decibels − up to 30 s](http://www.sengpielaudio.com/calculator-spl30.htm), and [Adding decibels of one-third octave bands
 to level of one octave band and vice versa](http://www.sengpielaudio.com/calculator-octave.htm) are used mostly. In addition, upper frequency for octave cycle is refered [here](https://courses.physics.illinois.edu/phys406/sp2017/Lab_Handouts/Octave_Bands.pdf).
 
+### Sensor values
+Sensor id for this plugin is 900, and parameter id is 1. The values are packed into a string, so it will look like this:
+```
+data time, node id, controlling device, sensor name, parameter name, raw data, human readable (converted) data
+2019/06/11 16:49:45,001e06117b41,nc,audio,spl,NA,"46.24, 35.12, 35.25, 35.26, 36.46, 47.57, 35.35, 45.37, 46.74, 35.45"
+```
 
 #### Center, lower, and upper frequencies for standard set of octave and 1/3 octave bands covering the audible frequency range.
 <table>
