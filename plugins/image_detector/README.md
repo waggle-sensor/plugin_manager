@@ -40,5 +40,13 @@ def get_default_configuration():
     return conf
 ```
 
+### Sensor values
+The values are count of each class (pedestrian and car), so it will look like this:
+```
+data time, node id, controlling device, sensor name, parameter name, raw data, human readable (converted) data
+2019/06/12 00:14:55,001e06117b41,image,image_detector,car_total,NA,9
+2019/06/12 00:14:55,001e06117b41,image,image_detector,person_total,NA,0
+```
+
 ## How to train:
 When you train the tensorflow model to add new classes or reinforce model, please refer [training](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/image_detector/training/README.md).
