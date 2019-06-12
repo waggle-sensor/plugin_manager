@@ -24,7 +24,7 @@ To calculate average dBm for each bin and total sound pressure level, resources 
 to level of one octave band and vice versa](http://www.sengpielaudio.com/calculator-octave.htm) are used mostly. In addition, upper frequency for octave cycle is refered [here](https://courses.physics.illinois.edu/phys406/sp2017/Lab_Handouts/Octave_Bands.pdf).
 
 ### Sensor values
-Sensor id for this plugin is 900, and parameter id is 1. The values are packed into a string, so it will look like this:
+The values are packed into a string, so it will look like this:
 ```
 data time, node id, controlling device, sensor name, parameter name, raw data, human readable (converted) data
 2019/06/11 16:49:45,001e06117b41,nc,audio,spl,NA,"46.24, 35.12, 35.25, 35.26, 36.46, 47.57, 35.35, 45.37, 46.74, 35.45"
