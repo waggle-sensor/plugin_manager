@@ -11,6 +11,12 @@ The sampled data (raw audio data collected through a microphone) can be recored 
 
 The sound pressure level estimation is based on Fourier Transformation. The data collected by the microphone is translated into frequency-intensity domain through Fourier Transformation. Among the frequency-intensity domain, frequency from 22 Hz to 22 kHz are seletected to calculate average dBm with given octave band. The full code is abailable from [here](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/audio_spl/spl.py).
 
+There are adjustable parameters when desired,
+* `sampling_period` to control length of sampling in second, default is 5 seconds
+* `interval` to control calculation interval in second, default is 60 seconds
+* `octave_band` to control octave band, default is 1/1 octave
+* `recording` to control if the sample need to be saved or not, default is `false`
+
 ### Octave band
 
 Octave band can be adjusted before the plugin is loaded on nodes by modifying configuration file (the argument ``'octave_band'`` in the configuration of the plugin; if octave_band = 1, then it is 1/1 octave, if octave_band = 3, then it is 1/3 octave, and so on). However the default is 1/1 octave. The plugin follows **Standard frequencies for acoustic measurements according to EN ISO 266** for 1/1 octave band and 1/3 octave band as showing in table at bottom. The plugin also supports other octave bands (such as 1/12 or 1/24).
