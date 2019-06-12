@@ -50,3 +50,11 @@ data time, node id, controlling device, sensor name, parameter name, raw data, h
 
 ## How to train:
 When you train the tensorflow model to add new classes or reinforce model, please refer [training](https://github.com/waggle-sensor/plugin_manager/blob/master/plugins/image_detector/training/README.md).
+
+
+#### Additional information
+This is the README file for the image_detector plugin.
+Plugin description: Pedestrian and car detector Plugin
+plugin.deploy contains deployment information.
+plugin.instance contains the instance number.
+plugin.ver contains the version information.
