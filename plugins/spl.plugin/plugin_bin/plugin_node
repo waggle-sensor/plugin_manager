@@ -238,14 +238,16 @@ class SoundPressureLevel:
 #             avg_db = self.match_length(avg_db)
 #             print(int(time.time()), avg_db)
 
-            measurement = {
-                'sensor_id': 900,
-                'parameter_id': 1,
-                'value': avg_db.tolist()
-            }
+        ## sensor_id: 900 --> spl v1 (use match_length function)
+        ## sensor_id: 901 --> spl v2 (don't use match_length function)
+        measurement = {
+            'sensor_id': 901,
+            'parameter_id': 1,
+            'value': avg_db.tolist()
+        }
 
-            plugin.add_measurement(measurement)
-            plugin.publish_measurements()
+        plugin.add_measurement(measurement)
+        plugin.publish_measurements()
 
     def run(self):
         while True:
