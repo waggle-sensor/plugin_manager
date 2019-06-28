@@ -37,6 +37,13 @@ data time, node id, controlling device, sensor name, parameter name, raw data, h
 ```
 
 ### Log
+
+#### Jun 28, 2019
+#### sensor_id: 0x3000 (12288)
+spl.plugin version 2: don't reshape the length of the measurement and send the result as it is (1/1 or 1/3 octave, or whatever)
+There is no  version 1 spl anymore. Also none of the spl plugin is recording data.
+
+#### Jun 18, 2019
 #### sensor_id: 900
 spl.plugin version 1: reshape the length of the measurement data into 10 (1/1 octave)
 #### sensor_id: 901
