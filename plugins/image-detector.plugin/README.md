@@ -58,3 +58,9 @@ Plugin description: Pedestrian and car detector Plugin
 plugin.deploy contains deployment information.
 plugin.instance contains the instance number.
 plugin.ver contains the version information.
+
+
+### Log
+#### Jun 28, 2019
+sensor id: 0x3001, parameter id: 1 (count of car)
+sensor id: 0x3001, parameter id: 2 (count of person)
