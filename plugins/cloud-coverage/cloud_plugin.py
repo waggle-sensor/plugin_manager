@@ -17,6 +17,8 @@ from sklearn.cross_decomposition import PLSRegression
 
 import joblib
 
+import sys
+
 #from waggle.pipeline import Plugin, ImagePipelineHandler
 #from waggle.protocol.v5.encoder import encode_frame
 
@@ -27,26 +29,20 @@ EXCHANGE = 'image_pipeline'
 # output direction of this processor
 ROUTING_KEY_EXPORT = 'exporter'  # flush output to Beehive
 
-# test images path
-test_path = '/home/waggle-student/waggle/tcs_cloud/test1/'
-
 # temporary image path
-TEMP_IMAGE_PATH = '0017.png'
-
-# Model name
-MODEL_NAME = 'swimseg_model_128.pkl'
+# TEMP_IMAGE_PATH = '0017.jpg'
 
 class CloudEstimator():
 #class CloudEstimator(Plugin):
     plugin_name = 'image_cloud_estimator'
     plugin_version = '0'
-    
+
     def __init__(self):
         super().__init__()
         #self.hrf = False
         #self.input_handler = ImagePipelineHandler(routing_in=self.config['source'])
-        #self.input_image_path = image_name 
-        
+        #self.input_image_path = image_name
+
     '''
     def close(self):
         self.input_handler.close()
@@ -61,7 +57,7 @@ class CloudEstimator():
 
         Image_Array_RGB = np.array(Input_Image_RGB)
         Image_Array_HSV = np.array(Input_Image_HSV)
-        
+
         Image_Shape = Image_Array_RGB.shape
         Pixels_Count = Image_Shape[0] * Image_Shape[1]
 
@@ -88,7 +84,7 @@ class CloudEstimator():
         One_D_Image_DIFF = One_D_Image_Red - One_D_Image_Blue
 
         One_D_Image_NORMALIZED = ( One_D_Image_Blue - One_D_Image_Red ) / (One_D_Image_Blue + One_D_Image_Red)
-    
+
         One_D_Image = np.hstack((One_D_Image_S, \
                     One_D_Image_RATIO, \
                     One_D_Image_NORMALIZED, \
@@ -96,25 +92,12 @@ class CloudEstimator():
 
         return One_D_Image, Image_Shape
 
-    def PLS_Regression(self, features, labels, image_shape):
-        X = features
-        y = labels
-
-        pls2 = PLSRegression(n_components=3)
-        pls2.fit(X,y)
-        Y_pred = pls2.predict(features)
-        
-        return Y_pred
-
     def Load_Ground_Truth_Label(self, Image_Name, Image_Shape):
 
         img_name = Image_Name.split('.')[0]
         groundtruth_image_name = img_name + '_GT.png'
 
         Image_Ground_Truth = cv.imread(groundtruth_image_name, cv.IMREAD_UNCHANGED)
-
-        cv.imshow('', Image_Ground_Truth)
-        cv.waitKey()
 
         One_D_Ground_Truth = np.transpose(np.matrix(Image_Ground_Truth.ravel()))
 
@@ -130,15 +113,13 @@ class CloudEstimator():
 
     def Threshold(self,input,target_shape):
 
-        input = [x / 255.0 for x in input]
         za = (np.asarray(input) < 0.5).sum()
-
         percentage = (za / (target_shape[0] * target_shape[1])) * 100
 
         return percentage
 
     def Load_Segmentation_Model(self):
-        model = joblib.load(MODEL_NAME)
+        model = joblib.load('swimseg_model_128.pkl')
 
         return model
 
@@ -147,9 +128,9 @@ class CloudEstimator():
         Y_pred = model.predict(target_feature)
         reg_end = time.time()
         print('inference time {}'.format(reg_end-reg_start))
-        
+
         return Y_pred
-    
+
     def Get_Ground_Truth_Value(self, Image_Name):
         filename = image_name
         gt_file_name = filename.split('.')[0] + '_GT.png'
@@ -162,31 +143,53 @@ class CloudEstimator():
         pixel_cnt = image_shape[0] * image_shape[1]
         pixel_cloud = np.count_nonzero(gt_one_D_array)
         print('actual percentage {}%'.format((pixel_cloud / pixel_cnt) * 100))
-        
-    def run(self):
+
+    def run(self, TEMP_IMAGE_PATH):
         start = time.time()
 
+        st = time.time()
         model = self.Load_Segmentation_Model()
+        et = time.time()
+        print('loading model elapsed %.6f' % (et-st))
 
+        st = time.time()
         target_feature, target_shape = self.Feature_Generator(TEMP_IMAGE_PATH)
+        et = time.time()
+        print('feature generator elapsed %.6f' % (et-st))
+
+        st = time.time()
         predict = self.Coverage_Predictor(target_feature, model)
+        et = time.time()
+        print('prediction elasped %.6f' % (et-st))
+
+        st = time.time()
         soft_thresholded = self.Soft_Thresholding(predict)
+        et = time.time()
+        print('threshold elapsed %.6f' % (et-st))
+
+        st = time.time()
         estimation = self.Threshold(soft_thresholded, target_shape)
+        et = time.time()
+        print('estimation elapsed %.6f' % (et-st))
+
+        print('cloud coverage estimation result: {}%'.format(estimation))
 
         end = time.time()
 
-        #self.Get_Ground_Truth_Value(image_name)
-
         print('time {}'.format(end-start))
-        
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--hrf', action='store_true', help='Print in human readable form')
+    parser.add_argument('--input', help='Input image')
     args = parser.parse_args()
     plugin = CloudEstimator()
-    
+
+    TEMP_IMAGE_PATH = args.input
+    print(TEMP_IMAGE_PATH)
+
     try:
-        plugin.run()
+        plugin.run(TEMP_IMAGE_PATH)
     except (KeyboardInterrupt, Exception) as ex:
         print(str(ex))
     finally:
