@@ -37,8 +37,8 @@ def get_default_configuration():
         'audio_chunk': 1024,
         'sampling_period': 5,  # in Second
         'interval': 60,  # 1 minute
-        'octave_band': 3,
-        'recording': False,
+        'octave_band': 1,
+        'recording': True,
     }
 
 
@@ -168,24 +168,24 @@ class SoundPressureLevel:
 
         return lower, center, upper
 
-    def match_length(self, avg_db):
-        octave_db = []
-        for i in range(10):
-            instance = 0.
-            if i == 9:
-                left = len(avg_db) - self.octave_band * 9
-                for j in range(left):
-                    instance = instance + 10 ** (avg_db[i * self.octave_band + j] / 10)
-            else:
-                for j in range(self.octave_band):
-                    instance = instance + 10 ** (avg_db[i * self.octave_band + j] / 10)
-            octave_db.append(10 * np.log10(instance))
+#     def match_length(self, avg_db):
+#         octave_db = []
+#         for i in range(10):
+#             instance = 0.
+#             if i == 9:
+#                 left = len(avg_db) - self.octave_band * 9
+#                 for j in range(left):
+#                     instance = instance + 10 ** (avg_db[i * self.octave_band + j] / 10)
+#             else:
+#                 for j in range(self.octave_band):
+#                     instance = instance + 10 ** (avg_db[i * self.octave_band + j] / 10)
+#             octave_db.append(10 * np.log10(instance))
 
-        instance = 0.
-        for i in range(10):
-            instance = instance + 10 ** (octave_db[i] / 10)
+#         instance = 0.
+#         for i in range(10):
+#             instance = instance + 10 ** (octave_db[i] / 10)
 
-        return octave_db
+#         return octave_db
 
     def close(self):
         pass
@@ -233,19 +233,19 @@ class SoundPressureLevel:
         sdb = 10 * np.log10(total)
         sdb = int(sdb)
 
-        # if octave band > 1, so that the length of avg_db does not match with waggle protocol:
-        if len(avg_db) > 10:
-            avg_db = self.match_length(avg_db)
-            print(int(time.time()), avg_db)
+#         # if octave band > 1, so that the length of avg_db does not match with waggle protocol:
+#         if len(avg_db) > 10:
+#             avg_db = self.match_length(avg_db)
+#             print(int(time.time()), avg_db)
 
-            measurement = {
-                'sensor_id': 900,
-                'parameter_id': 1,
-                'value': avg_db
-            }
+        measurement = {
+            'sensor_id': 0x3000,
+            'parameter_id': 1,
+            'value': avg_db.tolist()
+        }
 
-            plugin.add_measurement(measurement)
-            plugin.publish_measurements()
+        plugin.add_measurement(measurement)
+        plugin.publish_measurements()
 
     def run(self):
         while True:
