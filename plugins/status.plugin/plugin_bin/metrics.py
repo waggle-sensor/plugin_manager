@@ -51,8 +51,10 @@ def get_dev_exists(path):
 
 def get_net_metrics(iface):
     try:
-        rx = int(read_file(os.path.join('/sys/class/net', iface, 'statistics/rx_bytes')))
-        tx = int(read_file(os.path.join('/sys/class/net', iface, 'statistics/tx_bytes')))
+        rx = int(read_file(os.path.join(
+            '/sys/class/net', iface, 'statistics/rx_bytes')))
+        tx = int(read_file(os.path.join(
+            '/sys/class/net', iface, 'statistics/tx_bytes')))
     except FileNotFoundError:
         rx = 0
         tx = 0
@@ -70,6 +72,7 @@ def get_service_status(service):
 # HACK wagman_last_scan_time is used to track the last time we scanned the wagman logs
 wagman_last_scan_time = time.monotonic()
 
+
 def get_wagman_metrics(config, metrics):
     global wagman_last_scan_time
 
@@ -78,14 +81,16 @@ def get_wagman_metrics(config, metrics):
         return
 
     with suppress(Exception):
-        metrics['wagman_uptime'] = int(subprocess.check_output(['wagman-client', 'up']).decode())
-    
+        metrics['wagman_uptime'] = int(
+            subprocess.check_output(['wagman-client', 'up']).decode())
+
     scan_duration = int(time.monotonic() - wagman_last_scan_time + 5)
 
     log = subprocess.check_output([
         'journalctl',                   # scan journal for
         '-u', 'waggle-wagman-driver',   # wagman driver logs
-        '--since', '-{}'.format(scan_duration),               # from last scan time
+        # from last scan time
+        '--since', '-{}'.format(scan_duration),
         '-b',                           # from this boot only
         '-o', 'cat',                    # in compact form
     ]).decode()
@@ -114,6 +119,18 @@ def get_wagman_metrics(config, metrics):
         metrics['wagman_th_2'] = int(th[2])
         metrics['wagman_th_3'] = int(th[3])
         metrics['wagman_th_4'] = int(th[4])
+
+    with suppress(Exception):
+        value = re.findall(r':temperature (\d+) \d+', log)[-1]
+        metrics['wagman_temperature'] = int(value)
+
+    with suppress(Exception):
+        value = re.findall(r':humidity (\d+) \d+', log)[-1]
+        metrics['wagman_humidity'] = int(value)
+
+    with suppress(Exception):
+        value = re.findall(r':light (\d+)', log)[-1]
+        metrics['wagman_light'] = int(value)
 
     with suppress(Exception):
         nc, ep, cs = re.findall(r':enabled (\d+) (\d+) (\d+)', log)[-1]
@@ -213,7 +230,7 @@ def get_modem_strength(config, metrics):
         except KeyError:
             logger.warning('unknown modem strength')
             return
-        
+
         metrics['modem_dbm'] = dbm
 
 
@@ -227,8 +244,10 @@ def get_loadavg_metrics(config, metrics):
 
 def get_mem_metrics(config, metrics):
     s = read_file('/proc/meminfo')
-    metrics['mem_total'] = int(re.search(r'MemTotal:\s*(\d+)\s*kB', s).group(1)) * 1024
-    metrics['mem_free'] = int(re.search(r'MemFree:\s*(\d+)\s*kB', s).group(1)) * 1024
+    metrics['mem_total'] = int(
+        re.search(r'MemTotal:\s*(\d+)\s*kB', s).group(1)) * 1024
+    metrics['mem_free'] = int(
+        re.search(r'MemFree:\s*(\d+)\s*kB', s).group(1)) * 1024
     metrics['mem_free_ratio'] = metrics['mem_free'] / metrics['mem_total']
 
 
@@ -239,13 +258,14 @@ def get_disk_metrics(config, metrics):
     for line in subprocess.check_output(['df']).decode().splitlines()[1:]:
         fs = line.split()
         mount = fs[5]
-        size[mount] = int(fs[1]) * 1024 # df reports 1K blocks
+        size[mount] = int(fs[1]) * 1024  # df reports 1K blocks
         used[mount] = int(fs[2]) * 1024
 
     with suppress(KeyError):
         metrics['disk_size_boot'] = size['/media/boot']
         metrics['disk_used_boot'] = used['/media/boot']
-        metrics['disk_used_ratio_boot'] = round(used['/media/boot'] / size['/media/boot'], 3)
+        metrics['disk_used_ratio_boot'] = round(
+            used['/media/boot'] / size['/media/boot'], 3)
 
     with suppress(KeyError):
         metrics['disk_size_root'] = size['/']
@@ -255,15 +275,17 @@ def get_disk_metrics(config, metrics):
     with suppress(KeyError):
         metrics['disk_size_rw'] = size['/wagglerw']
         metrics['disk_used_rw'] = used['/wagglerw']
-        metrics['disk_used_ratio_rw'] = round(used['/wagglerw'] / size['/wagglerw'], 3)
+        metrics['disk_used_ratio_rw'] = round(
+            used['/wagglerw'] / size['/wagglerw'], 3)
 
 
 def get_plugin_metrics(config, metrics):
     try:
-        plugins = [p for p in os.listdir('/wagglerw/systemd/system') if p.startswith('waggle-plugin')]
+        plugins = [p for p in os.listdir(
+            '/wagglerw/systemd/system') if p.startswith('waggle-plugin')]
     except FileNotFoundError:
         plugins = []
-    
+
     active_total = 0
 
     for plugin in plugins:
@@ -290,7 +312,6 @@ def get_sys_metrics(config, metrics):
         metrics['media'] = 0
     elif 'MMC' in hostname:
         metrics['media'] = 1
-
 
 
 device_table = {
@@ -373,6 +394,7 @@ service_table = {
     'coresense': 'waggle-plugin-coresense',
 }
 
+
 def get_service_metrics(config, metrics):
     for name in config['services']:
         if name not in service_table:
@@ -397,7 +419,7 @@ def get_metrics_for_config(config):
 
     if 'wagman' in config['devices']:
         attempt_to_get_metrics(get_wagman_metrics, config, metrics)
-    
+
     if 'modem' in config['devices']:
         attempt_to_get_metrics(get_modem_strength, config, metrics)
 

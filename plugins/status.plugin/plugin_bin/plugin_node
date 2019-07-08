@@ -101,6 +101,9 @@ sdf_table = {
 
     'plugins_enabled': (0xff19, 1),
     'plugins_active': (0xff19, 2),
+
+    'wagman_temperature': (0x0002, 1),
+    'wagman_humidity': (0x0002, 2),
 }
 
 # OK...we'll start with new nodes to begin with then sort out the pipeline deployment stuff after.
