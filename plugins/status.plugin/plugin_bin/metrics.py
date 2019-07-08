@@ -121,11 +121,11 @@ def get_wagman_metrics(config, metrics):
         metrics['wagman_th_4'] = int(th[4])
 
     with suppress(Exception):
-        value = re.findall(r':temperature (\d+) \d+', log)[-1]
+        value = re.findall(r':temperature (\d+) \S+', log)[-1]
         metrics['wagman_temperature'] = int(value)
 
     with suppress(Exception):
-        value = re.findall(r':humidity (\d+) \d+', log)[-1]
+        value = re.findall(r':humidity (\d+) \S+', log)[-1]
         metrics['wagman_humidity'] = int(value)
 
     with suppress(Exception):
