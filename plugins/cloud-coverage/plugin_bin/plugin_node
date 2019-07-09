@@ -16,27 +16,9 @@ import sys
 import joblib
 from sklearn.cross_decomposition import PLSRegression
 
-from waggle.pipeline import Plugin, ImagePipelineHandler
+from waggle.pipeline import ImagePipelineHandler
 import waggle.plugin
 #from waggle.protocol.v5.encoder import encode_frame
-
-# change working directory to plugin dir
-os.chdir(os.path.dirname(sys.argv[0]))
-
-# Configuration of the pipeline
-# name of the pipeline
-EXCHANGE = 'image_pipeline'
-# output direction of this processor
-ROUTING_KEY_EXPORT = 'exporter'  # flush output to Beehive
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--debug', action='store_true')
-args = parser.parse_args()
-
-if args.debug:
-    plugin = waggle.plugin.PrintPlugin()
-else:
-    plugin = waggle.plugin.Plugin()
 
 
 def get_default_configuration():
@@ -54,12 +36,8 @@ def get_default_configuration():
 
 
 class CloudEstimator():
-#class CloudEstimator(Plugin):
-    plugin_name = 'image_cloud_estimator'
-    plugin_version = '0'
-
-    def __init__(self):
-        super().__init__()
+    def __init__(self, plugin):
+        self.plugin = plugin
         self.config = self._get_config_table()
         self.input_handler = ImagePipelineHandler(
             routing_in=self.config['source'])
@@ -68,10 +46,8 @@ class CloudEstimator():
         #self.input_handler = ImagePipelineHandler(routing_in=self.config['source'])
         #self.input_image_path = image_name
 
-    '''
-    def close(self):
-        self.input_handler.close()
-    '''
+        def close(self):
+            self.input_handler.close()
 
     def _get_config_table(self):
         try:
@@ -80,8 +56,8 @@ class CloudEstimator():
             return get_default_configuration()
 
 
-    def _feature_generator(self, path):
-        Input_Image = cv2.imread(path)
+    def _feature_generator(self, img):
+        Input_Image = img
         Input_Image_RGB = cv2.cvtColor(Input_Image, cv2.COLOR_BGR2RGBA)
         Input_Image_RGB = Input_Image
 
@@ -124,17 +100,6 @@ class CloudEstimator():
 
         return One_D_Image, Image_Shape
 
-    def Load_Ground_Truth_Label(self, Image_Name, Image_Shape):
-
-        img_name = Image_Name.split('.')[0]
-        groundtruth_image_name = img_name + '_GT.png'
-
-        Image_Ground_Truth = cv2.imread(groundtruth_image_name, cv2.IMREAD_UNCHANGED)
-
-        One_D_Ground_Truth = np.transpose(np.matrix(Image_Ground_Truth.ravel()))
-
-        return One_D_Ground_Truth
-
     def _soft_thresholding(self, labels):
 
         min_v = min(labels)
@@ -150,28 +115,20 @@ class CloudEstimator():
 
         return percentage
 
-    def _coverage_predictor(self, target_feature, model):
-        reg_start = time.time()
+    def _coverage_predictor(self, target_feature, model, target_shape):
+        # reg_start = time.time()
         Y_pred = model.predict(target_feature)
-        reg_end = time.time()
-        print('inference time {}'.format(reg_end-reg_start))
+        # reg_end = time.time()
+        # print('inference time {}'.format(reg_end-reg_start))
+
+        ## target_shape[0]: Width, target_shape[1]: Height
+        predicted = np.reshape(predicted, (target_shape[0], target_shape[1]))
+        predicted = np.array(predicted * 255, dtype = np.uint8)
+        cv.imwrite('predicted.jpg', predicted.T)
 
         return Y_pred
 
-    def Get_Ground_Truth_Value(self, Image_Name):
-        filename = image_name
-        gt_file_name = filename.split('.')[0] + '_GT.png'
-
-        gt_image = cv2.imread(gt_file_name)
-        gt_image = cv2.cvtColor(gt_image, cv2.COLOR_BGR2GRAY)
-        gt_one_D_array = gt_image.ravel()
-
-        image_shape = gt_image.shape
-        pixel_cnt = image_shape[0] * image_shape[1]
-        pixel_cloud = np.count_nonzero(gt_one_D_array)
-        print('actual percentage {}%'.format((pixel_cloud / pixel_cnt) * 100))
-
-    def run(self, TEMP_IMAGE_PATH):
+    def run(self):
         model = joblib.load(self.config['model'])
         print('Loading model {}'.format(model))
 
@@ -203,43 +160,62 @@ class CloudEstimator():
                     nparr_img = np.fromstring(frame, np.uint8)
                     img = cv2.imdecode(nparr_img, cv2.IMREAD_COLOR)
                     
-                    TEMP_IMAGE_PATH = args.input
-                    print(TEMP_IMAGE_PATH)
+                    counter = 0
+                    try:                    
+                        ## feature extraction and soft threshold take most of time
+                        target_feature, target_shape = self._feature_generator(img)
+                        predict = self._coverage_predictor(target_feature, model, target_shape)
+                        soft_thresholded = self._soft_thresholding(predict)
+                        estimation = self._threshold(soft_thresholded, target_shape, confidence)
 
-                    try:
-                        plugin.run(TEMP_IMAGE_PATH)
                     except (KeyboardInterrupt, Exception) as ex:
-                        print(str(ex))
-                    finally:
-                        #plugin.close()
+                        counter = counter + 1
+                        print("Exception occurred, caught and continuing", str(ex))
                         pass
-
-
-                    st = time.time()
-                    target_feature, target_shape = self._feature_generator(TEMP_IMAGE_PATH)
-                    et = time.time()
-                    print('feature generator elapsed %.6f' % (et-st))
-
-                    st = time.time()
-                    predict = self._coverage_predictor(target_feature, model)
-                    et = time.time()
-                    print('prediction elasped %.6f' % (et-st))
-
-                    st = time.time()
-                    soft_thresholded = self._soft_thresholding(predict)
-                    et = time.time()
-                    print('threshold elapsed %.6f' % (et-st))
-
-                    st = time.time()
-                    estimation = self._threshold(soft_thresholded, target_shape, confidence)
-                    et = time.time()
-                    print('estimation elapsed %.6f' % (et-st))
 
                     print('cloud coverage estimation result: {}%'.format(estimation))
 
-                    end = time.time()
+                    self.plugin.add_measurement({
+                        'sensor_id': 0x3002,
+                        'parameter_id': 1,
+                        'value': estimation,
+                    })
 
-            print('time {}'.format(end-start))
+                    self.plugin.publish_measurements()
+
+
+                    # Sampling the result
+                    if do_sampling:
+                        if current_time - self.config['last_sampled'] > self.config['sampling_interval']:
+                            result = {
+                                'processing_software': os.path.basename(__file__),
+                                'results': json.dumps(estimation)
+                            }
+                            properties.headers.update(result)
+                            self.input_handler.write(
+                                ROUTING_KEY_EXPORT,
+                                frame,
+                                properties.headers
+                            )
+                            self.config['last_sampled'] = current_time
+                self.config['last_updated'] = current_time
+            else:
+                wait_time = current_time - self.config['last_updated']
+                if wait_time > 0.1:
+                    time.sleep(wait_time)
 
 if __name__ == '__main__':
-    plugin = CloudEstimator.defaltConfig().run()
+    # plugin = CloudEstimator.defaltConfig().run()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--debug', action='store_true')
+    args = parser.parse_args()
+
+    if args.debug:
+        plugin = waggle.plugin.PrintPlugin()
+    else:
+        plugin = waggle.plugin.Plugin()
+
+
+    cce = CloudEstimator(plugin)
+    cce.run()
+        
