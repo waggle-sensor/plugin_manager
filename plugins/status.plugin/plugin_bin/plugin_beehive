@@ -82,6 +82,7 @@ conversion_table = {
 
 
 rewrite_sensor_subsystem = {
+    0x0002: 'wagman',
     0xff05: 'wagman',
     0xff06: 'wagman',
     0xff07: 'wagman',
