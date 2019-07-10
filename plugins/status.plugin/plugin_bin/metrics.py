@@ -14,7 +14,6 @@ logger = logging.getLogger('metrics')
 
 
 def read_file(path):
-    logger.debug('read_file %s', path)
     with open(path) as file:
         return file.read()
 
@@ -51,8 +50,10 @@ def get_dev_exists(path):
 
 def get_net_metrics(iface):
     try:
-        rx = int(read_file(os.path.join('/sys/class/net', iface, 'statistics/rx_bytes')))
-        tx = int(read_file(os.path.join('/sys/class/net', iface, 'statistics/tx_bytes')))
+        rx = int(read_file(os.path.join(
+            '/sys/class/net', iface, 'statistics/rx_bytes')))
+        tx = int(read_file(os.path.join(
+            '/sys/class/net', iface, 'statistics/tx_bytes')))
     except FileNotFoundError:
         rx = 0
         tx = 0
@@ -67,70 +68,76 @@ def get_service_status(service):
         return False
 
 
-# HACK wagman_last_scan_time is used to track the last time we scanned the wagman logs
-wagman_last_scan_time = time.monotonic()
-
-def get_wagman_metrics(config, metrics):
-    global wagman_last_scan_time
-
-    # optimization... doesn't bother with query if device missing.
-    if not get_dev_exists('/dev/waggle_sysmon'):
-        return
-
-    with suppress(Exception):
-        metrics['wagman_uptime'] = int(subprocess.check_output(['wagman-client', 'up']).decode())
-    
-    scan_duration = int(time.monotonic() - wagman_last_scan_time + 5)
-
-    log = subprocess.check_output([
-        'journalctl',                   # scan journal for
-        '-u', 'waggle-wagman-driver',   # wagman driver logs
-        '--since', '-{}'.format(scan_duration),               # from last scan time
-        '-b',                           # from this boot only
-        '-o', 'cat',                    # in compact form
-    ]).decode()
-
-    wagman_last_scan_time = time.monotonic()
-
+def scan_wagman_log(metrics, log):
     metrics['wagman_comm'] = ':wagman:' in log
 
-    with suppress(Exception):
+    try:
         nc, ep, cs = re.findall(r':fails (\d+) (\d+) (\d+)', log)[-1]
         metrics['wagman_fc_nc'] = int(nc)
         metrics['wagman_fc_ep'] = int(ep)
         metrics['wagman_fc_cs'] = int(cs)
+    except Exception:
+        logger.exception('scan wagman fc failed')
 
-    with suppress(Exception):
+    try:
         wm, nc, ep, cs = re.findall(r':cu (\d+) (\d+) (\d+) (\d+)', log)[-1]
         metrics['wagman_cu_wm'] = int(wm)
         metrics['wagman_cu_nc'] = int(nc)
         metrics['wagman_cu_ep'] = int(ep)
         metrics['wagman_cu_cs'] = int(cs)
+    except Exception:
+        logger.exception('scan wagman cu failed')
 
-    with suppress(Exception):
+    try:
         th = re.findall(r':th (\d+) (\d+) (\d+) (\d+) (\d+)', log)[-1]
         metrics['wagman_th_0'] = int(th[0])
         metrics['wagman_th_1'] = int(th[1])
         metrics['wagman_th_2'] = int(th[2])
         metrics['wagman_th_3'] = int(th[3])
         metrics['wagman_th_4'] = int(th[4])
+    except Exception:
+        logger.exception('scan wagman th failed')
 
-    with suppress(Exception):
+    try:
+        value = re.findall(r':temperature\s+(\d+)\s+', log)[-1]
+        metrics['wagman_temperature'] = int(value)
+    except Exception:
+        logger.exception('scan wagman temperature failed')
+
+    try:
+        value = re.findall(r':humidity\s+(\d+)\s+', log)[-1]
+        metrics['wagman_humidity'] = int(value)
+    except Exception:
+        logger.exception('scan wagman humidity failed')
+
+    try:
+        value = re.findall(r':light (\d+)', log)[-1]
+        metrics['wagman_light'] = int(value)
+    except Exception:
+        logger.exception('scan wagman light failed')
+
+    try:
         nc, ep, cs = re.findall(r':enabled (\d+) (\d+) (\d+)', log)[-1]
         metrics['wagman_enabled_nc'] = bool(nc)
         metrics['wagman_enabled_ep'] = bool(ep)
         metrics['wagman_enabled_cs'] = bool(cs)
+    except Exception:
+        logger.exception('scan wagman enabled failed')
 
-    with suppress(Exception):
+    try:
         ports = re.findall(r':vdc (\d+) (\d+) (\d+) (\d+) (\d+)', log)[-1]
         metrics['wagman_vdc_nc'] = int(ports[0])
         metrics['wagman_vdc_ep'] = int(ports[1])
         metrics['wagman_vdc_cs'] = int(ports[2])
+    except Exception:
+        logger.exception('scan wagman voltage failed')
 
-    with suppress(Exception):
+    try:
         metrics['wagman_hb_nc'] = 'nc heartbeat' in log
         metrics['wagman_hb_ep'] = 'gn heartbeat' in log
         metrics['wagman_hb_cs'] = 'cs heartbeat' in log
+    except Exception:
+        logger.exception('scan wagman heartbeat failed')
 
     metrics['wagman_stopping_nc'] = bool(re.search(r'wagman:nc stopping', log))
     metrics['wagman_stopping_ep'] = bool(re.search(r'wagman:gn stopping', log))
@@ -143,6 +150,41 @@ def get_wagman_metrics(config, metrics):
     metrics['wagman_killing_nc'] = bool(re.search(r'wagman:nc killing', log))
     metrics['wagman_killing_ep'] = bool(re.search(r'wagman:gn killing', log))
     metrics['wagman_killing_cs'] = bool(re.search(r'wagman:cs killing', log))
+
+
+# HACK wagman_last_scan_time is used to track the last time we scanned the wagman logs
+wagman_last_scan_time = time.monotonic()
+
+
+def get_recent_wagman_log():
+    global wagman_last_scan_time
+
+    scan_duration = int(time.monotonic() - wagman_last_scan_time + 5)
+
+    output = subprocess.check_output([
+        'journalctl',                   # scan journal for
+        '-u', 'waggle-wagman-driver',   # wagman driver logs
+        # from last scan time
+        '--since', '-{}'.format(scan_duration),
+        '-b',                           # from this boot only
+        '-o', 'cat',                    # in compact form
+    ]).decode()
+
+    wagman_last_scan_time = time.monotonic()
+
+    return output
+
+
+def get_wagman_metrics(config, metrics):
+    # optimization... doesn't bother with query if device missing.
+    if not get_dev_exists('/dev/waggle_sysmon'):
+        return
+
+    with suppress(Exception):
+        metrics['wagman_uptime'] = int(
+            subprocess.check_output(['wagman-client', 'up']).decode())
+
+    scan_wagman_log(metrics, get_recent_wagman_log())
 
 
 rssi_to_dbm = {
@@ -213,7 +255,7 @@ def get_modem_strength(config, metrics):
         except KeyError:
             logger.warning('unknown modem strength')
             return
-        
+
         metrics['modem_dbm'] = dbm
 
 
@@ -227,8 +269,10 @@ def get_loadavg_metrics(config, metrics):
 
 def get_mem_metrics(config, metrics):
     s = read_file('/proc/meminfo')
-    metrics['mem_total'] = int(re.search(r'MemTotal:\s*(\d+)\s*kB', s).group(1)) * 1024
-    metrics['mem_free'] = int(re.search(r'MemFree:\s*(\d+)\s*kB', s).group(1)) * 1024
+    metrics['mem_total'] = int(
+        re.search(r'MemTotal:\s*(\d+)\s*kB', s).group(1)) * 1024
+    metrics['mem_free'] = int(
+        re.search(r'MemFree:\s*(\d+)\s*kB', s).group(1)) * 1024
     metrics['mem_free_ratio'] = metrics['mem_free'] / metrics['mem_total']
 
 
@@ -239,13 +283,14 @@ def get_disk_metrics(config, metrics):
     for line in subprocess.check_output(['df']).decode().splitlines()[1:]:
         fs = line.split()
         mount = fs[5]
-        size[mount] = int(fs[1]) * 1024 # df reports 1K blocks
+        size[mount] = int(fs[1]) * 1024  # df reports 1K blocks
         used[mount] = int(fs[2]) * 1024
 
     with suppress(KeyError):
         metrics['disk_size_boot'] = size['/media/boot']
         metrics['disk_used_boot'] = used['/media/boot']
-        metrics['disk_used_ratio_boot'] = round(used['/media/boot'] / size['/media/boot'], 3)
+        metrics['disk_used_ratio_boot'] = round(
+            used['/media/boot'] / size['/media/boot'], 3)
 
     with suppress(KeyError):
         metrics['disk_size_root'] = size['/']
@@ -255,15 +300,17 @@ def get_disk_metrics(config, metrics):
     with suppress(KeyError):
         metrics['disk_size_rw'] = size['/wagglerw']
         metrics['disk_used_rw'] = used['/wagglerw']
-        metrics['disk_used_ratio_rw'] = round(used['/wagglerw'] / size['/wagglerw'], 3)
+        metrics['disk_used_ratio_rw'] = round(
+            used['/wagglerw'] / size['/wagglerw'], 3)
 
 
 def get_plugin_metrics(config, metrics):
     try:
-        plugins = [p for p in os.listdir('/wagglerw/systemd/system') if p.startswith('waggle-plugin')]
+        plugins = [p for p in os.listdir(
+            '/wagglerw/systemd/system') if p.startswith('waggle-plugin')]
     except FileNotFoundError:
         plugins = []
-    
+
     active_total = 0
 
     for plugin in plugins:
@@ -290,7 +337,6 @@ def get_sys_metrics(config, metrics):
         metrics['media'] = 0
     elif 'MMC' in hostname:
         metrics['media'] = 1
-
 
 
 device_table = {
@@ -373,6 +419,7 @@ service_table = {
     'coresense': 'waggle-plugin-coresense',
 }
 
+
 def get_service_metrics(config, metrics):
     for name in config['services']:
         if name not in service_table:
@@ -397,7 +444,7 @@ def get_metrics_for_config(config):
 
     if 'wagman' in config['devices']:
         attempt_to_get_metrics(get_wagman_metrics, config, metrics)
-    
+
     if 'modem' in config['devices']:
         attempt_to_get_metrics(get_modem_strength, config, metrics)
 
