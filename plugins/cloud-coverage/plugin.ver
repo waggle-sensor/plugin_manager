@@ -1,0 +1,6 @@
+[plugin]
+id=3008
+version=0.0.1
+name=Test Plugin
+description=Test plugin
+reference=https://github.com/waggle-sensor/plugin_manager/tree/master/plugins/cloud-coverage

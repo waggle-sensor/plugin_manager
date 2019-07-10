@@ -23,8 +23,8 @@ import waggle.plugin
 
 def get_default_configuration():
     return {
-        'source': 'bottom',
-        'model': 'models/swimseg_model_128.pkl',
+        'source': 'top',
+        'model': '/wagglerw/plugins/cloud-coverage.plugin/plugin_bin/models/swimseg_model_128.pkl',
         'input_scale': 0.00784,
         'input_size': (300, 300),
         'input_mean_subtraction': (127.5, 127.5, 127.5),
@@ -71,6 +71,14 @@ class CloudEstimator():
 
         Input_Image_Red = Image_Array_RGB[:,:,2]
         Input_Image_Blue = Image_Array_RGB[:, :, 0]
+
+
+        for value in Input_Image_Blue:
+            if value == 0:
+                print('Input_Image_Blue == 0')
+
+        print('Input_Image_Red', Input_Image_Red[0], 'Input_Image_Blue', Input_Image_Blue[0])
+        print(Input_Image_Red[0]/Input_Image_Blue[0]*100)
 
         Input_Image_Difference = Input_Image_Red / Input_Image_Blue * 100
 
@@ -129,6 +137,7 @@ class CloudEstimator():
         return Y_pred
 
     def run(self):
+        estimation = 0
         model = joblib.load(self.config['model'])
         print('Loading model {}'.format(model))
 
@@ -146,10 +155,11 @@ class CloudEstimator():
             do_sampling = True
 
         while True:
-            start = time.time()
+            current_time = time.time()
 
-            if start - self.config['last_updated'] > 3:
+            if current_time - self.config['last_updated'] > 3:
                 return_code, message = self.input_handler.read()
+                print('[return_code]: ', return_code)
                 print('Receive timeout', flush=True)
 
                 if return_code is True:
@@ -167,6 +177,7 @@ class CloudEstimator():
                         predict = self._coverage_predictor(target_feature, model, target_shape)
                         soft_thresholded = self._soft_thresholding(predict)
                         estimation = self._threshold(soft_thresholded, target_shape, confidence)
+
 
                     except (KeyboardInterrupt, Exception) as ex:
                         counter = counter + 1
