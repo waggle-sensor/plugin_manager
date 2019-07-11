@@ -20,6 +20,7 @@ from waggle.pipeline import ImagePipelineHandler
 import waggle.plugin
 #from waggle.protocol.v5.encoder import encode_frame
 
+np.seterr(divide='ignore', invalid='ignore')
 
 def get_default_configuration():
     return {
@@ -57,11 +58,15 @@ class CloudEstimator():
 
 
     def _feature_generator(self, img):
-        Input_Image = img
-        Input_Image_RGB = cv2.cvtColor(Input_Image, cv2.COLOR_BGR2RGBA)
-        Input_Image_RGB = Input_Image
+        #Input_Image = img
+        #Input_Image = cv2.imread('test_0ca.jpg')
+        #Input_Image_RGB = cv2.cvtColor(Input_Image, cv2.COLOR_BGR2RGBA)
+        #Input_Image_RGB = Input_Image
 
-        Input_Image_HSV = cv2.cvtColor(Input_Image, cv2.COLOR_BGR2HSV)
+        Input_Image_RGB = img
+
+        #Input_Image_HSV = cv2.cvtColor(Input_Image, cv2.COLOR_BGR2HSV)
+        Input_Image_HSV = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
 
         Image_Array_RGB = np.array(Input_Image_RGB)
         Image_Array_HSV = np.array(Input_Image_HSV)
@@ -71,14 +76,6 @@ class CloudEstimator():
 
         Input_Image_Red = Image_Array_RGB[:,:,2]
         Input_Image_Blue = Image_Array_RGB[:, :, 0]
-
-
-        for value in Input_Image_Blue:
-            if value == 0:
-                print('Input_Image_Blue == 0')
-
-        print('Input_Image_Red', Input_Image_Red[0], 'Input_Image_Blue', Input_Image_Blue[0])
-        print(Input_Image_Red[0]/Input_Image_Blue[0]*100)
 
         Input_Image_Difference = Input_Image_Red / Input_Image_Blue * 100
 
@@ -130,16 +127,16 @@ class CloudEstimator():
         # print('inference time {}'.format(reg_end-reg_start))
 
         ## target_shape[0]: Width, target_shape[1]: Height
-        predicted = np.reshape(predicted, (target_shape[0], target_shape[1]))
+        predicted = np.reshape(Y_pred, (target_shape[0], target_shape[1]))
         predicted = np.array(predicted * 255, dtype = np.uint8)
-        cv.imwrite('predicted.jpg', predicted.T)
+        cv2.imwrite('predicted.jpg', predicted.T)
 
         return Y_pred
 
     def run(self):
         estimation = 0
         model = joblib.load(self.config['model'])
-        print('Loading model {}'.format(model))
+        #print('Loading model {}'.format(model))
 
         try:
             confidence = float(self.config['detection_confidence'])
@@ -159,24 +156,49 @@ class CloudEstimator():
 
             if current_time - self.config['last_updated'] > 3:
                 return_code, message = self.input_handler.read()
-                print('[return_code]: ', return_code)
-                print('Receive timeout', flush=True)
+                #print('[return_code]: ', return_code)
+                #print('Receive timeout', flush=True)
 
                 if return_code is True:
-                    print(time.asctime())
-                    print('Received frame', flush=True)
+                    #print(time.asctime())
+                    #print('Received frame', flush=True)
                     properties, frame = message
                     metadata = properties.headers
                     nparr_img = np.fromstring(frame, np.uint8)
                     img = cv2.imdecode(nparr_img, cv2.IMREAD_COLOR)
+
+                    cv2.imwrite('test_0ca.jpg', img)
                     
                     counter = 0
-                    try:                    
-                        ## feature extraction and soft threshold take most of time
+                    try:
                         target_feature, target_shape = self._feature_generator(img)
                         predict = self._coverage_predictor(target_feature, model, target_shape)
                         soft_thresholded = self._soft_thresholding(predict)
                         estimation = self._threshold(soft_thresholded, target_shape, confidence)
+
+
+                        '''
+                        ## feature extraction and soft threshold take most of time
+                        st = time.time()
+                        target_feature, target_shape = self._feature_generator(img)
+                        et = time.time()
+                        print('feature generator elapsed in %.6f' % (et-st))
+
+                        st = time.time()
+                        predict = self._coverage_predictor(target_feature, model, target_shape)
+                        et = time.time()
+                        print('predictor elapsed in %.6f' % (et-st))
+
+                        st = time.time()
+                        soft_thresholded = self._soft_thresholding(predict)
+                        et = time.time()
+                        print('soft threshold elapsed in %.6f' % (et-st))
+
+                        st = time.time()
+                        estimation = self._threshold(soft_thresholded, target_shape, confidence)
+                        et = time.time()
+                        print('threshold elapsed in %.6f' % (et-st))
+                        '''
 
 
                     except (KeyboardInterrupt, Exception) as ex:
