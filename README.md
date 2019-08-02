@@ -16,3 +16,4 @@ Installation of some common plugin dependencies can be done by running:
 ```sh
 ./configure
 ```
+
