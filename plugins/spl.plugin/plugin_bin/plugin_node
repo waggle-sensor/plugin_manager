@@ -14,6 +14,7 @@ import pyaudio
 import numpy as np
 import wave
 import waggle.plugin
+import math
 
 
 parser = argparse.ArgumentParser()
@@ -39,6 +40,8 @@ def get_default_configuration():
         'interval': 60,  # 1 minute
         'octave_band': 1,
         'recording': True,
+        'dft_length': 8192,    ## DFT length
+        'digital_audio_max' = 32768      ## = 2**15
     }
 
 
@@ -62,6 +65,8 @@ class SoundPressureLevel:
         self.total_count = int(self.audio_rate / self.audio_chunk * self.audio_sampling_seconds)
         self.octave_band = self.config['octave_band']
         self.recording = self.config['recording']
+        self.N = self.config['dft_length']
+        self.ref = self.config['digital_audio_max']
 
     def _get_config_table(self):
         try:
@@ -139,7 +144,7 @@ class SoundPressureLevel:
         else:
             return False, 'Timeout on data collection'
 
-    def cal_freq_range(self):
+    def cal_freq_range(self, xf, val):
         octv = self.octave_band
         n = 5 * octv + (octv - 1) + 10
         m = 4 * octv + 10
@@ -166,26 +171,40 @@ class SoundPressureLevel:
             if len(lower) < (octv * 10):
                 lower.append(round(l, 4))
 
-        return lower, center, upper
 
-#     def match_length(self, avg_db):
-#         octave_db = []
-#         for i in range(10):
-#             instance = 0.
-#             if i == 9:
-#                 left = len(avg_db) - self.octave_band * 9
-#                 for j in range(left):
-#                     instance = instance + 10 ** (avg_db[i * self.octave_band + j] / 10)
-#             else:
-#                 for j in range(self.octave_band):
-#                     instance = instance + 10 ** (avg_db[i * self.octave_band + j] / 10)
-#             octave_db.append(10 * np.log10(instance))
+        octave = {}
+        avg = []
+        for i in range(len(upper)):
+            octave[i] = []
 
-#         instance = 0.
-#         for i in range(10):
-#             instance = instance + 10 ** (octave_db[i] / 10)
+        for hz, magnitude in zip(xf, val):
+            if hz < 20:
+                continue
+            index = np.searchsorted(upper, hz, side="left")
+            if index >= len(upper):
+                continue
+            octave[index].append(magnitude)
 
-#         return octave_db
+        for di in range(len(octave)):
+            avg.append(sum(octave[di]) / len(octave[di]))
+
+        return lower, center, upper, avg
+
+
+
+    def decibel(self, s_db, avg):
+        inner = [10**(x/10) for x in s_db]
+        inner = sum(inner)
+        s_db_db = 10*math.log10(inner)
+
+
+        inner = [10**(x/10) for x in avg]
+        inner = sum(inner)
+        avg_db = 10*math.log10(inner)
+
+        return s_db_db, avg_db
+
+
 
     def close(self):
         pass
@@ -198,45 +217,23 @@ class SoundPressureLevel:
         print('Received frame')
         numpydata = np.hstack(raw_data)
 
-        number_of_samples = numpydata.shape[0]
-        time_per_sample = 1.0 / self.audio_rate
 
-        yf = np.fft.fftn(numpydata)  # the n-dimensional FFT
-        xf = np.linspace(0.0, 1.0 / (2.0 * time_per_sample), number_of_samples // 2)  # 1.0/(2.0*T) = RATE / 2
+        ## calculate db from fft
+        window = np.hamming(self.N)
+        x = numpydata[0:self.N] * window
 
-        val = yf[0:number_of_samples // 2]
-        octaves_lower_hz, octaves_center_hz, octaves_upper_hz = self.cal_freq_range()
+        spectrum = np.fft.rfft(x)
+        freq = np.arange((self.N / 2) + 1) / (float(self.N) / self.audio_rate)
+        spectrum_mag = np.abs(spectrum) * 2 / np.sum(window)
 
-        octave = {}
-        avg = []
-        for i in range(len(octaves_upper_hz)):
-            octave[i] = []
+        K = 94 + 38  ## sensitivity on 94 PBSPL is -38 db. ## mic_A,B: -38 db, mic_C, diff: -20 db
+        s_dbfs = 20 * np.log10(spectrum_mag/self.ref)      ## Decibels relative to full scale
+        s_db = s_dbfs + K
 
-        for hz, magnitude in zip(xf, val):
-            if hz < 20:
-                continue
-            index = np.searchsorted(octaves_upper_hz, hz, side="left")
-            if index >= len(octaves_upper_hz):
-                continue
-            octave[index].append(magnitude)
+        lower, center, upper, avg = self.cal_freq_range(freq, s_db)
+        s_db_db, avg_db = decibel(s_db, avg)
 
-        for di in range(len(octave)):
-            avg.append(sum(octave[di]) / len(octave[di]))
-
-        avg = np.asarray(avg)
-        avg_db = 10 * np.log10(np.abs(avg))
-
-        total = 0.
-        for ia in range(len(avg)):
-            total = total + 10 ** (avg_db[ia] / 10)
-
-        sdb = 10 * np.log10(total)
-        sdb = int(sdb)
-
-#         # if octave band > 1, so that the length of avg_db does not match with waggle protocol:
-#         if len(avg_db) > 10:
-#             avg_db = self.match_length(avg_db)
-#             print(int(time.time()), avg_db)
+        avg.append(avg_db)
 
         measurement = {
             'sensor_id': 0x3000,
