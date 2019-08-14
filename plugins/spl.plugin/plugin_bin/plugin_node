@@ -39,7 +39,7 @@ def get_default_configuration():
         'sampling_period': 5,  # in Second
         'interval': 60,  # 1 minute
         'octave_band': 1,
-        'recording': True,
+        'recording': False,
         'dft_length': 8192,    ## DFT length
         'digital_audio_max' = 32768      ## = 2**15
     }
