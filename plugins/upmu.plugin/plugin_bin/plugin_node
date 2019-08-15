@@ -14,7 +14,6 @@ import socket
 import logging
 
 import collections
-import matplotlib.pyplot as plt
 
 from pymu.client import Client
 from pymu.pmuDataFrame import DataFrame

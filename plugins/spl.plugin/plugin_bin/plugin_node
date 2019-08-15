@@ -35,19 +35,14 @@ def get_default_configuration():
         'audio_name': 'USB PnP Sound Device:',
         'audio_channels': 1,
         'audio_rate': 44100,
-        'audio_chunk': 1024,
-        'sampling_period': 5,  # in Second
-        'interval': 60,  # 1 minute
+        'audio_chunk': 512,
+        'sampling_period': 60,  # in Second
+        'interval': 60 * 17,  # 17 minute for distributed sampling over hours
         'octave_band': 1,
         'recording': False,
-        'dft_length': 8192,    ## DFT length
-        'digital_audio_max' = 32768      ## = 2**15
+        'dft_length': 44100,    ## DFT length
+        'digital_audio_max': 32768,      ## = 2**15
     }
-
-
-def read_json_file(filename):
-    with open(filename) as file:
-        return json.load(file)
 
 
 class SoundPressureLevel:
@@ -68,11 +63,22 @@ class SoundPressureLevel:
         self.N = self.config['dft_length']
         self.ref = self.config['digital_audio_max']
 
-    def _get_config_table(self):
+    def _get_config_table(self, file_name='/wagglerw/waggle/audio_spl.conf'):
+        config = None
         try:
-            return read_json_file('/wagglerw/waggle/audio_spl.conf')
+            with open(file_name) as file:
+                config = json.load(file)
         except Exception:
-            return get_default_configuration()
+            pass
+
+        if config is None:
+            config = get_default_configuration()
+            try:
+                with open(file_name, 'w') as file:
+                    file.write(json.dumps(config, sort_keys=True, indent=4))
+            except:
+                pass
+        return config
 
     def _read_callback(self, in_data, frame_count, time_info, status):
         self.frames.append(np.frombuffer(in_data, dtype=np.int16))
@@ -96,7 +102,7 @@ class SoundPressureLevel:
 
             if device_index < 0:
                 audio.terminate()
-                return False, 'Failed to find Waggle microphone'
+                return -1, 'Failed to find Waggle microphone'
 
             stream = audio.open(
                 format=self.audio_format,
@@ -112,6 +118,8 @@ class SoundPressureLevel:
             error_code = 1
         except:
             pass
+
+        record_time = time.time()
         try:
             stream.start_stream()
             # Give it 30 more seconds as timeout
@@ -121,7 +129,7 @@ class SoundPressureLevel:
                     break
                 time.sleep(1)
         except Exception as ex:
-            return False, str(ex)
+            return -3, str(ex)
         finally:
             stream.stop_stream()
             stream.close()
@@ -140,9 +148,9 @@ class SoundPressureLevel:
             waveFile.close()
 
         if error_code == 0:
-            return True, self.frames
+            return record_time, self.frames
         else:
-            return False, 'Timeout on data collection'
+            return -2, 'Timeout on data collection'
 
     def cal_freq_range(self, xf, val):
         octv = self.octave_band
@@ -171,7 +179,6 @@ class SoundPressureLevel:
             if len(lower) < (octv * 10):
                 lower.append(round(l, 4))
 
-
         octave = {}
         avg = []
         for i in range(len(upper)):
@@ -190,13 +197,10 @@ class SoundPressureLevel:
 
         return lower, center, upper, avg
 
-
-
     def decibel(self, s_db, avg):
         inner = [10**(x/10) for x in s_db]
         inner = sum(inner)
         s_db_db = 10*math.log10(inner)
-
 
         inner = [10**(x/10) for x in avg]
         inner = sum(inner)
@@ -204,41 +208,49 @@ class SoundPressureLevel:
 
         return s_db_db, avg_db
 
-
-
     def close(self):
         pass
 
     def _do_process(self):
         #f, raw_data = self._open_and_read()
-        f = False
-        while f is False:
-            f, raw_data = self._open_and_read()
+        record_time = -1
+        while record_time < 0:
+            record_time, raw_data = self._open_and_read()
+            if record_time < 0:
+                print('[Error] ', raw_data)
+                print('[Info] Attempting to collect sample in 10 seconds...')
+                time.sleep(10)
+
         print('Received frame')
         numpydata = np.hstack(raw_data)
 
+        message = []
+        window = np.hamming(self.N)  # What is this?
+        for i in range(0, self.audio_rate * self.audio_sampling_seconds, self.audio_rate):
+            if len(numpydata[i : i + self.N]) != self.N:
+                continue
 
-        ## calculate db from fft
-        window = np.hamming(self.N)
-        x = numpydata[0:self.N] * window
+            x = numpydata[i : i + self.N] * window
+            
+            spectrum = np.fft.rfft(x)
+            freq = np.arange((self.N / 2) + 1) / (float(self.N) / self.audio_rate)
+            spectrum_mag = np.abs(spectrum) * 2 / np.sum(window)
 
-        spectrum = np.fft.rfft(x)
-        freq = np.arange((self.N / 2) + 1) / (float(self.N) / self.audio_rate)
-        spectrum_mag = np.abs(spectrum) * 2 / np.sum(window)
+            K = 94 + 38  ## sensitivity on 94 PBSPL is -38 db. ## mic_A,B: -38 db, mic_C, diff: -20 db
+            s_dbfs = 20 * np.log10(spectrum_mag / self.ref)      ## Decibels relative to full scale
+            s_db = s_dbfs + K
 
-        K = 94 + 38  ## sensitivity on 94 PBSPL is -38 db. ## mic_A,B: -38 db, mic_C, diff: -20 db
-        s_dbfs = 20 * np.log10(spectrum_mag/self.ref)      ## Decibels relative to full scale
-        s_db = s_dbfs + K
+            lower, center, upper, avg = self.cal_freq_range(freq, s_db)
+            s_db_db, avg_db = self.decibel(s_db, avg)
 
-        lower, center, upper, avg = self.cal_freq_range(freq, s_db)
-        s_db_db, avg_db = decibel(s_db, avg)
-
-        avg.append(avg_db)
+            avg.append(avg_db)
+            message.extend(avg)
 
         measurement = {
             'sensor_id': 0x3000,
             'parameter_id': 1,
-            'value': avg_db.tolist()
+            'timestamp': int(record_time),
+            'value': message
         }
 
         plugin.add_measurement(measurement)
