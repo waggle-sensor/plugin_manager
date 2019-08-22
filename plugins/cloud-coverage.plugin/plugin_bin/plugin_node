@@ -14,7 +14,6 @@ import numpy as np
 import sys
 
 import joblib
-from sklearn.cross_decomposition import PLSRegression
 
 from waggle.pipeline import ImagePipelineHandler
 import waggle.plugin
