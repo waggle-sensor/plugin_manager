@@ -17,7 +17,6 @@ import joblib
 
 from waggle.pipeline import ImagePipelineHandler
 import waggle.plugin
-#from waggle.protocol.v5.encoder import encode_frame
 
 np.seterr(divide='ignore', invalid='ignore')
 
@@ -34,6 +33,7 @@ def get_default_configuration():
         'detection_confidence': 0.5,  # least detection confidence
     }
 
+ROUTING_KEY_EXPORT = 'exporter'
 
 class CloudEstimator():
     def __init__(self, plugin):
@@ -42,19 +42,25 @@ class CloudEstimator():
         self.input_handler = ImagePipelineHandler(
             routing_in=self.config['source'])
 
-        #self.hrf = False
-        #self.input_handler = ImagePipelineHandler(routing_in=self.config['source'])
-        #self.input_image_path = image_name
+    def close(self):
+        self.input_handler.close()
 
-        def close(self):
-            self.input_handler.close()
-
-    def _get_config_table(self):
+    def _get_config_table(self, file_name='/wagglerw/waggle/cloud_coverage_estimator.conf'):
+        config = None
         try:
-            return read_json_file('/wagglerw/waggle/cloud_coverage_estimator.conf')
+            with open(file_name) as file:
+                config = json.load(file)
         except Exception:
-            return get_default_configuration()
+            pass
 
+        if config is None:
+            config = get_default_configuration()
+            try:
+                with open(file_name, 'w') as file:
+                    file.write(json.dumps(config, sort_keys=True, indent=4))
+            except:
+                pass
+        return config
 
     def _feature_generator(self, img):
         #Input_Image = img
@@ -132,15 +138,58 @@ class CloudEstimator():
 
         return Y_pred
 
+    def _pre_process(self, frame, properties):
+        try:
+            metadata = properties.headers
+            nparr_img = np.fromstring(frame, np.uint8)
+            img = cv2.imdecode(nparr_img, cv2.IMREAD_COLOR)
+            return True, img
+        except Exception as ex:
+            return False, str(ex)
+
+    def _process(self, image, benchmark=False):
+        try:
+            if benchmark is False:
+                target_feature, target_shape = self._feature_generator(image)
+                predict = self._coverage_predictor(target_feature, model, target_shape)
+                soft_thresholded = self._soft_thresholding(predict)
+                estimation = self._threshold(soft_thresholded, target_shape, confidence)
+                return True, estimation
+            else:
+                ## feature extraction and soft threshold take most of time
+                st = time.time()
+                target_feature, target_shape = self._feature_generator(image)
+                et = time.time()
+                print('feature generator elapsed in %.6f' % (et-st))
+
+                st = time.time()
+                predict = self._coverage_predictor(target_feature, model, target_shape)
+                et = time.time()
+                print('predictor elapsed in %.6f' % (et-st))
+
+                st = time.time()
+                soft_thresholded = self._soft_thresholding(predict)
+                et = time.time()
+                print('soft threshold elapsed in %.6f' % (et-st))
+
+                st = time.time()
+                estimation = self._threshold(soft_thresholded, target_shape, confidence)
+                et = time.time()
+                print('threshold elapsed in %.6f' % (et-st))
+                return True, estimation
+        except Exception as ex:
+            return False, str(ex)
+
     def run(self):
-        estimation = 0
         model = joblib.load(self.config['model'])
-        #print('Loading model {}'.format(model))
 
         try:
             confidence = float(self.config['detection_confidence'])
         except Exception:
+            print('[Error] Failed to read confidence. Use 0.5 by default...')
             confidence = 0.5
+
+        interval = int(self.config['detection_interval'])
 
         self.config['last_updated'] = time.time() - self.config['detection_interval']
         self.config['last_sampled'] = time.time() - self.config['sampling_interval']
@@ -150,104 +199,58 @@ class CloudEstimator():
         else:
             do_sampling = True
 
+        attempts = 3
         while True:
-            current_time = time.time()
-
-            if current_time - self.config['last_updated'] > 3:
-                return_code, message = self.input_handler.read()
-                #print('[return_code]: ', return_code)
-                #print('Receive timeout', flush=True)
-
-                if return_code is True:
-                    #print(time.asctime())
-                    #print('Received frame', flush=True)
+            for attempt in range(attempts):
+                current_time = time.time()
+                f, message = self.input_handler.read()
+                if f is True:
                     properties, frame = message
-                    metadata = properties.headers
-                    nparr_img = np.fromstring(frame, np.uint8)
-                    img = cv2.imdecode(nparr_img, cv2.IMREAD_COLOR)
+                    f, image = self._pre_process(frame, properties)
+                    if f is True:
+                        f, estimation = self._process(image)
+                        if f is True:
+                            print('cloud coverage estimation result: {}%'.format(estimation))
 
-                    cv2.imwrite('test_0ca.jpg', img)
-                    
-                    counter = 0
-                    try:
-                        target_feature, target_shape = self._feature_generator(img)
-                        predict = self._coverage_predictor(target_feature, model, target_shape)
-                        soft_thresholded = self._soft_thresholding(predict)
-                        estimation = self._threshold(soft_thresholded, target_shape, confidence)
+                            self.plugin.add_measurement({
+                                'sensor_id': 0x3002,
+                                'parameter_id': 1,
+                                'value': estimation,
+                            })
+                            self.plugin.publish_measurements()
+                            # Sampling the result
+                            if do_sampling:
+                                result = {
+                                    'processing_software': os.path.basename(__file__),
+                                    'results': json.dumps(estimation)
+                                }
+                                properties.headers.update(result)
+                                self.input_handler.write(
+                                    ROUTING_KEY_EXPORT,
+                                    frame,
+                                    properties.headers
+                                )
+                            break
+                        else:
+                            print('[Error] in processing ', estimation)
+                    else:
+                        print('[Error] in pre-processing ', image)
+                else:
+                    print('[Error] in getting message', message)
+                print('[Info] Re-attempting in 5 seconds...')
+                sleep(5)
+            sleep(interval)
 
-
-                        '''
-                        ## feature extraction and soft threshold take most of time
-                        st = time.time()
-                        target_feature, target_shape = self._feature_generator(img)
-                        et = time.time()
-                        print('feature generator elapsed in %.6f' % (et-st))
-
-                        st = time.time()
-                        predict = self._coverage_predictor(target_feature, model, target_shape)
-                        et = time.time()
-                        print('predictor elapsed in %.6f' % (et-st))
-
-                        st = time.time()
-                        soft_thresholded = self._soft_thresholding(predict)
-                        et = time.time()
-                        print('soft threshold elapsed in %.6f' % (et-st))
-
-                        st = time.time()
-                        estimation = self._threshold(soft_thresholded, target_shape, confidence)
-                        et = time.time()
-                        print('threshold elapsed in %.6f' % (et-st))
-                        '''
-
-
-                    except (KeyboardInterrupt, Exception) as ex:
-                        counter = counter + 1
-                        print("Exception occurred, caught and continuing", str(ex))
-                        pass
-
-                    print('cloud coverage estimation result: {}%'.format(estimation))
-
-                    self.plugin.add_measurement({
-                        'sensor_id': 0x3002,
-                        'parameter_id': 1,
-                        'value': estimation,
-                    })
-
-                    self.plugin.publish_measurements()
-
-
-                    # Sampling the result
-                    if do_sampling:
-                        if current_time - self.config['last_sampled'] > self.config['sampling_interval']:
-                            result = {
-                                'processing_software': os.path.basename(__file__),
-                                'results': json.dumps(estimation)
-                            }
-                            properties.headers.update(result)
-                            self.input_handler.write(
-                                ROUTING_KEY_EXPORT,
-                                frame,
-                                properties.headers
-                            )
-                            self.config['last_sampled'] = current_time
-                self.config['last_updated'] = current_time
-            else:
-                wait_time = current_time - self.config['last_updated']
-                if wait_time > 0.1:
-                    time.sleep(wait_time)
 
 if __name__ == '__main__':
-    # plugin = CloudEstimator.defaltConfig().run()
     parser = argparse.ArgumentParser()
-    parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--print', action='store_true')
     args = parser.parse_args()
 
-    if args.debug:
+    if args.print:
         plugin = waggle.plugin.PrintPlugin()
     else:
         plugin = waggle.plugin.Plugin()
 
-
     cce = CloudEstimator(plugin)
     cce.run()
-        

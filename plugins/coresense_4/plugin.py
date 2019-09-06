@@ -304,11 +304,11 @@ if __name__ == '__main__':
         if not os.path.exists(device):
             exit(1)
 
+        if args.hrf:
+            plugin = CoresensePlugin4(hrf=args.hrf)
+        else:
+            plugin = CoresensePlugin4.defaultConfig()
         try:
-            if args.hrf:
-                plugin = CoresensePlugin4(hrf=args.hrf)
-            else:
-                plugin = CoresensePlugin4.defaultConfig()
             plugin.run()
         except (KeyboardInterrupt, SerialException, Exception) as ex:
             print(str(ex))

@@ -28,6 +28,9 @@ else:
 
 device = os.environ.get('WAGGLE_MICROPHONE', '/dev/waggle_microphone')
 
+def log(message):
+    print(message, flush=True)
+
 
 # TODO: There should be better way to find Waggle microphone
 def get_default_configuration():
@@ -217,11 +220,11 @@ class SoundPressureLevel:
         while record_time < 0:
             record_time, raw_data = self._open_and_read()
             if record_time < 0:
-                print('[Error] ', raw_data)
-                print('[Info] Attempting to collect sample in 10 seconds...')
+                log('[Error] ' + raw_data)
+                log('[Info] Attempting to collect sample in 10 seconds...')
                 time.sleep(10)
 
-        print('Received frame')
+        log('Received frame')
         numpydata = np.hstack(raw_data)
 
         message = []
@@ -255,6 +258,7 @@ class SoundPressureLevel:
 
         plugin.add_measurement(measurement)
         plugin.publish_measurements()
+        log('published')
 
     def run(self):
         while True:
