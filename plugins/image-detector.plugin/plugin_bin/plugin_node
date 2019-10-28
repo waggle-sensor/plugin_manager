@@ -237,7 +237,7 @@ class CarPedDetector(Plugin):
                             self.config['last_sampled'] = current_time
                 self.config['last_updated'] = current_time
             else:
-                wait_time = self.config['last_updated'] + self.config['detection_interval']
+                wait_time = (self.config['last_updated'] + self.config['detection_interval']) - current_time
                 if wait_time > 0.1:
                     time.sleep(wait_time)
 
