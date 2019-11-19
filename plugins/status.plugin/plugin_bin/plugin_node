@@ -114,8 +114,12 @@ config = metrics.read_config_file('/wagglerw/metrics.config')
 plugin = waggle.plugin.Plugin()
 
 while True:
+    # sleep at the start of loop to avoid sending on automatic restarts or unexpected flow changes
+    time.sleep(60)
+
     results = metrics.get_metrics_for_config(config)
     pprint.pprint(results)
+    print(flush=True)
 
     # clear measurements, just to be sure.
     plugin.clear_measurements()
@@ -133,6 +137,3 @@ while True:
         })
 
     plugin.publish_measurements()
-
-    print(flush=True)
-    time.sleep(60)
