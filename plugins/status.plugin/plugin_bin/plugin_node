@@ -115,7 +115,7 @@ plugin = waggle.plugin.Plugin()
 
 while True:
     # sleep at the start of loop to avoid sending on automatic restarts or unexpected flow changes
-    time.sleep(60)
+    time.sleep(300)
 
     results = metrics.get_metrics_for_config(config)
     pprint.pprint(results)
