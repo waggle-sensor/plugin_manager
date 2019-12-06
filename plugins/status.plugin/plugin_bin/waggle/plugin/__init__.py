@@ -130,7 +130,9 @@ def get_plain_connection_parameters(c):
     return pika.ConnectionParameters(
         host=c.host or 'localhost',
         port=c.port or 5672,
-        credentials=credentials)
+        credentials=credentials,
+        heartbeat=600,
+        blocked_connection_timeout=600)
 
 
 def get_ssl_connection_parameters(c):
@@ -143,16 +145,18 @@ def get_ssl_connection_parameters(c):
     context.load_cert_chain(
         os.path.abspath(c.certfile),
         os.path.abspath(c.keyfile))
-    
+
     context.check_hostname = False
-    
+
     ssl_options = pika.SSLOptions(context, host)
 
     return pika.ConnectionParameters(
         host=host,
         port=port,
         credentials=pika.credentials.ExternalCredentials(),
-        ssl_options=ssl_options)
+        ssl_options=ssl_options,
+        heartbeat=600,
+        blocked_connection_timeout=600)
 
 
 def format_device_id(s):
@@ -164,8 +168,10 @@ class Credentials:
     def __init__(self, **kwargs):
         # we'll leave these out for now. in all cases, our system will validate
         # them.
-        self.node_id = format_device_id(kwargs.get('node_id') or '0000000000000000')
-        self.sub_id = format_device_id(kwargs.get('sub_id') or '0000000000000000')
+        self.node_id = format_device_id(
+            kwargs.get('node_id') or '0000000000000000')
+        self.sub_id = format_device_id(
+            kwargs.get('sub_id') or '0000000000000000')
 
         self.host = kwargs.get('host')
         self.port = kwargs.get('port')
@@ -174,7 +180,8 @@ class Credentials:
         # Could later just directly extract from cert.
         # Then, even better, we can just use these credentials universally and
         # only have one connection system for RabbitMQ.
-        self.username = kwargs.get('username') or 'node-{}'.format(self.node_id)
+        self.username = kwargs.get(
+            'username') or 'node-{}'.format(self.node_id)
         self.password = kwargs.get('password')
 
         self.cacertfile = kwargs.get('cacert')
