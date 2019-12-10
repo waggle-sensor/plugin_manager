@@ -106,8 +106,6 @@ sdf_table = {
     'wagman_humidity': (0x0002, 2),
 }
 
-# OK...we'll start with new nodes to begin with then sort out the pipeline deployment stuff after.
-# Would be really nice to go ahead and unify all of this pipeline...
 
 config = metrics.read_config_file('/wagglerw/metrics.config')
 

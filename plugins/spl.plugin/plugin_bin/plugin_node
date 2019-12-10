@@ -28,6 +28,7 @@ else:
 
 device = os.environ.get('WAGGLE_MICROPHONE', '/dev/waggle_microphone')
 
+
 def log(message):
     print(message, flush=True)
 
@@ -43,8 +44,8 @@ def get_default_configuration():
         'interval': 60 * 17,  # 17 minute for distributed sampling over hours
         'octave_band': 1,
         'recording': False,
-        'dft_length': 44100,    ## DFT length
-        'digital_audio_max': 32768,      ## = 2**15
+        'dft_length': 44100,  # DFT length
+        'digital_audio_max': 32768,  # = 2**15
     }
 
 
@@ -60,7 +61,8 @@ class SoundPressureLevel:
         self.audio_rate = self.config['audio_rate']
         self.audio_chunk = self.config['audio_chunk']
         self.audio_sampling_seconds = self.config['sampling_period']
-        self.total_count = int(self.audio_rate / self.audio_chunk * self.audio_sampling_seconds)
+        self.total_count = int(
+            self.audio_rate / self.audio_chunk * self.audio_sampling_seconds)
         self.octave_band = self.config['octave_band']
         self.recording = self.config['recording']
         self.N = self.config['dft_length']
@@ -141,8 +143,9 @@ class SoundPressureLevel:
         if self.recording is True:
             base_dir = '/wagglerw/files/audio'
             if not os.path.exists(base_dir):
-                os.makedirs(base_dir)
-            file_name = os.path.join(base_dir, 'audio_{:%Y%m%dT%H%M%S}.wav'.format(datetime.datetime.now()))
+                os.makedirs(base_dir, exist_ok=True)
+            file_name = os.path.join(
+                base_dir, 'audio_{:%Y%m%dT%H%M%S}.wav'.format(datetime.datetime.now()))
             waveFile = wave.open(file_name, 'wb')
             waveFile.setnchannels(self.audio_channels)
             waveFile.setsampwidth(audio.get_sample_size(self.audio_format))
@@ -230,17 +233,19 @@ class SoundPressureLevel:
         message = []
         window = np.hamming(self.N)  # What is this?
         for i in range(0, self.audio_rate * self.audio_sampling_seconds, self.audio_rate):
-            if len(numpydata[i : i + self.N]) != self.N:
+            if len(numpydata[i: i + self.N]) != self.N:
                 continue
 
-            x = numpydata[i : i + self.N] * window
-            
+            x = numpydata[i: i + self.N] * window
+
             spectrum = np.fft.rfft(x)
-            freq = np.arange((self.N / 2) + 1) / (float(self.N) / self.audio_rate)
+            freq = np.arange((self.N / 2) + 1) / \
+                (float(self.N) / self.audio_rate)
             spectrum_mag = np.abs(spectrum) * 2 / np.sum(window)
 
-            K = 94 + 38  ## sensitivity on 94 PBSPL is -38 db. ## mic_A,B: -38 db, mic_C, diff: -20 db
-            s_dbfs = 20 * np.log10(spectrum_mag / self.ref)      ## Decibels relative to full scale
+            K = 94 + 38  # sensitivity on 94 PBSPL is -38 db. ## mic_A,B: -38 db, mic_C, diff: -20 db
+            # Decibels relative to full scale
+            s_dbfs = 20 * np.log10(spectrum_mag / self.ref)
             s_db = s_dbfs + K
 
             lower, center, upper, avg = self.cal_freq_range(freq, s_db)
