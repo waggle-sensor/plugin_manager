@@ -76,9 +76,10 @@ class CarPedDetector(Plugin):
                 sensor_table = json.loads(config.read())
         except Exception:
             sensor_table = get_default_configuration()
-            os.makedirs('/wagglerw/waggle/')
+            os.makedirs('/wagglerw/waggle/', exist_ok=True)
             with open(sensor_config_file, 'w') as config:
-                config.write(json.dumps(sensor_table, sort_keys=True, indent=4))
+                config.write(json.dumps(
+                    sensor_table, sort_keys=True, indent=4))
         return sensor_table
 
     def _detect(self, img_blob, cvNet, classes, confidence=0.3, img_rows=1, img_cols=1):
@@ -237,7 +238,8 @@ class CarPedDetector(Plugin):
                             self.config['last_sampled'] = current_time
                 self.config['last_updated'] = current_time
             else:
-                wait_time = (self.config['last_updated'] + self.config['detection_interval']) - current_time
+                wait_time = (
+                    self.config['last_updated'] + self.config['detection_interval']) - current_time
                 if wait_time > 0.1:
                     time.sleep(wait_time)
 
