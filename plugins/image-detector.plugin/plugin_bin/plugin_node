@@ -236,7 +236,9 @@ class CarPedDetector(Plugin):
                                 properties.headers
                             )
                             self.config['last_sampled'] = current_time
-                self.config['last_updated'] = current_time
+                    self.config['last_updated'] = current_time
+                else:
+                    time.sleep(1)
             else:
                 wait_time = (
                     self.config['last_updated'] + self.config['detection_interval']) - current_time
