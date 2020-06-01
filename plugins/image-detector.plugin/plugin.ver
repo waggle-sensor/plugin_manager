@@ -1,6 +1,6 @@
 [plugin]
 id=50
-version=0.0.0
+version=1.0.0
 name=Image Detector
 description=Car and pedestraian counter plugin.
 reference=https://github.com/waggle-sensor/plugin_manager/tree/develop/plugins/d3s
